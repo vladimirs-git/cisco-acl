@@ -15,8 +15,8 @@ class Base(ABC):
     def __init__(self, **kwargs):
         """Base - Parent of: AceBase, Address, Port, Protocol.
         :param kwargs: Params.
-            platform: Platform. By default: "ios".
-            note: Object description (not used in ACE).
+            platform: Supported platforms: "ios", "cnx". By default: "ios".
+            note: Object description (used only in object).
         """
         self._uuid = str(uuid.uuid1())
         self._platform = self._init_platform(**kwargs)

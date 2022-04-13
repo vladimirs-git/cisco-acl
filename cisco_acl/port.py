@@ -17,8 +17,8 @@ class Port(Base):
         """ACE. TCP/UDP Port.
         :param line: TCP/UDP ports line.
         :param kwargs: Params.
-            platform: Platform. By default: "ios".
-            note: Object description (not used in ACE).
+            platform: Supported platforms: "ios", "cnx". By default: "ios".
+            note: Object description (used only in object).
 
         Example1: ios, "eq" match multiple ports
             line: "eq www 443"

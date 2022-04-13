@@ -10,19 +10,18 @@ from cisco_acl.types_ import StrInt
 class BaseAce(Base):
     """BaseAce - Parent of: Ace, Remark."""
 
-    __slots__ = ("_platform", "_note", "_line", "_idx", "_sidx")
+    __slots__ = ("_platform", "_note", "_line", "_sequence", "_ssequence")
 
     def __init__(self, line, **kwargs):
         """BaseAce - Parent of: Ace, Remark.
         :param line: ACE line, can contain index.
         :param kwargs: Params.
-            platform: Platform. By default: "ios".
-            note: Object description (not used in ACE).
-            line_length: ACE line max length.
+            platform: Supported platforms: "ios", "cnx". By default: "ios".
+            note: Object description (used only in object).
         """
         super().__init__(**kwargs)
-        self.line_length = int(kwargs.get("line_length") or MAX_LINE_LENGTH)
-        self._idx: int = 0
+        self.line_length = MAX_LINE_LENGTH
+        self._sequence: int = 0
         self.line = line
 
     # =========================== property ===========================
@@ -38,8 +37,8 @@ class BaseAce(Base):
         return
 
     @property
-    def idx(self) -> int:
-        """ACE index, int.
+    def sequence(self) -> int:
+        """ACE sequence number <int>.
 
         Example1:
             Ace("permit any any")
@@ -49,19 +48,19 @@ class BaseAce(Base):
             Ace("10 permit any any")
             :return: 10
         """
-        return self._idx
+        return self._sequence
 
-    @idx.setter
-    def idx(self, idx: StrInt) -> None:
-        self._idx = h.str_to_positive_int(idx)
+    @sequence.setter
+    def sequence(self, sequence: StrInt) -> None:
+        self._sequence = h.str_to_positive_int(sequence)
 
-    @idx.deleter
-    def idx(self) -> None:
-        self._idx = 0
+    @sequence.deleter
+    def sequence(self) -> None:
+        self._sequence = 0
 
     @property
-    def sidx(self) -> str:
-        """ACE index, string.
+    def ssequence(self) -> str:
+        """ACE sequence number <str>.
 
         Example1:
             Ace("permit any any")
@@ -71,7 +70,7 @@ class BaseAce(Base):
             Ace("10 permit any any")
             :return: "10"
         """
-        return str(self.idx) if self.idx else ""
+        return str(self.sequence) if self.sequence else ""
 
     # =========================== helpers ============================
 

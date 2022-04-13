@@ -11,7 +11,7 @@ from cisco_acl.ace import Ace
 from cisco_acl.ace_group import AceGroup, LUAcl
 from cisco_acl.interface import Interface
 from cisco_acl.remark import Remark
-from cisco_acl.static_ import IDX_MAX, DEFAULT_PLATFORM, MAX_LINE_LENGTH, INDENTATION
+from cisco_acl.static_ import SEQUENCE_MAX, DEFAULT_PLATFORM, MAX_LINE_LENGTH, INDENTATION
 
 
 @total_ordering
@@ -20,17 +20,35 @@ class Acl(AceGroup):
 
     def __init__(self, line: str = "", items: Any = None, **kwargs):
         """ACL (Access Control List).
-        ACL index (self.idx) is taken from the first ACE in items.
+        ACL index (self.sequence) is taken from the first ACE in items.
         :param name: ACL name.
         :param items: List of ACE (strings or Ace objects).
         :param kwargs:
-            platform: Platform. By default: "ios".
-            note: Object description (not used in ACE).
-            line_length: ACE line max length.
-            indent: ACE lines indentation. By default 2 spaces.
-            name: ACL name.
+            platform: Supported platforms: "ios", "cnx". By default: "ios".
+            name: ACL name (by default taken from line param).
             input: Interfaces, where Acl is used on input.
             output: Interfaces, where Acl is used on output.
+            indent: ACE lines indentation. By default 2 spaces.
+            note: Object description (used only in object).
+
+        Example:
+        line: "ip access-list extended NAME
+                 remark TEXT
+                 permit icmp any any"
+        platform: "ios"
+        input: "interface FastEthernet1"
+        indent: 2
+
+        result:
+            self.line = "ip access-list extended NAME\n  remark TEXT\n  permit icmp any any"
+            self.platform = "ios"
+            self.name = "NAME"
+            self.ip_acl_name = "ip access-list NAME"
+            self.items = [Remark("remark TEXT"), Ace("permit icmp any any")]
+            self.interface.input = ["interface FastEthernet1"]
+            self.interface.output = []
+            self.indent = "  "
+            self.note = ""
         """
         super().__init__(**kwargs)
         self.line = line
@@ -69,12 +87,12 @@ class Acl(AceGroup):
 
     def __lt__(self, other) -> bool:
         """< less than"""
-        if hasattr(other, "idx"):
-            if self.idx == other.idx:
+        if hasattr(other, "sequence"):
+            if self.sequence == other.sequence:
                 if isinstance(other, (Acl, Ace)):
                     return str(self) < str(other)
                 return False
-            return self.idx < other.idx
+            return self.sequence < other.sequence
         return False
 
     # ============================= init =============================
@@ -265,30 +283,31 @@ class Acl(AceGroup):
             items: List of Ace objects. By default self.items.
         :return: Last sequence number.
         """
-        if not 1 <= start <= IDX_MAX:
-            raise ValueError(f"{start=} expected=1..{IDX_MAX}")
+        if not 1 <= start <= SEQUENCE_MAX:
+            raise ValueError(f"{start=} expected=1..{SEQUENCE_MAX}")
         if step < 1:
             raise ValueError(f"{step=} expected >= 1")
         items: LUAcl = kwargs.get("items") or self.items
-        idx = start
+        sequence = start
         count = len(items)
 
         for id_, item in enumerate(items, start=1):
             if isinstance(item, AceGroup):
-                idx = self.resequence(start=idx, step=step, items=item)
-            item.idx = idx
+                sequence = self.resequence(start=sequence, step=step, items=item)
+            item.sequence = sequence
             if id_ < count:
-                idx += step
-        if idx > IDX_MAX:
-            raise ValueError(f"last {idx=} expected=1..{IDX_MAX}")
-        return idx
+                sequence += step
+        if sequence > SEQUENCE_MAX:
+            raise ValueError(f"last {sequence=} expected=1..{SEQUENCE_MAX}")
+        return sequence
 
     def delete_sequence(self):
         """Delete sequence numbers from ACEs"""
         for item in self.items:
             if isinstance(item, AceGroup):
                 for item_ in item:
-                    item_.idx = 0
-            item.idx = 0
+                    item_.sequence = 0
+            item.sequence = 0
+
 
 LAcl = List[Acl]

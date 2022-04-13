@@ -16,7 +16,7 @@ class Test(unittest.TestCase):
     @staticmethod
     def _generate_aces_req() -> LDStr:
         """Return all combinations of ACE, ready for parse_ace() test"""
-        idxs = ["", "10"]
+        sequencees = ["", "10"]
         actions = ["permit", "deny"]
         protocols = ["tcp"]
         srcaddrs = ["any", "host 1.1.1.1", "1.1.1.0 0.0.0.7", "1.1.0.0/16",
@@ -26,7 +26,7 @@ class Test(unittest.TestCase):
         dstports = ["", "eq www 443", "neq 1 www", "gt www", "lt 443", "range 1 3", "range www bgp"]
         options = ["", "log"]
 
-        lines = [f"idx={s}" for s in idxs]
+        lines = [f"sequence={s}" for s in sequencees]
         lines = [f"{i},action={s}" for i in lines for s in actions]
         lines = [f"{i},protocol={s}" for i in lines for s in protocols]
         lines = [f"{i},srcaddr={s}" for i in lines for s in srcaddrs]
@@ -158,7 +158,7 @@ class Test(unittest.TestCase):
 
     def test_valid__parse_ace(self):
         """BaseAce._parse_ace()"""
-        pattern = "{idx} {action} {protocol} {srcaddr} {srcport} {dstaddr} {dstport} {option}"
+        pattern = "{sequence} {action} {protocol} {srcaddr} {srcport} {dstaddr} {dstport} {option}"
         items: LDStr = self._generate_aces_req()
         for req_d in items:
             line = pattern.format(**req_d)
@@ -203,11 +203,11 @@ class Test(unittest.TestCase):
 
     def test_valid__parse_action(self):
         """parse_action()"""
-        for idx in ["", "10"]:
+        for seq in ["", "10"]:
             for line, req_d in [
-                (f"{idx} remark text", dict(idx=idx, action="remark", text="text")),
-                (f"{idx} {PERMIT_IP}", dict(idx=idx, action="permit", text="ip any any")),
-                (f"{idx} {DENY_IP}", dict(idx=idx, action="deny", text="ip any any")),
+                (f"{seq} remark text", dict(sequence=seq, action="remark", text="text")),
+                (f"{seq} {PERMIT_IP}", dict(sequence=seq, action="permit", text="ip any any")),
+                (f"{seq} {DENY_IP}", dict(sequence=seq, action="deny", text="ip any any")),
             ]:
                 line = " ".join(line.split())
                 result_d = h.parse_action(line)

@@ -18,25 +18,25 @@ class Ace(BaseAce):
     """ACE (Access Control Entry)"""
 
     __slots__ = ("_platform", "_note", "_line",
-                 "_idx", "_action", "_protocol", "_srcaddr", "_srcport",
+                 "_sequence", "_action", "_protocol", "_srcaddr", "_srcport",
                  "_dstaddr", "_dstport", "_option")
 
     def __init__(self, line: str, **kwargs):
         """ACE (Access Control Entry).
         :param line: ACE line.
         :param kwargs: Params.
-            platform: Platform. By default: "ios".
-            note: Object description (not used in ACE).
-            line_length: ACE line max length.
+            platform: Supported platforms: "ios", "cnx". By default: "ios".
+            note: Object description (used only in object).
 
         Example:
-        line: "10 permit tcp host 10.0.0.1 eq 179 10.0.0. 0.0.0.3 eq 80 443 log"
+        line: "10 permit tcp host 10.0.0.1 eq 179 10.0.0.0 0.0.0.3 eq 80 443 log"
         platform: "ios"
         note: "description"
+
         result:
-            self.platform = "ios"
             self.line = "10 permit tcp host 10.0.0.1 10.0.0.0 0.0.0.3 eq www 443 log"
-            self.idx = 10
+            self.platform = "ios"
+            self.sequence = 10
             self.action = "permit"
             self.protocol = Protocol("tcp")
             self.srcaddr = Address("host 10.0.0.1")
@@ -61,10 +61,10 @@ class Ace(BaseAce):
 
     def __lt__(self, other) -> bool:
         """< less than"""
-        if hasattr(other, "idx"):
-            # idx
-            if self.idx != other.idx:
-                return self.idx < other.idx
+        if hasattr(other, "sequence"):
+            # sequence
+            if self.sequence != other.sequence:
+                return self.sequence < other.sequence
             # object
             if other.__class__.__name__ == "Remark":
                 return False
@@ -119,7 +119,7 @@ class Ace(BaseAce):
             :return: "10 permit ip any any"
         """
         items = [
-            self.sidx,
+            self.ssequence,
             self.action,
             self.protocol.line,
             self.srcaddr.line,
@@ -135,7 +135,7 @@ class Ace(BaseAce):
         line = self._init_line(line)
         self._check_line_length(line)
         ace_d = h.parse_ace(line)
-        self.idx = int(ace_d["idx"]) if ace_d["idx"] else 0
+        self.sequence = int(ace_d["sequence"]) if ace_d["sequence"] else 0
         self.action: str = ace_d["action"]
         self.protocol: Protocol = Protocol(ace_d["protocol"], platform=self.platform)
         self.srcaddr: Address = Address(ace_d["srcaddr"], platform=self.platform)

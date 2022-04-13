@@ -18,24 +18,21 @@ class Text:
 class Remark(BaseAce):
     """ACL Remark"""
 
-    __slots__ = ("_platform", "_note", "_line", "_idx", "_action", "_text")
+    __slots__ = ("_platform", "_note", "_line", "_sequence", "_action", "_text")
 
     def __init__(self, line: str, **kwargs):
         """ACL Remark.
         :param line: ACE line.
         :param kwargs: Params.
-            platform: Platform. By default: "ios".
-            note: Object description (not used in ACE).
-            line_length: ACE line max length.
+            note: Object description (used only in object).
 
         Example:
         line: "10 remark text"
-        platform: "ios"
         note: "description"
+
         result:
-            self.platform = "ios"
             self.line = "10 remark text"
-            self.idx = 10
+            self.sequence = 10
             self.action = "remark"
             self.text = "text"
             self.note = "description"
@@ -56,12 +53,12 @@ class Remark(BaseAce):
     def __lt__(self, other) -> bool:
         """< less than"""
         x = other.__class__.__name__
-        if hasattr(other, "idx"):
-            if self.idx == other.idx:
+        if hasattr(other, "sequence"):
+            if self.sequence == other.sequence:
                 if isinstance(other, Remark):
                     return self.text < other.text
                 return True
-            return self.idx < other.idx
+            return self.sequence < other.sequence
         if isinstance(other, str):
             return False
         return True
@@ -74,7 +71,7 @@ class Remark(BaseAce):
         Example:
             Remark("10 remark text")
             :return: "10 remark text" """
-        items = [self.sidx, self.action, self.text]
+        items = [self.ssequence, self.action, self.text]
         return " ".join([s for s in items if s])
 
     @line.setter
@@ -88,7 +85,7 @@ class Remark(BaseAce):
         expected = "remark"
         if action != expected:
             raise ValueError(f"invalid {action=}, {expected=}")
-        self.idx = int(ace_d["idx"]) if ace_d["idx"] else 0
+        self.sequence = int(ace_d["sequence"]) if ace_d["sequence"] else 0
         self._action = action
         self._text = ace_d["text"]
 

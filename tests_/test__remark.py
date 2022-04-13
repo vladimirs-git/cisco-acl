@@ -59,12 +59,12 @@ class Test(unittest.TestCase):
         remark_0 = "remark text1 text2"
         remark_0b = " remark\ttext1  text2\n"
         remark_0_d = dict(line=remark_0,
-                          idx=0,
+                          sequence=0,
                           action="remark",
                           text="text1 text2")
         remark_10 = "10 remark text1 text2"
         remark_10b = " 10\tremark  text1  text2\n"
-        remark_10_d = {**remark_0_d, **{"line": remark_10, "idx": 10}}
+        remark_10_d = {**remark_0_d, **{"line": remark_10, "sequence": 10}}
         for line, req, req_d in [
             (remark_0, remark_0, remark_0_d),
             (remark_0b, remark_0, remark_0_d),

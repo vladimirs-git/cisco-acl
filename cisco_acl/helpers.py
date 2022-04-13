@@ -61,10 +61,10 @@ def str_to_positive_int(line: StrInt) -> int:
         line = line.split()[0] if line else "0"
         if not line.isdigit():
             raise ValueError(f"{line=}, {int} expected")
-    idx = int(line)
-    if idx < 0:
-        raise ValueError(f"invalid {idx=}, positive expected")
-    return idx
+    sequence = int(line)
+    if sequence < 0:
+        raise ValueError(f"invalid {sequence=}, positive expected")
+    return sequence
 
 
 # =============================== list ===============================
@@ -91,7 +91,7 @@ def parse_ace(line: str) -> DStr:
     """Parse ACE line to elements.
     Example:
         :param line: "10 permit tcp host 1.1.1.1 eq 1025 10.0.0.0 255.0.0.0 eq web log"
-        :return: {"idx": 10,
+        :return: {"sequence": 10,
                   "action": "permit",
                   "protocol": "tcp",
                   "srcaddr": "host 1.1.1.1",
@@ -111,7 +111,7 @@ def parse_ace(line: str) -> DStr:
         f"{octets} {octets}",  # "A.B.C.D A.B.C.D"
     ])
 
-    re_idx = r"(\d+)?"
+    re_sequence = r"(\d+)?"
     re_action = f"{space}?(permit|deny)"
     re_proto = f"({space}{text})?"
     re_srcaddr = f"{space}({addr})"
@@ -119,7 +119,7 @@ def parse_ace(line: str) -> DStr:
     re_dstaddr = f"{space}({addr})"
     re_dstport = "( .+)?"
 
-    regex = f"^{re_idx}{re_action}{re_proto}{re_srcaddr}{re_srcport}{re_dstaddr}{re_dstport}"
+    regex = f"^{re_sequence}{re_action}{re_proto}{re_srcaddr}{re_srcport}{re_dstaddr}{re_dstport}"
     items_ = re_find_t(regex, line)
     if not items_:
         raise ValueError(f"invalid {line=}")
@@ -127,7 +127,7 @@ def parse_ace(line: str) -> DStr:
     dstport_option = items[-1]
     result: DStr = _parse_dstport_option(dstport_option)
     data = dict(
-        idx=items[0],
+        sequence=items[0],
         action=items[1],
         protocol=items[2],
         srcaddr=items[3],
@@ -186,16 +186,16 @@ def parse_action(line: str) -> DStr:
     space = r"(?: )"
     actions = "|".join(ACTIONS)
 
-    re_idx = r"(\d+)?"
+    re_sequence = r"(\d+)?"
     re_action = f"{space}?({actions})"
     re_text = r"( .+)"
-    regex = f"^{re_idx}{re_action}{re_text}"
+    regex = f"^{re_sequence}{re_action}{re_text}"
     items_ = re_find_t(regex, line)
     if not items_:
         raise ValueError(f"invalid {line=}")
     items = [s.strip() for s in items_]
     data = dict(
-        idx=items[0],
+        sequence=items[0],
         action=items[1],
         text=items[2],
     )

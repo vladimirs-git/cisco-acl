@@ -39,24 +39,6 @@ class Test(unittest.TestCase):
 
     # =========================== property ===========================
 
-    def test_valid__line_length(self):
-        """AceGroup._line_length"""
-        for items, req in [
-            ([PERMIT_IP], 50),
-            ([Ace(PERMIT_IP, line_length=40)], 50),
-        ]:
-            aceg_o = AceGroup(items=items, line_length=req)
-            result = aceg_o[0].line_length
-            self.assertLessEqual(result, req, msg=f"acl_length={req}")
-
-    def test_invalid__line_length(self):
-        """AceGroup._line_length"""
-        for items, error in [
-            ([Ace(PERMIT_IP, line_length=100)], ValueError),
-        ]:
-            with self.assertRaises(error, msg=f"{items=}"):
-                AceGroup(items=items, line_length=50)
-
     def test_valid__items(self):
         """AceGroup.items"""
         aceg_o = AceGroup()
@@ -117,32 +99,32 @@ class Test(unittest.TestCase):
 
     def test_valid__convert_any_to_aces(self):
         """AceGroup._convert_any_to_aces()"""
-        idx_0_d = dict(idx=0, sidx="")
-        idx_1_d = dict(idx=1, sidx="1")
-        idx_2_d = dict(idx=2, sidx="2")
+        seq_0_d = dict(sequence=0, ssequence="")
+        seq_1_d = dict(sequence=1, ssequence="1")
+        seq_2_d = dict(sequence=2, ssequence="2")
         aceg_o_ = AceGroup()
         for items, req, req_d in [
             # str
-            (REMARK, [REMARK], idx_0_d),
-            (REMARK_1, [REMARK_1], idx_1_d),
-            (PERMIT_IP, [PERMIT_IP], idx_0_d),
-            (PERMIT_IP_1, [PERMIT_IP_1], idx_1_d),
+            (REMARK, [REMARK], seq_0_d),
+            (REMARK_1, [REMARK_1], seq_1_d),
+            (PERMIT_IP, [PERMIT_IP], seq_0_d),
+            (PERMIT_IP_1, [PERMIT_IP_1], seq_1_d),
 
             # List[str]
-            ([], [], idx_0_d),
-            ([REMARK, PERMIT_IP], [REMARK, PERMIT_IP], idx_0_d),
-            ([REMARK_1, PERMIT_IP_2], [REMARK_1, PERMIT_IP_2], idx_1_d),
-            ([PERMIT_IP_2, REMARK_1], [PERMIT_IP_2, REMARK_1], idx_2_d),
+            ([], [], seq_0_d),
+            ([REMARK, PERMIT_IP], [REMARK, PERMIT_IP], seq_0_d),
+            ([REMARK_1, PERMIT_IP_2], [REMARK_1, PERMIT_IP_2], seq_1_d),
+            ([PERMIT_IP_2, REMARK_1], [PERMIT_IP_2, REMARK_1], seq_2_d),
 
             # object
-            (Remark(REMARK), [REMARK], idx_0_d),
-            (Ace(PERMIT_IP), [PERMIT_IP], idx_0_d),
-            (Ace(PERMIT_ADDR_GR, platform="ios"), [PERMIT_OBJ_GR], idx_0_d),
+            (Remark(REMARK), [REMARK], seq_0_d),
+            (Ace(PERMIT_IP), [PERMIT_IP], seq_0_d),
+            (Ace(PERMIT_ADDR_GR, platform="ios"), [PERMIT_OBJ_GR], seq_0_d),
 
             # List[object]
-            ([Remark(REMARK_1), Ace(PERMIT_IP_1)], [REMARK_1, PERMIT_IP_1], idx_1_d),
-            ([Ace(PERMIT_IP_1), Ace(DENY_IP_2)], [PERMIT_IP_1, DENY_IP_2], idx_1_d),
-            ([Ace(DENY_IP_2), Ace(PERMIT_IP_1)], [DENY_IP_2, PERMIT_IP_1], idx_2_d),
+            ([Remark(REMARK_1), Ace(PERMIT_IP_1)], [REMARK_1, PERMIT_IP_1], seq_1_d),
+            ([Ace(PERMIT_IP_1), Ace(DENY_IP_2)], [PERMIT_IP_1, DENY_IP_2], seq_1_d),
+            ([Ace(DENY_IP_2), Ace(PERMIT_IP_1)], [DENY_IP_2, PERMIT_IP_1], seq_2_d),
         ]:
             result_items = aceg_o_._convert_any_to_aces(items)
             result = [str(o) for o in result_items]
@@ -228,15 +210,6 @@ class Test(unittest.TestCase):
             aceg_o = AceGroup(line_length=line_length)
             result = aceg_o._check_line_length(ace_o)
             self.assertEqual(result, req, msg=f"{line_length=} {ace_o=}")
-
-    def test_invalid__check_line_length(self):
-        """AceGroup._check_line_length()"""
-        for line_length, ace_o, error in [
-            (40, Ace(PERMIT_IP, line_length=50), ValueError),
-        ]:
-            aceg_o = AceGroup(line_length=line_length)
-            with self.assertRaises(error, msg=f"{line_length=} {ace_o=}"):
-                aceg_o._check_line_length(ace_o)
 
 
 if __name__ == "__main__":

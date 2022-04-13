@@ -18,8 +18,8 @@ class Protocol(Base):
         """ACE. Protocol.
         :param line: Protocol line.
         :param kwargs: Params.
-            platform: Platform. By default: "ios".
-            note: Object description (not used in ACE).
+            platform: Supported platforms: "ios", "cnx". By default: "ios".
+            note: Object description (used only in object).
 
         Example1:
             line: ["tcp"]

@@ -32,8 +32,8 @@ class Address(Base):
             addrgroup NAME      cnx         Network object group
 
         :param kwargs: Params.
-            platform: Platform. By default: "ios".
-            note: Object description (not used in ACE).
+            platform: Supported platforms: "ios", "cnx". By default: "ios".
+            note: Object description (used only in object).
 
         Example1:
             line: "10.0.0.0 0.0.0.3"

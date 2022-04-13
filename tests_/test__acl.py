@@ -103,25 +103,6 @@ class Test(unittest.TestCase):
 
     # =========================== property ===========================
 
-    def test_valid__line_length(self):
-        """Acl._line_length"""
-        for items, req in [
-            ([PERMIT_IP], 50),
-            ([Ace(PERMIT_IP, line_length=40)], 50),
-            ([AceGroup(PERMIT_IP, line_length=40)], 50),
-        ]:
-            acl_o = Acl(items=items, line_length=req)
-            result = acl_o[0].line_length
-            self.assertLessEqual(result, req, msg=f"acl_length={req}")
-
-    def test_invalid__line_length(self):
-        """Acl._line_length"""
-        for items, error in [
-            ([Ace(PERMIT_IP, line_length=100)], ValueError),
-        ]:
-            with self.assertRaises(error, msg=f"{items=}"):
-                Acl(items=items, line_length=50)
-
     def test_valid__name(self):
         """Acl.name"""
         for name, req in [
@@ -146,19 +127,6 @@ class Test(unittest.TestCase):
             result = acl_o.name
             # noinspection PyUnboundLocalVariable
             self.assertEqual(result, "", msg=f"deleter {name=}")
-
-    def test_invalid__name(self):
-        """Acl.name"""
-        for name, length, error in [
-            (1, 100, TypeError),
-            ("abc", 2, ValueError),
-            ("a b", 100, ValueError),
-            ("_b", 100, ValueError),
-            ("1b", 100, ValueError),
-            ("a?", 100, ValueError),
-        ]:
-            with self.assertRaises(error, msg=f"{name=} {length=}"):
-                Acl(name=name, line_length=length)
 
     def test_valid__indent(self):
         """Acl.indent"""
@@ -352,11 +320,11 @@ class Test(unittest.TestCase):
         """Acl.delete_sequence()"""
         acl_o = Acl(items=[REMARK, PERMIT_IP, AceGroup([DENY_IP, REMARK])])
         acl_o.resequence()
-        result = sum([o.idx for o in acl_o])
+        result = sum([o.sequence for o in acl_o])
         self.assertEqual(result, 70, msg="before sorting")
 
         acl_o.delete_sequence()
-        result = sum([o.idx for o in acl_o])
+        result = sum([o.sequence for o in acl_o])
         self.assertEqual(result, 0, msg="after sorting")
 
 

@@ -24,17 +24,35 @@ class AceGroup(Group, BaseAce):
 
     def __init__(self, items: ULAce = None, **kwargs):
         """Group of ACE (Access Control Entry).
-        Taking AceGroup index (self.idx) from the first ACE in items.
+        Taking AceGroup index (self.sequence) from the first ACE in items.
         :param items: List of ACE (strings or Ace objects).
         :param kwargs:
-            platform: Platform. By default: "ios".
-            note: Object description (not used in ACE).
-            line_length: ACE line max length.
+            platform: Supported platforms: "ios", "cnx". By default: "ios".
+            note: Object description (used only in object).
+
+        Example:
+        line: "10 permit tcp host 10.0.0.1 eq 179 10.0.0.0 0.0.0.3 eq 80 443 log"
+        platform: "ios"
+        note: "description"
+
+        result:
+            self.line = "10 permit tcp host 10.0.0.1 10.0.0.0 0.0.0.3 eq www 443 log"
+            self.platform = "ios"
+            self.sequence = 10
+            self.action = "permit"
+            self.protocol = Protocol("tcp")
+            self.srcaddr = Address("host 10.0.0.1")
+            self.srcport = Port("eq bgp")
+            self.dstaddr = Address("10.0.0.0 0.0.0.3")
+            self.dstport = Port("eq www 443")
+            self.option = "log"
+            self.note = "description"
+
         """
         BaseAce.__init__(self, "", **kwargs)
         Group.__init__(self)
         self.items = self._convert_any_to_aces(items or [])  # type:ignore
-        self.idx = self._init_idx()
+        self.sequence = self._init_sequence()
 
     def __hash__(self) -> int:
         return self.line.__hash__()
@@ -48,8 +66,8 @@ class AceGroup(Group, BaseAce):
 
     def __lt__(self, other) -> bool:
         """< less than"""
-        if hasattr(other, "idx"):
-            if self.idx == other.idx:
+        if hasattr(other, "sequence"):
+            if self.sequence == other.sequence:
                 if other.__class__.__name__ == "Remark":
                     return False
                 if isinstance(other, Ace):
@@ -57,7 +75,7 @@ class AceGroup(Group, BaseAce):
                 if isinstance(other, AceGroup):
                     return str(self) < str(other)
                 raise TypeError(f"{other=} {AceGroup} expected")
-            return self.idx < other.idx
+            return self.sequence < other.sequence
         return False
 
     # =========================== property ===========================
@@ -160,10 +178,10 @@ class AceGroup(Group, BaseAce):
             raise ValueError(f"{item=} {ace_line_length=}, expected {acl_line_length=}")
         return True
 
-    def _init_idx(self) -> int:
-        """Init Acl idx. Index of 1st item in self.items."""
+    def _init_sequence(self) -> int:
+        """Init Acl sequence. Index of 1st item in self.items."""
         if self.items:
-            return self.items[0].idx
+            return self.items[0].sequence
         return 0
 
 

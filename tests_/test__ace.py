@@ -140,7 +140,7 @@ class Test(unittest.TestCase):
         permit_0b = " permit\ttcp any eq www 443 object-group NAME neq 22 ack log\n"
         permit_10 = f"10 {permit_0}"
         permit_0_d = dict(line=permit_0,
-                          idx=0,
+                          sequence=0,
                           action="permit",
                           protocol="tcp",
                           srcaddr="any",
@@ -148,13 +148,13 @@ class Test(unittest.TestCase):
                           dstaddr="object-group NAME",
                           dstport="neq 22",
                           option="ack log")
-        permit_10_d = {**permit_0_d, **{"line": permit_10, "idx": 10}}
+        permit_10_d = {**permit_0_d, **{"line": permit_10, "sequence": 10}}
 
         deny_0 = "deny udp host 1.1.1.1 lt 3 2.2.2.0 0.0.0.3 range www bgp"
         deny_0b = " deny\tudp host 1.1.1.1 lt 3 2.2.2.0 0.0.0.3 range www bgp\n"
         deny_10 = f"10 {deny_0}"
         deny_0_d = dict(line=deny_0,
-                        idx=0,
+                        sequence=0,
                         action="deny",
                         protocol="udp",
                         srcaddr="host 1.1.1.1",
@@ -162,7 +162,7 @@ class Test(unittest.TestCase):
                         dstaddr="2.2.2.0 0.0.0.3",
                         dstport="range www bgp",
                         option="")
-        deny_10_d = {**deny_0_d, **{"line": deny_10, "idx": 10}}
+        deny_10_d = {**deny_0_d, **{"line": deny_10, "sequence": 10}}
 
         for line, req, req_d in [
             (permit_0, permit_0, permit_0_d),

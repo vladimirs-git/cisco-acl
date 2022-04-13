@@ -12,29 +12,11 @@ class Test(unittest.TestCase):
 
     # =========================== property ===========================
 
-    def test_valid__line_length(self):
-        """Ace.line_length"""
-        for line_length, req in [
-            (50, 50),
-        ]:
-            acl_o = Ace(f"{PERMIT_IP}", line_length=line_length)
-            result = acl_o.line_length
-            self.assertEqual(result, req, msg=f"getter {line_length=}")
-
-    def test_invalid__line_length(self):
-        """Ace.line_length"""
-        for class_, line, line_length, error in [
-            (Ace, PERMIT_IP, 2, ValueError),
-            (Remark, REMARK, 2, ValueError),
-        ]:
-            with self.assertRaises(error, msg=f"{line=} {line_length=}"):
-                class_(line, line_length=line_length)
-
-    def test_valid__idx(self):
-        """Ace.idx sidx"""
-        id_0_d = dict(idx=0, sidx="")
-        id_10_d = dict(idx=10, sidx="10")
-        for idx, req_d in [
+    def test_valid__sequence(self):
+        """Ace.sequence ssequence"""
+        id_0_d = dict(sequence=0, ssequence="")
+        id_10_d = dict(sequence=10, ssequence="10")
+        for sequence, req_d in [
             ("", id_0_d),
             ("0", id_0_d),
             ("10", id_10_d),
@@ -42,54 +24,45 @@ class Test(unittest.TestCase):
             (10, id_10_d),
         ]:
             for ace_o in [
-                Ace(f"{idx} {PERMIT_IP}"),
-                Remark(f"{idx} {REMARK}"),
+                Ace(f"{sequence} {PERMIT_IP}"),
+                Remark(f"{sequence} {REMARK}"),
             ]:
                 # getter
                 for attr, req_ in req_d.items():
                     # noinspection PyUnboundLocalVariable
-                    msg = f"{idx=} {ace_o.__class__.__name__} {attr=}"
+                    msg = f"{sequence=} {ace_o.__class__.__name__} {attr=}"
                     result_ = getattr(ace_o, attr)
                     self.assertEqual(result_, req_, msg=msg)
                 # setter
-                ace_o.idx = idx
+                ace_o.sequence = sequence
                 for attr, req_ in req_d.items():
                     # noinspection PyUnboundLocalVariable
-                    msg = f"{idx=} {ace_o.__class__.__name__} {attr=}"
+                    msg = f"{sequence=} {ace_o.__class__.__name__} {attr=}"
                     result_ = getattr(ace_o, attr)
                     self.assertEqual(result_, req_, msg=msg)
                 # deleter
-                del ace_o.idx
-                result = ace_o.idx
-                self.assertEqual(result, 0, msg="deleter idx")
-                with self.assertRaises(AttributeError, msg="deleter sidx"):
+                del ace_o.sequence
+                result = ace_o.sequence
+                self.assertEqual(result, 0, msg="deleter sequence")
+                with self.assertRaises(AttributeError, msg="deleter ssequence"):
                     # noinspection PyPropertyAccess
-                    del ace_o.sidx
+                    del ace_o.ssequence
 
-    def test_invalid__idx(self):
-        """Ace.idx"""
+    def test_invalid__sequence(self):
+        """Ace.sequence"""
         base_o = Ace(PERMIT_IP)
-        for idx, error in [
+        for sequence, error in [
             ({}, TypeError),
             (-1, ValueError),
             ("a", ValueError),
             ("-1", ValueError),
         ]:
-            with self.assertRaises(error, msg=f"deleted {idx=}"):
-                base_o.idx = idx
-            with self.assertRaises(ValueError, msg=f"{idx=}"):
-                Ace(f"{idx} {PERMIT_IP}")
+            with self.assertRaises(error, msg=f"deleted {sequence=}"):
+                base_o.sequence = sequence
+            with self.assertRaises(ValueError, msg=f"{sequence=}"):
+                Ace(f"{sequence} {PERMIT_IP}")
 
     # =========================== helpers ============================
-
-    def test_valid__check_line_length(self):
-        """AceGroup._check_line_length()"""
-        for line, line_length, req in [
-            (PERMIT_IP, 50, True),
-        ]:
-            ace_o = Ace(PERMIT_IP, line_length=line_length)
-            result = ace_o._check_line_length(line)
-            self.assertEqual(result, req, msg=f"{line=} {line_length=}")
 
     def test_invalid__check_line_length(self):
         """AceGroup._check_line_length()"""
@@ -100,8 +73,6 @@ class Test(unittest.TestCase):
             with self.assertRaises(error, msg=f"{line=} {line_length=}"):
                 ace_o_.line_length = line_length
                 ace_o_._check_line_length(line)
-            with self.assertRaises(error, msg=f"{line=} {line_length=}"):
-                Ace(PERMIT_IP, line_length=line_length)
 
 
 if __name__ == "__main__":
