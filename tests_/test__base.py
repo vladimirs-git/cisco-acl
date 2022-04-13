@@ -40,8 +40,6 @@ class Test(unittest.TestCase):
     def test_valid__init_lines(self):
         """Base._init_lines()"""
         for line, req in [
-            ("a", ["a"]),
-            ("a\nb", ["a", "b"]),
             (f"\n{ACL_A}\n  {REMARK}\n \n  {PERMIT_IP}\n ", [ACL_A, REMARK, PERMIT_IP]),
         ]:
             result = ACE_O._init_lines(line)

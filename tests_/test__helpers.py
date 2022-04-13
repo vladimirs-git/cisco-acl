@@ -67,6 +67,45 @@ class Test(unittest.TestCase):
 
         return lines_d
 
+    # =============================== str ================================
+
+    def test_valid__line_wo_spaces(self):
+        """line_wo_spaces()"""
+        for line, req in [
+            ("", ""),
+            ("a", "a"),
+            (" \ta\nb\n", "a b"),
+        ]:
+            result = h.line_wo_spaces(line)
+            self.assertEqual(result, req, msg=f"{line=}")
+
+    def test_invalid__line_wo_spaces(self):
+        """line_wo_spaces()"""
+        for line, error in [
+            (1, TypeError),
+            (["a"], TypeError),
+        ]:
+            with self.assertRaises(error, msg=f"{line=}"):
+                h.line_wo_spaces(line)
+
+    def test_valid__lines_wo_spaces(self):
+        """lines_wo_spaces()"""
+        for line, req in [
+            ("a", ["a"]),
+            ("\ta\n \nb\n", ["a", "b"]),
+        ]:
+            result = h.lines_wo_spaces(line)
+            self.assertEqual(result, req, msg=f"{line=}")
+
+    def test_invalid__lines_wo_spaces(self):
+        """lines_wo_spaces()"""
+        for line, error in [
+            (1, TypeError),
+            (["a"], TypeError),
+        ]:
+            with self.assertRaises(error, msg=f"{line=}"):
+                h.lines_wo_spaces(line)
+
     # ============================= int ==============================
 
     def test_valid__str_to_positive_int(self):

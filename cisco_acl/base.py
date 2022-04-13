@@ -60,17 +60,12 @@ class Base(ABC):
     @staticmethod
     def _init_line(line: str) -> str:
         """Init line, replace spaces."""
-        if not isinstance(line, str):
-            raise TypeError(f"{line=} {str} expected")
-        return h.replace_spaces(line)
+        return h.line_wo_spaces(line)
 
-    def _init_lines(self, line: str) -> LStr:
+    @staticmethod
+    def _init_lines(line: str) -> LStr:
         """Init multiple lines, replace spaces."""
-        if not isinstance(line, str):
-            raise TypeError(f"{line=} {str} expected")
-        lines = line.split("\n")
-        lines = [self._init_line(s) for s in lines]
-        return [s for s in lines if s]
+        return h.lines_wo_spaces(line)
 
     @staticmethod
     def _init_line_int(line: StrInt) -> str:

@@ -12,8 +12,24 @@ from cisco_acl.types_ import DStr, LStr, StrInt
 # =============================== str ================================
 
 def replace_spaces(line: str) -> str:
-    """Replace multiple white spaces with single space"""
+    """Replace multiple white spaces with single space."""
     return " ".join(line.split())
+
+
+def line_wo_spaces(line: str) -> str:
+    """Return <str>. Replace multiple white spaces with single space."""
+    if not isinstance(line, str):
+        raise TypeError(f"{line=} {str} expected")
+    return replace_spaces(line)
+
+
+def lines_wo_spaces(line: str) -> LStr:
+    """Return List[str]. Replace multiple white spaces with single space."""
+    if not isinstance(line, str):
+        raise TypeError(f"{line=} {str} expected")
+    lines = line.split("\n")
+    lines = [line_wo_spaces(s) for s in lines]
+    return [s for s in lines if s]
 
 
 def re_find_s(regex: str, line: str) -> str:
