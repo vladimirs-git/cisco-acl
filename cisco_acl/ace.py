@@ -4,8 +4,6 @@ from __future__ import annotations
 from functools import total_ordering
 from typing import List
 
-from netaddr import IPNetwork  # type: ignore
-
 from cisco_acl import helpers as h
 from cisco_acl.address import Address
 from cisco_acl.base_ace import BaseAce

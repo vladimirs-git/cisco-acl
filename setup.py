@@ -26,7 +26,7 @@ if __name__ == "__main__":
         download_url=packet.__download_url__,
         keywords="cisco, nexus, acl, ios, nx-os, networking, telecommunication",
         python_requires=">=3.8",
-        install_requires=["netaddr"],
+        install_requires=["netaddr==0.8.0"],
         classifiers=[
             "Development Status :: 3 - Alpha",
             # "Development Status :: 4 - Beta",
