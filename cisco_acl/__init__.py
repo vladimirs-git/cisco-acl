@@ -7,7 +7,7 @@ from cisco_acl.remark import Remark
 
 __all__ = ["Ace", "AceGroup", "Acl", "Remark"]
 
-__version__ = "0.0.2"
+__version__ = "0.0.3"
 __date__ = "2022-04-13"
 __title__ = "cisco-acl"
 
