@@ -149,6 +149,16 @@ class Test(unittest.TestCase):
             with self.assertRaises(error, msg=f"{name=} {length=}"):
                 Acl(name=name, line_length=length)
 
+    def test_valid__ip_acl_name(self):
+        """Acl.ip_acl_name"""
+        for platform, req in [
+            ("ios", "ip access-list extended NAME"),
+            ("cnx", "ip access-list NAME"),
+        ]:
+            acl_o = Acl(name="NAME", platform=platform)
+            result = acl_o.ip_acl_name
+            self.assertEqual(result, req, msg=f"getter {platform=}")
+
     def test_valid__items(self):
         """Acl.items"""
         acl_o = Acl()

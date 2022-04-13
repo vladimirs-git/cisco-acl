@@ -141,6 +141,22 @@ class Acl(AceGroup):
     def name(self) -> None:
         self._name = ""
 
+    @property
+    def ip_acl_name(self) -> str:
+        """Return platform depended ip access-list name line.
+        Example1:
+            self.platform: "ios"
+            :return: "ip access-list extended NAME"
+        Example2:
+            self.platform: "cnx"
+            :return: "ip access-list NAME"
+        """
+        items = ["ip access-list"]
+        if self.platform == "ios":
+            items.append("extended")
+        items.append(self.name)
+        return " ".join(items)
+
     @property  # type:ignore
     def items(self) -> LUAcl:
         """List of Acl objects"""
@@ -169,9 +185,7 @@ class Acl(AceGroup):
 
     @line.setter
     def line(self, line: str) -> None:
-        items = line.split("\n")
-        items = [self._init_line(s) for s in items]
-        items = [s for s in items if s]
+        items = h.lines_wo_spaces(line)
         if not items:
             self.name = ""
             self.items = []
