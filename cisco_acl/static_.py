@@ -1,7 +1,6 @@
 """Static settings"""
 
 DEFAULT_PLATFORM = "ios"
-
 MAX_LINE_LENGTH = 100
 IDX_MAX = 4294967295
 

@@ -6,7 +6,7 @@ from abc import ABC, abstractmethod
 
 from cisco_acl import helpers as h
 from cisco_acl.static_ import PLATFORMS, DEFAULT_PLATFORM
-from cisco_acl.types_ import StrInt
+from cisco_acl.types_ import StrInt, LStr
 
 
 class Base(ABC):
@@ -63,6 +63,14 @@ class Base(ABC):
         if not isinstance(line, str):
             raise TypeError(f"{line=} {str} expected")
         return h.replace_spaces(line)
+
+    def _init_lines(self, line: str) -> LStr:
+        """Init multiple lines, replace spaces."""
+        if not isinstance(line, str):
+            raise TypeError(f"{line=} {str} expected")
+        lines = line.split("\n")
+        lines = [self._init_line(s) for s in lines]
+        return [s for s in lines if s]
 
     @staticmethod
     def _init_line_int(line: StrInt) -> str:
