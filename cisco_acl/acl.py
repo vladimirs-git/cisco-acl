@@ -272,6 +272,7 @@ class Acl(AceGroup):
         items: LUAcl = kwargs.get("items") or self.items
         idx = start
         count = len(items)
+
         for id_, item in enumerate(items, start=1):
             if isinstance(item, AceGroup):
                 idx = self.resequence(start=idx, step=step, items=item)
@@ -282,5 +283,12 @@ class Acl(AceGroup):
             raise ValueError(f"last {idx=} expected=1..{IDX_MAX}")
         return idx
 
+    def delete_sequence(self):
+        """Delete sequence numbers from ACEs"""
+        for item in self.items:
+            if isinstance(item, AceGroup):
+                for item_ in item:
+                    item_.idx = 0
+            item.idx = 0
 
 LAcl = List[Acl]

@@ -61,3 +61,14 @@ print()
 #   102 permit tcp any any
 #   103 permit udp any any eq 53
 #   104 deny ip any any
+
+# Delete sequences.
+acl1.delete_sequence()
+print(str(acl1))
+print()
+# ip access-list extended acl1
+#   deny tcp any any eq 53
+#   permit icmp any any
+#   permit tcp any any
+#   permit udp any any eq 53
+#   deny ip any any

@@ -348,6 +348,17 @@ class Test(unittest.TestCase):
             result = [str(o) for o in acl_o]
             self.assertEqual(result, req, msg=f"{acl_o=}")
 
+    def test_invalid__delete_sequence(self):
+        """Acl.delete_sequence()"""
+        acl_o = Acl(items=[REMARK, PERMIT_IP, AceGroup([DENY_IP, REMARK])])
+        acl_o.resequence()
+        result = sum([o.idx for o in acl_o])
+        self.assertEqual(result, 70, msg="before sorting")
+
+        acl_o.delete_sequence()
+        result = sum([o.idx for o in acl_o])
+        self.assertEqual(result, 0, msg="after sorting")
+
 
 if __name__ == "__main__":
     unittest.main()
