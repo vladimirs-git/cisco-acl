@@ -3,8 +3,10 @@ Python package to parse and manage Cisco ACL (Access Control List).
 Supported platforms: IOS, NX-OS.
 
 Main features:
-- Parse ACL from Cisco config file
+- Parse ACL from text of Cisco config.
 - Grouping and sorting ACE (Access Control Entry)
+- Sequencing ACEs in ACL.
+- Sorting ACE and AceGroups. The order of the lines within the AceGroup does not change.
 - Generate ACL config commands (ready for ssh console)
 
 
