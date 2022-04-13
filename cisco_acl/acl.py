@@ -11,7 +11,7 @@ from cisco_acl.ace import Ace
 from cisco_acl.ace_group import AceGroup, LUAcl
 from cisco_acl.interface import Interface
 from cisco_acl.remark import Remark
-from cisco_acl.static_ import IDX_MAX, DEFAULT_PLATFORM, MAX_LINE_LENGTH
+from cisco_acl.static_ import IDX_MAX, DEFAULT_PLATFORM, MAX_LINE_LENGTH, INDENTATION
 
 
 @total_ordering
@@ -27,11 +27,13 @@ class Acl(AceGroup):
             platform: Platform. By default: "ios".
             note: Object description (not used in ACE).
             line_length: ACE line max length.
+            indent: ACE lines indentation. By default 2 spaces.
             input: Interfaces, where Acl is used on input.
             output: Interfaces, where Acl is used on output.
         """
         super().__init__(**kwargs)
         self.name = name
+        self.indent = kwargs.get("indent")
         self.items = self._convert_any_to_acl(items or [])
         self.interface = Interface(**kwargs)
 
@@ -142,6 +144,26 @@ class Acl(AceGroup):
         self._name = ""
 
     @property
+    def indent(self) -> str:
+        """ACL indent"""
+        return self._indent
+
+    @indent.setter
+    def indent(self, indent: int) -> None:
+        """ACE lines indentation, Be default 2 spaces"""
+        if indent is None:
+            indent = INDENTATION
+        if not isinstance(indent, int):
+            raise TypeError(f"acl {indent=} {int} expected")
+        if indent < 0:
+            raise ValueError(f"invalid {indent=}")
+        self._indent = " " * indent
+
+    @indent.deleter
+    def indent(self) -> None:
+        self._indent = " " * INDENTATION
+
+    @property
     def ip_acl_name(self) -> str:
         """Return platform depended ip access-list name line.
         Example1:
@@ -179,7 +201,14 @@ class Acl(AceGroup):
     @property
     def line(self) -> str:
         """ACEs in string format"""
-        ace = "\n".join([str(o) for o in self.items])
+        items = []
+        for item in self.items:
+            if isinstance(item, AceGroup):
+                for item_ in item:
+                    items.append(item_)
+                continue
+            items.append(item)
+        ace = "\n".join([f"{self.indent}{o}" for o in items])
         return "\n".join([self.ip_acl_name, ace])
 
     @line.setter

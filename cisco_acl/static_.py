@@ -3,6 +3,7 @@
 DEFAULT_PLATFORM = "ios"
 MAX_LINE_LENGTH = 100
 IDX_MAX = 4294967295
+INDENTATION = 2
 
 PLATFORMS = ("ios", "cnx")
 ACTIONS = ("remark", "permit", "deny")

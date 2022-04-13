@@ -2,13 +2,13 @@
 
 ACL_IOS = "ip access-list extended "
 ACL_NAME_IOS = "ip access-list extended A"
-ACL_NAME_RP_IOS = "ip access-list extended A\nremark text\npermit ip any any"
-ACL_RP_IOS = "ip access-list extended \nremark text\npermit ip any any"
+ACL_NAME_RP_IOS = "ip access-list extended A\n  remark text\n  permit ip any any"
+ACL_RP_IOS = "ip access-list extended \n  remark text\n  permit ip any any"
 
 ACL_CNX = "ip access-list "
 ACL_NAME_CNX = "ip access-list A"
-ACL_NAME_RP_CNX = "ip access-list A\nremark text\npermit ip any any"
-ACL_RP_CNX = "ip access-list \nremark text\npermit ip any any"
+ACL_NAME_RP_CNX = "ip access-list A\n  remark text\n  permit ip any any"
+ACL_RP_CNX = "ip access-list \n  remark text\n  permit ip any any"
 
 DENY_ICMP = "deny icmp any any"
 DENY_IP = "deny ip any any"

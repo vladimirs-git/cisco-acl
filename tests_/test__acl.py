@@ -153,6 +153,34 @@ class Test(unittest.TestCase):
             with self.assertRaises(error, msg=f"{name=} {length=}"):
                 Acl(name=name, line_length=length)
 
+    def test_valid__indent(self):
+        """Acl.indent"""
+        for indent, req in [
+            (None, "  "),
+            (0, ""),
+            (1, " "),
+        ]:
+            acl_o = Acl(indent=indent)
+            result = acl_o.indent
+            self.assertEqual(result, req, msg=f"getter {indent=}")
+            acl_o.indent = indent
+            result = acl_o.indent
+            self.assertEqual(result, req, msg=f"setter {indent=}")
+            del acl_o.indent
+            result = acl_o.indent
+            # noinspection PyUnboundLocalVariable
+            self.assertEqual(result, "  ", msg=f"deleter {indent=}")
+
+    def test_invalid__indent(self):
+        """Acl.indent"""
+        for indent, error in [
+            ("", TypeError),
+            ([], TypeError),
+            (-1, ValueError),
+        ]:
+            with self.assertRaises(error, msg=f"{indent=}"):
+                Acl(indent=indent)
+
     def test_valid__ip_acl_name(self):
         """Acl.ip_acl_name"""
         for platform, req in [
@@ -201,14 +229,14 @@ class Test(unittest.TestCase):
             ("ios", "\n", dict(line=f"{ACL_IOS}\n", name="")),
             ("ios", ACL_IOS, dict(line=f"{ACL_IOS}\n", name="")),
             ("ios", ACL_NAME_IOS, dict(line=f"{ACL_NAME_IOS}\n", name="A")),
-            ("ios", PERMIT_IP, dict(line=f"{ACL_IOS}\n{PERMIT_IP}", name="")),
+            ("ios", PERMIT_IP, dict(line=f"{ACL_IOS}\n  {PERMIT_IP}", name="")),
             ("ios", ACL_RP_IOS, dict(line=ACL_RP_IOS, name="")),
             ("ios", ACL_NAME_RP_IOS, dict(line=ACL_NAME_RP_IOS, name="A")),
 
             ("cnx", "\n", dict(line=f"{ACL_CNX}\n", name="")),
             ("cnx", ACL_CNX, dict(line=f"{ACL_CNX}\n", name="")),
             ("cnx", ACL_NAME_CNX, dict(line=f"{ACL_NAME_CNX}\n", name="A")),
-            ("cnx", PERMIT_IP, dict(line=f"{ACL_CNX}\n{PERMIT_IP}", name="")),
+            ("cnx", PERMIT_IP, dict(line=f"{ACL_CNX}\n  {PERMIT_IP}", name="")),
             ("cnx", ACL_RP_CNX, dict(line=ACL_RP_CNX, name="")),
             ("cnx", ACL_NAME_RP_CNX, dict(line=ACL_NAME_RP_CNX, name="A")),
         ]:
