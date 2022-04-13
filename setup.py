@@ -14,7 +14,7 @@ ROOT = pathlib.Path(__file__).parent.resolve()
 if __name__ == "__main__":
     setup(
         name=PACKAGE_,
-        packages=find_packages(exclude=["tests_"]),
+        packages=[PACKAGE_],
         version=VERSION,
         license=packet.__license__,
         description=packet.__summary__,

@@ -42,10 +42,10 @@ class Test(unittest.TestCase):
         path = os.path.join(ROOT, PACKAGE, "__init__.py")
         self.assertEqual(var, PACKAGE, msg=f"invalid variable {name} in {path=}")
 
-        # name, var = f"{ROOT=!s}".split("=")
-        # var = os.path.split(var)[1]
-        # path = os.path.join(ROOT, "static.py")
-        # self.assertEqual(var, PACKAGE, msg=f"invalid variable {name} in {path=}")
+        name, var = f"{ROOT=!s}".split("=")
+        var = os.path.split(var)[1]
+        path = os.path.join(ROOT, "static.py")
+        self.assertEqual(var, PACKAGE, msg=f"invalid variable {name} in {path=}")
 
     @unittest.skip("solve pylint conflict")
     def test_valid__init__(self):
