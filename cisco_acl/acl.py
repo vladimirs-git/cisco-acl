@@ -282,9 +282,5 @@ class Acl(AceGroup):
             raise ValueError(f"last {idx=} expected=1..{IDX_MAX}")
         return idx
 
-    def sort(self) -> None:
-        """Sort Ace objects in self.items"""
-        self.items = sorted(self.items)
-
 
 LAcl = List[Acl]
