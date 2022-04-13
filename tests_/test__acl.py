@@ -158,6 +158,12 @@ class Test(unittest.TestCase):
             acl_o = Acl(name="NAME", platform=platform)
             result = acl_o.ip_acl_name
             self.assertEqual(result, req, msg=f"getter {platform=}")
+        with self.assertRaises(AttributeError, msg=f"setter ip_acl_name"):
+            # noinspection PyPropertyAccess
+            acl_o.ip_acl_name = "a"
+        with self.assertRaises(AttributeError, msg=f"deleter ip_acl_name"):
+            # noinspection PyPropertyAccess
+            del acl_o.ip_acl_name
 
     def test_valid__items(self):
         """Acl.items"""
