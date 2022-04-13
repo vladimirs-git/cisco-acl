@@ -18,7 +18,7 @@ from cisco_acl.static_ import IDX_MAX, DEFAULT_PLATFORM, MAX_LINE_LENGTH, INDENT
 class Acl(AceGroup):
     """ACL (Access Control List)"""
 
-    def __init__(self, name: str = "", items: Any = None, **kwargs):
+    def __init__(self, line: str = "", items: Any = None, **kwargs):
         """ACL (Access Control List).
         ACL index (self.idx) is taken from the first ACE in items.
         :param name: ACL name.
@@ -28,13 +28,16 @@ class Acl(AceGroup):
             note: Object description (not used in ACE).
             line_length: ACE line max length.
             indent: ACE lines indentation. By default 2 spaces.
+            name: ACL name.
             input: Interfaces, where Acl is used on input.
             output: Interfaces, where Acl is used on output.
         """
         super().__init__(**kwargs)
-        self.name = name
-        self.indent = kwargs.get("indent")
-        self.items = self._convert_any_to_acl(items or [])
+        self.line = line
+        if not line:
+            self.name = kwargs.get("name") or ""
+            self.items = self._convert_any_to_acl(items or [])
+        self.indent = kwargs.get("indent", INDENTATION)
         self.interface = Interface(**kwargs)
 
     def __repr__(self):
@@ -122,6 +125,8 @@ class Acl(AceGroup):
         - first char is ascii_letters,
         - other chars are ascii_letters and punctuation,
         """
+        if name is None:
+            name = ""
         if not isinstance(name, str):
             raise TypeError(f"acl {name=} {str} expected")
         name = name.strip()
@@ -234,6 +239,7 @@ class Acl(AceGroup):
 
     @line.deleter
     def line(self) -> None:
+        self.name = ""
         self.items = []
 
     # =========================== methods ============================

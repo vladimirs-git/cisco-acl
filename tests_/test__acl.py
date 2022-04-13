@@ -35,6 +35,7 @@ ACE_GR_10 = AceGroup([Ace(f"10 {DENY_IP}"), Ace(PERMIT_IP)])
 ACE_GR_20 = AceGroup([Ace(f"20 {DENY_IP}"), Ace(PERMIT_IP)])
 
 
+# noinspection DuplicatedCode
 class Test(unittest.TestCase):
     """Acl"""
 
@@ -124,17 +125,23 @@ class Test(unittest.TestCase):
     def test_valid__name(self):
         """Acl.name"""
         for name, req in [
+            (None, ""),
             ("", ""),
             ("A1", "A1"),
             ("a_", "a_"),
             ("\tab\n", "ab"),
         ]:
+            # getter
             acl_o = Acl(name=name, line_length=2)
             result = acl_o.name
             self.assertEqual(result, req, msg=f"getter {name=}")
+
+            # setter
             acl_o.name = name
             result = acl_o.name
             self.assertEqual(result, req, msg=f"setter {name=}")
+
+            # deleter
             del acl_o.name
             result = acl_o.name
             # noinspection PyUnboundLocalVariable
@@ -190,10 +197,10 @@ class Test(unittest.TestCase):
             acl_o = Acl(name="NAME", platform=platform)
             result = acl_o.ip_acl_name
             self.assertEqual(result, req, msg=f"getter {platform=}")
-        with self.assertRaises(AttributeError, msg=f"setter ip_acl_name"):
+        with self.assertRaises(AttributeError, msg="setter ip_acl_name"):
             # noinspection PyPropertyAccess
             acl_o.ip_acl_name = "a"
-        with self.assertRaises(AttributeError, msg=f"deleter ip_acl_name"):
+        with self.assertRaises(AttributeError, msg="deleter ip_acl_name"):
             # noinspection PyPropertyAccess
             del acl_o.ip_acl_name
 
@@ -240,7 +247,16 @@ class Test(unittest.TestCase):
             ("cnx", ACL_RP_CNX, dict(line=ACL_RP_CNX, name="")),
             ("cnx", ACL_NAME_RP_CNX, dict(line=ACL_NAME_RP_CNX, name="A")),
         ]:
-            acl_o = Acl(platform=platform)
+            # getter
+            acl_o = Acl(line, platform=platform)
+            result = str(acl_o)
+            req = req_d["line"]
+            self.assertEqual(result, req, msg=f"{line=}")
+            for attr, req in req_d.items():
+                result = getattr(acl_o, attr)
+                self.assertEqual(result, req, msg=f"{line=}")
+
+            # setter
             acl_o.line = line
             result = str(acl_o)
             req = req_d["line"]
@@ -248,6 +264,13 @@ class Test(unittest.TestCase):
             for attr, req in req_d.items():
                 result = getattr(acl_o, attr)
                 self.assertEqual(result, req, msg=f"{line=}")
+
+            # deleter
+            del acl_o.line
+            result = str(acl_o)
+            req = f"{ACL_CNX}\n" if acl_o.platform == "cnx" else f"{ACL_IOS}\n"
+            # noinspection PyUnboundLocalVariable
+            self.assertEqual(result, req, msg=f"{line=}")
 
     def test_invalid__line(self):
         """Acl.line"""

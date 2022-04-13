@@ -19,5 +19,15 @@ todo
 
 
 ## Examples
-todo
 [examples/examples_acl.py](examples/examples_acl.py) 
+- Create flat ACL.
+- Generate sequences for ACEs.
+- Move one ACE.
+- Resequence ACEs.
+
+[examples/examples_acl.py](examples/examples_acl_objects.py) 
+- Create ACL from strings.
+- Create ACL from objects.
+- Create ACL with groups (rules). 
+- Generate sequences for ACEs.
+- Move group and resequence ACEs.

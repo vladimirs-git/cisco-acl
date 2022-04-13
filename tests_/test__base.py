@@ -40,7 +40,8 @@ class Test(unittest.TestCase):
     def test_valid__init_lines(self):
         """Base._init_lines()"""
         for line, req in [
-            (f"\n{ACL_NAME_IOS}\n  {REMARK}\n \n  {PERMIT_IP}\n ", [ACL_NAME_IOS, REMARK, PERMIT_IP]),
+            (f"\n{ACL_NAME_IOS}\n  {REMARK}\n \n  {PERMIT_IP}\n ",
+             [ACL_NAME_IOS, REMARK, PERMIT_IP]),
         ]:
             result = ACE_O._init_lines(line)
             self.assertEqual(result, req, msg=f"{line=}")
