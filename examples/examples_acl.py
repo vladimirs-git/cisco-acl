@@ -40,8 +40,8 @@ print()
 
 # Change places of ace "deny tcp any any eq 53".
 # Note that ACE have been moved up with the old sequence numbers.
-rule1 = acl1.items.pop()
-acl1.items.insert(0, rule1)
+rule1 = acl1.pop()
+acl1.insert(0, rule1)
 print(str(acl1))
 print()
 # ip access-list extended acl1
