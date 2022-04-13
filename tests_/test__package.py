@@ -44,7 +44,7 @@ class Test(unittest.TestCase):
 
         name, var = f"{ROOT=!s}".split("=")
         var = os.path.split(var)[1]
-        path = os.path.join(ROOT, "static.py")
+        path = os.path.join(ROOT, "static_.py")
         self.assertEqual(var, PACKAGE, msg=f"invalid variable {name} in {path=}")
 
     @unittest.skip("solve pylint conflict")

@@ -3,7 +3,7 @@
 from typing import List
 
 from cisco_acl.base import Base
-from cisco_acl.static import PROTOCOL_TO_NR, NR_TO_PROTOCOL
+from cisco_acl.static_ import PROTOCOL_TO_NR, NR_TO_PROTOCOL
 from cisco_acl.types_ import StrInt
 
 

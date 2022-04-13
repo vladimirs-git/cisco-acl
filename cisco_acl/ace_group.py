@@ -9,7 +9,7 @@ from cisco_acl.ace import Ace, LAce
 from cisco_acl.base_ace import BaseAce
 from cisco_acl.group import Group
 from cisco_acl.remark import Remark, LRemark
-from cisco_acl.static import ACTIONS
+from cisco_acl.static_ import ACTIONS
 from cisco_acl.types_ import LStr
 
 UAce = Union[Ace, Remark]

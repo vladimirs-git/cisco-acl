@@ -5,7 +5,7 @@ from typing import Any
 
 from netaddr import IPNetwork  # type: ignore
 
-from cisco_acl.static import ACTIONS, OPERATORS, PORTS
+from cisco_acl.static_ import ACTIONS, OPERATORS, PORTS
 from cisco_acl.types_ import DStr, LStr, StrInt
 
 

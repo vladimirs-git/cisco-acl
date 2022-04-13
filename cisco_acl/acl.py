@@ -11,7 +11,7 @@ from cisco_acl.ace import Ace
 from cisco_acl.ace_group import AceGroup, LUAcl
 from cisco_acl.interface import Interface
 from cisco_acl.remark import Remark
-from cisco_acl.static import IDX_MAX, DEFAULT_PLATFORM, MAX_LINE_LENGTH
+from cisco_acl.static_ import IDX_MAX, DEFAULT_PLATFORM, MAX_LINE_LENGTH
 
 
 @total_ordering

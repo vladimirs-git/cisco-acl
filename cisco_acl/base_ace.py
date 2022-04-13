@@ -3,7 +3,7 @@ BaseAce - Parent of: Ace, Remark."""
 
 from cisco_acl import helpers as h
 from cisco_acl.base import Base
-from cisco_acl.static import MAX_LINE_LENGTH
+from cisco_acl.static_ import MAX_LINE_LENGTH
 from cisco_acl.types_ import StrInt
 
 

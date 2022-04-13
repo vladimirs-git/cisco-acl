@@ -9,7 +9,7 @@ from cisco_acl.address import Address
 from cisco_acl.base_ace import BaseAce
 from cisco_acl.port import Port
 from cisco_acl.protocol import Protocol
-from cisco_acl.static import DEFAULT_PLATFORM
+from cisco_acl.static_ import DEFAULT_PLATFORM
 from cisco_acl.types_ import LStr, LInt
 
 

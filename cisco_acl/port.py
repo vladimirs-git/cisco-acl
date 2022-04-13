@@ -3,7 +3,7 @@
 from typing import List
 
 from cisco_acl.base import Base
-from cisco_acl.static import OPERATORS, PORTS
+from cisco_acl.static_ import OPERATORS, PORTS
 from cisco_acl.types_ import LInt, LStr, OInt
 
 

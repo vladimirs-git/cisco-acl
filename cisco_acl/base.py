@@ -5,7 +5,7 @@ import uuid
 from abc import ABC, abstractmethod
 
 from cisco_acl import helpers as h
-from cisco_acl.static import PLATFORMS, DEFAULT_PLATFORM
+from cisco_acl.static_ import PLATFORMS, DEFAULT_PLATFORM
 from cisco_acl.types_ import StrInt
 
 
