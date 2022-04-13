@@ -4,10 +4,14 @@ import unittest
 
 from cisco_acl import Ace, AceGroup, Acl, Remark
 from tests_.helpers_test import (
-    ACL,
-    ACL_A,
-    ACL_A_REMARK_PERMIT_IP,
-    ACL_REMARK_PERMIT_IP,
+    ACL_CNX,
+    ACL_IOS,
+    ACL_NAME_CNX,
+    ACL_NAME_IOS,
+    ACL_NAME_RP_CNX,
+    ACL_NAME_RP_IOS,
+    ACL_RP_CNX,
+    ACL_RP_IOS,
     DENY_IP,
     DENY_IP_1,
     DENY_IP_2,
@@ -193,25 +197,36 @@ class Test(unittest.TestCase):
 
     def test_valid__line(self):
         """Acl.line"""
-        acl_o = Acl()
-        for line, req, in [
-            # ("\n", f"{ACL}\n"),  # TODO
-            (ACL, f"{ACL}\n"),
-            # (PERMIT_IP, f"{ACL}\n{PERMIT_IP}"),
-            # (ACL_A, f"{ACL_A}\n"),
-            # (ACL_REMARK_PERMIT_IP, ACL_REMARK_PERMIT_IP),
-            # (ACL_A_REMARK_PERMIT_IP, ACL_A_REMARK_PERMIT_IP),
+        for platform, line, req_d, in [
+            ("ios", "\n", dict(line=f"{ACL_IOS}\n", name="")),
+            ("ios", ACL_IOS, dict(line=f"{ACL_IOS}\n", name="")),
+            ("ios", ACL_NAME_IOS, dict(line=f"{ACL_NAME_IOS}\n", name="A")),
+            ("ios", PERMIT_IP, dict(line=f"{ACL_IOS}\n{PERMIT_IP}", name="")),
+            ("ios", ACL_RP_IOS, dict(line=ACL_RP_IOS, name="")),
+            ("ios", ACL_NAME_RP_IOS, dict(line=ACL_NAME_RP_IOS, name="A")),
+
+            ("cnx", "\n", dict(line=f"{ACL_CNX}\n", name="")),
+            ("cnx", ACL_CNX, dict(line=f"{ACL_CNX}\n", name="")),
+            ("cnx", ACL_NAME_CNX, dict(line=f"{ACL_NAME_CNX}\n", name="A")),
+            ("cnx", PERMIT_IP, dict(line=f"{ACL_CNX}\n{PERMIT_IP}", name="")),
+            ("cnx", ACL_RP_CNX, dict(line=ACL_RP_CNX, name="")),
+            ("cnx", ACL_NAME_RP_CNX, dict(line=ACL_NAME_RP_CNX, name="A")),
         ]:
+            acl_o = Acl(platform=platform)
             acl_o.line = line
             result = str(acl_o)
+            req = req_d["line"]
             self.assertEqual(result, req, msg=f"{line=}")
+            for attr, req in req_d.items():
+                result = getattr(acl_o, attr)
+                self.assertEqual(result, req, msg=f"{line=}")
 
     def test_invalid__line(self):
         """Acl.line"""
         acl_o = Acl()
         for line, error, in [
             ("typo", ValueError),
-            (f"{ACL_A_REMARK_PERMIT_IP}\ntypo", ValueError),
+            (f"{ACL_NAME_RP_IOS}\ntypo", ValueError),
         ]:
             with self.assertRaises(error, msg=f"{line=}"):
                 acl_o.line = line

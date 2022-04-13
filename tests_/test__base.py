@@ -4,7 +4,7 @@ import unittest
 
 from cisco_acl.ace import Ace
 from cisco_acl.remark import Remark
-from tests_.helpers_test import ACL_A, PERMIT_IP, REMARK
+from tests_.helpers_test import ACL_NAME_IOS, PERMIT_IP, REMARK
 
 REMARK_O = Remark(REMARK)
 ACE_O = Ace(PERMIT_IP)
@@ -40,7 +40,7 @@ class Test(unittest.TestCase):
     def test_valid__init_lines(self):
         """Base._init_lines()"""
         for line, req in [
-            (f"\n{ACL_A}\n  {REMARK}\n \n  {PERMIT_IP}\n ", [ACL_A, REMARK, PERMIT_IP]),
+            (f"\n{ACL_NAME_IOS}\n  {REMARK}\n \n  {PERMIT_IP}\n ", [ACL_NAME_IOS, REMARK, PERMIT_IP]),
         ]:
             result = ACE_O._init_lines(line)
             self.assertEqual(result, req, msg=f"{line=}")

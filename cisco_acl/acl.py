@@ -179,9 +179,8 @@ class Acl(AceGroup):
     @property
     def line(self) -> str:
         """ACEs in string format"""
-        name = f"ip access-list extended {self.name}"
         ace = "\n".join([str(o) for o in self.items])
-        return "\n".join([name, ace])
+        return "\n".join([self.ip_acl_name, ace])
 
     @line.setter
     def line(self, line: str) -> None:
@@ -192,10 +191,13 @@ class Acl(AceGroup):
             return
 
         name = ""
-        if re.match("ip access-list", items[0]):
-            ip_access_list_name, *items = items
-            regex = r"^ip access-list extended (\S+)"
-            name = h.re_find_s(regex, ip_access_list_name)
+        first_line = items[0]
+        if re.match("ip access-list", first_line):
+            ip_acl_name, *items = items
+            regex = r"^ip access-list (\S+)"
+            if self.platform == "ios":
+                regex = r"^ip access-list extended (\S+)"
+            name = h.re_find_s(regex, ip_acl_name)
 
         aces: LUAcl = [self._convert_str_to_ace(s) for s in items]
         self.name = name
