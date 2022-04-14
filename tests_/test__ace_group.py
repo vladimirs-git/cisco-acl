@@ -47,6 +47,7 @@ class Test(unittest.TestCase):
             ([Ace(PERMIT_IP), Ace(DENY_IP)], [PERMIT_IP, DENY_IP]),
             ([Remark(REMARK), Ace(DENY_IP)], [REMARK, DENY_IP]),
         ]:
+            # setter
             aceg_o.items = items
             result = [str(o) for o in aceg_o]
             self.assertEqual(result, req, msg=f"{items=}")

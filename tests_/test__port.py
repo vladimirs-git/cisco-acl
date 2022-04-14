@@ -45,16 +45,23 @@ class Test(unittest.TestCase):
             ("cnx", "lt 3", lt_3_d),
             ("cnx", "range 2 4", range_2_4),
         ]:
+            # getter
             port_o = Port(line, platform=platform)
             result = port_o.line
-            self.assertEqual(result, req_d["line"], msg=f"{line=}")
-            self.assertEqual(str(port_o), req_d["line"], msg=f"{line=}")
+            req = req_d["line"]
+            self.assertEqual(result, req, msg=f"{line=}")
+            result = str(port_o)
+            self.assertEqual(result, req, msg=f"{line=}")
             for attr, req in req_d.items():
                 result = getattr(port_o, attr)
                 self.assertEqual(result, req, msg=f"{line=}")
+
+        # setter
         port_o.line = line
         result = port_o.line
         self.assertEqual(result, req_d["line"], msg=f"setter {line=}")
+
+        # deleter
         with self.assertRaises(AttributeError, msg=f"deleter {line=}"):
             # noinspection PyPropertyAccess
             del port_o.line

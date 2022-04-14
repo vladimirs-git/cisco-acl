@@ -184,7 +184,7 @@ class Acl(AceGroup):
 
     @indent.deleter
     def indent(self) -> None:
-        self._indent = " " * INDENTATION
+        self._indent = ""
 
     @property
     def ip_acl_name(self) -> str:

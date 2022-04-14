@@ -40,10 +40,13 @@ class Test(unittest.TestCase):
             (1, dict(line="icmp", name="icmp", number=1)),
             (255, dict(line="255", name="", number=255)),
         ]:
+            # getter
             proto_o = Protocol(line)
             result = str(proto_o)
             req = req_d["line"]
             self.assertEqual(result, req, msg=f"{line=}")
+
+            # setter
             proto_o.line = line
             result = proto_o.line
             self.assertEqual(result, req, msg=f"setter {line=}")
@@ -79,6 +82,7 @@ class Test(unittest.TestCase):
             ("", dict(line="ip", name="ip", number=0)),
             ("ahp", dict(line="ahp", name="ahp", number=51)),
         ]:
+            # setter
             proto_o = Protocol("icmp")
             proto_o.name = name
             result = proto_o.name
@@ -111,6 +115,7 @@ class Test(unittest.TestCase):
             (255, dict(line="255", name="", number=255)),
             ("255", dict(line="255", name="", number=255)),
         ]:
+            # setter
             proto_o = Protocol("icmp")
             proto_o.number = number
             result = proto_o.number

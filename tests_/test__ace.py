@@ -164,27 +164,32 @@ class Test(unittest.TestCase):
                         option="")
         deny_10_d = {**deny_0_d, **{"line": deny_10, "sequence": 10}}
 
-        for line, req, req_d in [
-            (permit_0, permit_0, permit_0_d),
-            (permit_10, permit_10, permit_10_d),
-            (permit_0b, permit_0, permit_0_d),
-            (deny_0, deny_0, deny_0_d),
-            (deny_10, deny_10, deny_10_d),
-            (deny_0b, deny_0, deny_0_d),
+        for line, req_d in [
+            (permit_0, permit_0_d),
+            (permit_10, permit_10_d),
+            (permit_0b, permit_0_d),
+            (deny_0, deny_0_d),
+            (deny_10, deny_10_d),
+            (deny_0b, deny_0_d),
         ]:
             ace_o = Ace(line)
-            result = ace_o.line
-            self.assertEqual(result, req, msg=f"{line=}")
+
+            # getter
             result = str(ace_o)
+            req = req_d["line"]
             self.assertEqual(result, req, msg=f"{line=}")
             for attr, req_ in req_d.items():
                 result_ = getattr(ace_o, attr)
                 if not isinstance(result_, (int, str)):
                     result_ = str(result_)
                 self.assertEqual(result_, req_, msg=f"{line=} {attr=}")
+
+            # setter
             ace_o.line = " ".join(line.split())
             result = str(ace_o)
             self.assertEqual(result, req, msg=f"setter {line=}")
+
+            # deleter
             with self.assertRaises(AttributeError, msg=f"deleter {line=}"):
                 # noinspection PyPropertyAccess
                 del ace_o.line

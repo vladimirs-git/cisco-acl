@@ -27,10 +27,12 @@ class Test(unittest.TestCase):
             usage_o = Interface(input=items)
             result = usage_o.input
             self.assertEqual(result, req, msg=f"{items=}")
+
             # setter
             usage_o.input = items
             result = usage_o.input
             self.assertEqual(result, req, msg=f"setter {items=}")
+
             # deleter
             del usage_o.input
             result = usage_o.input
@@ -63,10 +65,12 @@ class Test(unittest.TestCase):
             usage_o = Interface(output=items)
             result = usage_o.output
             self.assertEqual(result, req, msg=f"{items=}")
+
             # setter
             usage_o.output = items
             result = usage_o.output
             self.assertEqual(result, req, msg=f"setter {items=}")
+
             # deleter
             del usage_o.output
             result = usage_o.output

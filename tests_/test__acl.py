@@ -135,16 +135,21 @@ class Test(unittest.TestCase):
             (0, ""),
             (1, " "),
         ]:
+            # getter
             acl_o = Acl(indent=indent)
             result = acl_o.indent
             self.assertEqual(result, req, msg=f"getter {indent=}")
+
+            # setter
             acl_o.indent = indent
             result = acl_o.indent
             self.assertEqual(result, req, msg=f"setter {indent=}")
+
+            # deleter
             del acl_o.indent
             result = acl_o.indent
             # noinspection PyUnboundLocalVariable
-            self.assertEqual(result, "  ", msg=f"deleter {indent=}")
+            self.assertEqual(result, "", msg=f"deleter {indent=}")
 
     def test_invalid__indent(self):
         """Acl.indent"""
@@ -162,12 +167,17 @@ class Test(unittest.TestCase):
             ("ios", "ip access-list extended NAME"),
             ("cnx", "ip access-list NAME"),
         ]:
+            # getter
             acl_o = Acl(name="NAME", platform=platform)
             result = acl_o.ip_acl_name
             self.assertEqual(result, req, msg=f"getter {platform=}")
+
+        # setter
         with self.assertRaises(AttributeError, msg="setter ip_acl_name"):
             # noinspection PyPropertyAccess
             acl_o.ip_acl_name = "a"
+
+        # deleter
         with self.assertRaises(AttributeError, msg="deleter ip_acl_name"):
             # noinspection PyPropertyAccess
             del acl_o.ip_acl_name

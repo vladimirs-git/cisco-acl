@@ -33,6 +33,7 @@ class Test(unittest.TestCase):
                     msg = f"{sequence=} {ace_o.__class__.__name__} {attr=}"
                     result_ = getattr(ace_o, attr)
                     self.assertEqual(result_, req_, msg=msg)
+
                 # setter
                 ace_o.sequence = sequence
                 for attr, req_ in req_d.items():
@@ -40,6 +41,7 @@ class Test(unittest.TestCase):
                     msg = f"{sequence=} {ace_o.__class__.__name__} {attr=}"
                     result_ = getattr(ace_o, attr)
                     self.assertEqual(result_, req_, msg=msg)
+
                 # deleter
                 del ace_o.sequence
                 result = ace_o.sequence

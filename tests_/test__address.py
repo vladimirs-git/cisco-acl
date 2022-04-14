@@ -101,16 +101,24 @@ class Test(unittest.TestCase):
             ("cnx", "object-group NAME", cnx_addrgroup_d),
             ("cnx", "addrgroup NAME", cnx_addrgroup_d),
         ]:
+            # getter
             addr_o = Address(line=line, platform=platform)
             result = addr_o.line
-            self.assertEqual(result, req_d["line"], msg=f"{line=}")
-            self.assertEqual(str(addr_o), req_d["line"], msg=f"{line=}")
+            req = req_d["line"]
+            self.assertEqual(result, req, msg=f"{line=}")
+            result = str(addr_o)
+            self.assertEqual(result, req, msg=f"{line=}")
             for attr, req in req_d.items():
                 result = getattr(addr_o, attr)
                 self.assertEqual(result, req, msg=f"{line=}")
+
+            # setter
             addr_o.line = line
             result = addr_o.line
-            self.assertEqual(result, req_d["line"], msg=f"setter {line=}")
+            req = req_d["line"]
+            self.assertEqual(result, req, msg=f"setter {line=}")
+
+            # deleter
             with self.assertRaises(AttributeError, msg=f"deleter {line=}"):
                 # noinspection PyPropertyAccess
                 del addr_o.line

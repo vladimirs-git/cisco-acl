@@ -71,6 +71,7 @@ class Test(unittest.TestCase):
             (remark_10, remark_10, remark_10_d),
             (remark_10b, remark_10, remark_10_d),
         ]:
+            # getter
             rem_o = Remark(line)
             result = rem_o.line
             self.assertEqual(result, req, msg=f"{line=}")
@@ -81,9 +82,13 @@ class Test(unittest.TestCase):
                 if not isinstance(result_, (int, str)):
                     result_ = str(result_)
                 self.assertEqual(result_, req_, msg=f"{line=} {attr=}")
+
+            # setter
             rem_o.line = line
             result = str(rem_o)
             self.assertEqual(result, req, msg=f"setter {line=}")
+
+            # deleter
             with self.assertRaises(AttributeError, msg=f"deleter {line=}"):
                 # noinspection PyPropertyAccess
                 del rem_o.line
@@ -120,10 +125,13 @@ class Test(unittest.TestCase):
             (text_, text_),
             (f"\t{text_}\n", text_),
         ]:
+            # setter
             rem_o = Remark(REMARK)
             rem_o.text = text
             result = rem_o.text
             self.assertEqual(result, req, msg=f"setter {text=}")
+
+            # deleter
             with self.assertRaises(AttributeError, msg=f"deleter {text=}"):
                 # noinspection PyPropertyAccess
                 del rem_o.text

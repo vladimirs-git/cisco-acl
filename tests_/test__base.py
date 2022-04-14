@@ -115,11 +115,17 @@ class Test(unittest.TestCase):
     def test_valid__uuid(self):
         """Base.uuid"""
         obj = Ace(PERMIT_IP)
+
+        # getter
         result = len(obj.uuid.split("-"))
         self.assertEqual(result, 5, msg="getter uuid")
+
+        # setter
         obj.uuid = "1"
         result = obj.uuid
         self.assertEqual(result, "1", msg="setter uuid")
+
+        # deleter
         del obj.uuid
         result = obj.uuid
         # noinspection PyUnboundLocalVariable
@@ -146,14 +152,18 @@ class Test(unittest.TestCase):
                 (Remark, REMARK),
                 (Ace, PERMIT_IP),
             ]:
+                # getter
                 # noinspection PyUnboundLocalVariable
                 obj = class_(line, platform=platform)
                 result = obj.platform
                 self.assertEqual(result, req, msg=f"getter {platform=}")
+
+                # setter
                 with self.assertRaises(AttributeError, msg=f"setter {platform=}"):
                     # noinspection PyPropertyAccess
                     obj.platform = platform
-                self.assertEqual(result, req, msg=f"{platform=}")
+
+                # deleter
                 with self.assertRaises(AttributeError, msg=f"deleter {platform=}"):
                     # noinspection PyPropertyAccess
                     del obj.platform
@@ -170,6 +180,7 @@ class Test(unittest.TestCase):
                 (Remark, REMARK, []),
                 (Ace, PERMIT_IP, ["protocol", "srcaddr", "srcport", "dstaddr", "dstport"]),
             ]:
+                # getter
                 # noinspection PyUnboundLocalVariable
                 obj = class_(line, note=note)
                 result = obj.note
@@ -177,9 +188,13 @@ class Test(unittest.TestCase):
                 for attr in attrs:
                     result = getattr(getattr(obj, attr), "note")
                     self.assertEqual(result, "", msg=f"getter {note=}")
+
+                # setter
                 obj.note = note
                 result = obj.note
                 self.assertEqual(result, req, msg=f"setter {note=}")
+
+                # deleter
                 del obj.note
                 result = obj.note
                 self.assertEqual(result, "", msg="deleter")
