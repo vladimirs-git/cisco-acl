@@ -13,7 +13,7 @@ class Port(Base):
 
     __slots__ = ("_platform", "_note", "_line", "_operator", "_ports", "_sport")
 
-    def __init__(self, line: str, **kwargs):
+    def __init__(self, line: str = "", **kwargs):
         """ACE. TCP/UDP Port.
         :param line: TCP/UDP ports line.
         :param kwargs: Params.

@@ -18,7 +18,7 @@ class Address(Base):
     __slots__ = ("_platform", "_note", "_line",
                  "_addrgroup", "_prefix", "_subnet", "_wildcard", "_ipnet")
 
-    def __init__(self, line: str, **kwargs):
+    def __init__(self, line: str = "any", **kwargs):
         """ACE. Address.
         :param line: Address line.
             line pattern        platform    description

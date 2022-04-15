@@ -49,4 +49,6 @@ class Helpers(unittest.TestCase):
         self.assertEqual(result, req, msg=f"{msg} str")
         for attr, req in req_d.items():
             result = getattr(obj, attr)
+            if hasattr(result, "line"):
+                result = str(result)
             self.assertEqual(result, req, msg=f"{msg} {attr=}")

@@ -11,10 +11,10 @@ from tests_.helpers_test import (
     PERMIT_IP_2,
     REMARK,
 )
-
+from helpers_test import Helpers
 
 # noinspection DuplicatedCode
-class Test(unittest.TestCase):
+class Test(Helpers):
     """Ace"""
 
     # ========================== redefined ===========================
@@ -172,33 +172,24 @@ class Test(unittest.TestCase):
             (deny_10, deny_10_d),
             (deny_0b, deny_0_d),
         ]:
-            ace_o = Ace(line)
-
             # getter
-            result = str(ace_o)
-            req = req_d["line"]
-            self.assertEqual(result, req, msg=f"{line=}")
-            for attr, req_ in req_d.items():
-                result_ = getattr(ace_o, attr)
-                if not isinstance(result_, (int, str)):
-                    result_ = str(result_)
-                self.assertEqual(result_, req_, msg=f"{line=} {attr=}")
+            ace_o = Ace(line)
+            self._test_attrs(obj=ace_o, req_d=req_d, msg=f"getter {line=}")
 
             # setter
-            ace_o.line = " ".join(line.split())
-            result = str(ace_o)
-            self.assertEqual(result, req, msg=f"setter {line=}")
+            ace_o.line = line
+            self._test_attrs(obj=ace_o, req_d=req_d, msg=f"setter {line=}")
 
-            # deleter
-            with self.assertRaises(AttributeError, msg=f"deleter {line=}"):
-                # noinspection PyPropertyAccess
-                del ace_o.line
+        # deleter
+        with self.assertRaises(AttributeError, msg=f"deleter line"):
+            # noinspection PyPropertyAccess
+            del ace_o.line
 
     def test_invalid__line(self):
         """Ace.line"""
         for line, error in [
-            ("remark text", ValueError),
-            ("10 remark text", ValueError),
+            (REMARK, ValueError),
+            (f"10 {REMARK}", ValueError),
             ({}, TypeError),
             ("", ValueError),
             ("typo", ValueError),
@@ -261,6 +252,12 @@ class Test(unittest.TestCase):
             result = ace_o.line
             self.assertEqual(result, req, msg=f"{platform=} {to_platform=} {line=}")
 
+        # deleter
+        ace_o = Ace(PERMIT_IP)
+        with self.assertRaises(AttributeError, msg=f"deleter line"):
+            # noinspection PyPropertyAccess
+            del ace_o.line
+
     def test_invalid__platform(self):
         """Ace.platform"""
         ace_o = Ace(PERMIT_IP)
@@ -270,59 +267,6 @@ class Test(unittest.TestCase):
             Ace(PERMIT_IP, platform="typo")
 
     # =========================== methods ============================
-
-    def test_valid__convert(self):
-        """Ace.convert"""
-        ios_grp = "deny ip object-group A object-group B"
-        cnx_grp = "deny ip addrgroup A addrgroup B"
-        ios_host = "permit ip host 1.1.1.1 host 2.2.2.2"
-        cnx_host = "permit ip 1.1.1.1/32 2.2.2.2/32"
-        ios_prefix = "permit ip 1.1.1.0 0.0.0.255 2.2.2.0 0.0.0.255"
-        cnx_prefix = "permit ip 1.1.1.0/24 2.2.2.0/24"
-        any_wild = "permit ip 1.1.0.0 0.0.3.3 2.2.0.0 0.0.3.3"
-        ios_eq = "permit tcp any eq 1 2 any neq 3 4 log"
-        any_eq1 = "permit tcp any eq 1 any neq 3 log"
-        cnx_eq2 = "permit tcp any eq 2 any neq 4 log"
-        cnx_eq3 = "permit tcp any eq 1 any neq 3 log"
-        cnx_eq4 = "permit tcp any eq 2 any neq 4 log"
-        any_gt = "permit tcp any gt 65533 any lt 3 log"
-
-        for platform, to_platform, line, req in [
-            ("ios", "ios", ios_grp, [ios_grp]),
-            ("ios", "ios", ios_host, [ios_host]),
-            ("ios", "ios", ios_prefix, [ios_prefix]),
-            ("ios", "ios", any_wild, [any_wild]),
-            ("ios", "ios", ios_eq, [ios_eq]),
-            ("ios", "ios", any_gt, [any_gt]),
-
-            ("ios", "cnx", ios_grp, [cnx_grp]),
-            ("ios", "cnx", ios_host, [cnx_host]),
-            ("ios", "cnx", ios_prefix, [cnx_prefix]),
-            ("ios", "cnx", any_wild, [any_wild]),
-            ("ios", "cnx", ios_eq, [any_eq1, cnx_eq2, cnx_eq3, cnx_eq4]),
-            ("ios", "cnx", any_gt, [any_gt]),
-
-            ("cnx", "ios", cnx_grp, [ios_grp]),
-            ("cnx", "ios", cnx_host, [ios_host]),
-            ("cnx", "ios", cnx_prefix, [ios_prefix]),
-            ("cnx", "ios", any_wild, [any_wild]),
-            ("cnx", "ios", any_eq1, [ios_eq]),
-            ("cnx", "ios", any_gt, [any_gt]),
-
-            ("cnx", "cnx", cnx_grp, [cnx_grp]),
-            ("cnx", "cnx", cnx_host, [cnx_host]),
-            ("cnx", "cnx", cnx_prefix, [cnx_prefix]),
-            ("cnx", "cnx", any_wild, [any_wild]),
-            ("cnx", "cnx", any_eq1, [any_eq1]),
-            ("cnx", "cnx", any_gt, [any_gt]),
-        ]:
-            ace_o = Ace(line, platform=platform)
-            ace_o.platform = to_platform
-            result = ace_o.line
-            self.assertEqual(result, req, msg=f"{platform=} {to_platform=} {line=}")
-            result = ace_o.platform
-            req = to_platform
-            self.assertEqual(result, req, msg=f"{platform=} {to_platform=} {line=}")
 
     def test_valid__copy(self):
         """Acl.copy()"""

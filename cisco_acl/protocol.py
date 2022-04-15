@@ -14,7 +14,7 @@ class Protocol(Base):
 
     __slots__ = ("_platform", "_note", "_line", "_name", "_number")
 
-    def __init__(self, line: str, **kwargs):
+    def __init__(self, line: str = "", **kwargs):
         """ACE. Protocol.
         :param line: Protocol line.
         :param kwargs: Params.

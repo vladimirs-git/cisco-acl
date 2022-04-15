@@ -9,7 +9,7 @@ from cisco_acl.address import Address
 from cisco_acl.base_ace import BaseAce
 from cisco_acl.port import Port
 from cisco_acl.protocol import Protocol
-from cisco_acl.static_ import DEFAULT_PLATFORM
+from cisco_acl.static import DEFAULT_PLATFORM, PLATFORMS
 from cisco_acl.types_ import LStr, LInt
 
 
@@ -46,8 +46,14 @@ class Ace(BaseAce):
             self.option = "log"
             self.note = "description"
         """
+        self._action = ""
+        self._protocol = Protocol()
+        self._srcaddr = Address()
+        self._srcport = Port()
+        self._dstaddr = Address()
+        self._dstport = Port()
+        self._option = ""
         super().__init__(line, **kwargs)
-        self._uuid = self._uuid  # hold docstring and suppress pylint W0235
 
     def __hash__(self) -> int:
         return self.line.__hash__()
@@ -112,6 +118,58 @@ class Ace(BaseAce):
     # =========================== property ===========================
 
     @property
+    def action(self):
+        """ACE action: "permit", "deny".
+        Example:
+            Ace("10 permit ip any any")
+            :return: "permit"
+        """
+        return self._action
+
+    @action.setter
+    def action(self, action: str):
+        expected = ["permit", "deny"]
+        if action not in expected:
+            raise ValueError(f"invalid {action=}, {expected=}")
+        self._action = action
+
+    @property
+    def dstaddr(self) -> Address:
+        """ACE source address: "any", "host A.B.C.D", "A.B.C.D A.B.C.D", "A.B.C.D/24",
+            "object-group NAME".
+
+        Example1:
+            Ace("permit ip host 1.1.1.1 any")
+            return: Address("host 1.1.1.1")
+
+        Example2:
+            Ace("10 permit ip host 1.1.1.1 any", platform="cnx")
+            return: Address("1.1.1.1/32")
+        """
+        return self._dstaddr
+
+    @dstaddr.setter
+    def dstaddr(self, dstaddr: Address):
+        if not isinstance(dstaddr, Address):
+            raise TypeError(f"{dstaddr=} {Address} expected")
+        self._dstaddr = dstaddr
+
+    @property
+    def dstport(self) -> Port:
+        """ACE destination ports: "eq www 443", ""neq 1 2", "lt 2", "gt 2", "range 1 3".
+        Example:
+            Ace("permit tcp host 1.1.1.1 eq www 443 any eq 1025 log")
+            return: Port("eq 1025")
+        """
+        return self._dstport
+
+    @dstport.setter
+    def dstport(self, dstport: Port):
+        if not isinstance(dstport, Port):
+            raise TypeError(f"{dstport=} {Port} expected")
+        self._dstport = dstport
+
+    @property
     def line(self):
         """ACE line.
         Example:
@@ -133,9 +191,9 @@ class Ace(BaseAce):
     @line.setter
     def line(self, line: str):
         line = self._init_line(line)
-        self._check_line_length(line)
+        h.check_line_length(line)
         ace_d = h.parse_ace(line)
-        self.sequence = int(ace_d["sequence"]) if ace_d["sequence"] else 0
+        self.sequence = int(ace_d["sequence"]) if ace_d["sequence"] else 0  # TODO object Sequence(), delete self.ssequence
         self.action: str = ace_d["action"]
         self.protocol: Protocol = Protocol(ace_d["protocol"], platform=self.platform)
         self.srcaddr: Address = Address(ace_d["srcaddr"], platform=self.platform)
@@ -145,20 +203,35 @@ class Ace(BaseAce):
         self.option: str = ace_d["option"]
 
     @property
-    def action(self):
-        """ACE action: "permit", "deny".
-        Example:
-            Ace("10 permit ip any any")
-            :return: "permit"
-        """
-        return self._action
+    def platform(self) -> str:
+        """Platforms: "ios", "cnx"."""
+        return self._platform
 
-    @action.setter
-    def action(self, action: str):
-        expected = ["permit", "deny"]
-        if action not in expected:
-            raise ValueError(f"invalid {action=}, {expected=}")
-        self._action = action
+    @platform.setter
+    def platform(self, platform: str):
+        if platform not in PLATFORMS:
+            raise ValueError(f"invalid {platform=}, expected={PLATFORMS}")
+        if platform == self.platform:
+            return
+
+        self._platform = platform
+        self.protocol.platform = platform
+        self.srcaddr.platform = platform
+        self.srcport.platform = platform
+        self.dstaddr.platform = platform
+        self.dstport.platform = platform
+        items = [
+            self.ssequence,
+            self.action,
+            self.protocol.line,
+            self.srcaddr.line,
+            self.srcport.line,
+            self.dstaddr.line,
+            self.dstport.line,
+            self.option,
+        ]
+        items = [s for s in items if s]
+        self.line = " ".join(items)
 
     @property
     def protocol(self) -> Protocol:
@@ -210,43 +283,11 @@ class Ace(BaseAce):
             raise TypeError(f"{srcport=} {Port} expected")
         self._srcport = srcport
 
-    @property
-    def dstaddr(self) -> Address:
-        """ACE source address: "any", "host A.B.C.D", "A.B.C.D A.B.C.D", "A.B.C.D/24",
-            "object-group NAME".
-
-        Example1:
-            Ace("permit ip host 1.1.1.1 any")
-            return: Address("host 1.1.1.1")
-
-        Example2:
-            Ace("10 permit ip host 1.1.1.1 any", platform="cnx")
-            return: Address("1.1.1.1/32")
-        """
-        return self._dstaddr
-
-    @dstaddr.setter
-    def dstaddr(self, dstaddr: Address):
-        if not isinstance(dstaddr, Address):
-            raise TypeError(f"{dstaddr=} {Address} expected")
-        self._dstaddr = dstaddr
-
-    @property
-    def dstport(self) -> Port:
-        """ACE destination ports: "eq www 443", ""neq 1 2", "lt 2", "gt 2", "range 1 3".
-        Example:
-            Ace("permit tcp host 1.1.1.1 eq www 443 any eq 1025 log")
-            return: Port("eq 1025")
-        """
-        return self._dstport
-
-    @dstport.setter
-    def dstport(self, dstport: Port):
-        if not isinstance(dstport, Port):
-            raise TypeError(f"{dstport=} {Port} expected")
-        self._dstport = dstport
-
     # =========================== methods ============================
+
+    def copy(self) -> Ace:
+        """Return a shallow copy of self."""
+        return Ace(self.line, platform=self.platform, note=self.note)
 
     @classmethod
     def rule(cls, **kwargs) -> LAce:
