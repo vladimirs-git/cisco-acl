@@ -27,9 +27,9 @@ class Acl(AceGroup):
         :param line: ACL config (name and following remarks and access entries).
         :param kwargs:
             platform: Supported platforms: "ios", "cnx". By default: "ios".
-            name: ACL name. By default taken from line param.
+            name: ACL name. By default parsed from line.
             items: List of ACE (strings or Ace, AceGroup, Remark objects).
-                    By default taken from line param.
+                    By default parsed from line.
             input: Interfaces, where Acl is used on input.
             output: Interfaces, where Acl is used on output.
             indent: ACE lines indentation. By default 2 spaces.
@@ -41,18 +41,19 @@ class Acl(AceGroup):
                  permit icmp any any"
         platform: "ios"
         input: "interface FastEthernet1"
-        indent: 2
+        indent: 4
+        note: "allow icmp"
 
         result:
             self.line = "ip access-list extended NAME\n  remark TEXT\n  permit icmp any any"
             self.platform = "ios"
             self.name = "NAME"
+            self.items = [Remark("remark TEXT"), Ace("permit icmp any any")]
             self.ip_acl_name = "ip access-list NAME"
             self.interface.input = ["interface FastEthernet1"]
             self.interface.output = []
-            self.indent = "  "
-            self.note = ""
-            self.items = [Remark("remark TEXT"), Ace("permit icmp any any")]
+            self.indent = "    "
+            self.note = "allow icmp"
         """
         super().__init__(**kwargs)
         self.line = line

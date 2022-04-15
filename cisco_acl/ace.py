@@ -31,7 +31,7 @@ class Ace(BaseAce):
         Example:
         line: "10 permit tcp host 10.0.0.1 eq 179 10.0.0.0 0.0.0.3 eq 80 443 log"
         platform: "ios"
-        note: "description"
+        note: "allow web"
 
         result:
             self.line = "10 permit tcp host 10.0.0.1 10.0.0.0 0.0.0.3 eq www 443 log"
@@ -44,7 +44,7 @@ class Ace(BaseAce):
             self.dstaddr = Address("10.0.0.0 0.0.0.3")
             self.dstport = Port("eq www 443")
             self.option = "log"
-            self.note = "description"
+            self.note = "allow web"
         """
         self._action = ""
         self._protocol = Protocol()
