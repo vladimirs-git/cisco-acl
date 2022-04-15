@@ -10,10 +10,6 @@ from cisco_acl import helpers as h
 from cisco_acl.base_ace import BaseAce
 
 
-class Text:
-    """ACL Remark Text"""
-
-
 @total_ordering
 class Remark(BaseAce):
     """ACL Remark"""
@@ -52,7 +48,6 @@ class Remark(BaseAce):
 
     def __lt__(self, other) -> bool:
         """< less than"""
-        x = other.__class__.__name__
         if hasattr(other, "sequence"):
             if self.sequence == other.sequence:
                 if isinstance(other, Remark):
@@ -77,9 +72,7 @@ class Remark(BaseAce):
     @line.setter
     def line(self, line) -> None:
         line = self._init_line(line)
-        line_length = len(line)
-        if line_length > self.line_length:
-            raise ValueError(f"{line_length=}, expected={self.line_length}")
+        h.check_line_length(line)
         ace_d = h.parse_action(line)
         action = ace_d["action"]
         expected = "remark"
