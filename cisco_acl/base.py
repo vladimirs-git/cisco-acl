@@ -5,7 +5,7 @@ import uuid
 from abc import ABC, abstractmethod
 
 from cisco_acl import helpers as h
-from cisco_acl.static_ import PLATFORMS, DEFAULT_PLATFORM
+from cisco_acl.static import PLATFORMS, DEFAULT_PLATFORM
 from cisco_acl.types_ import StrInt, LStr
 
 
@@ -24,8 +24,8 @@ class Base(ABC):
 
     def __repr__(self):
         params = [f"{self.line!r}"]
-        if self._platform != DEFAULT_PLATFORM:
-            params.append(f"platform={self._platform!r}")
+        if self.platform != DEFAULT_PLATFORM:
+            params.append(f"platform={self.platform!r}")
         if self.note:
             params.append(f"note={self.note!r}")
         kwargs = ", ".join(params)
@@ -39,14 +39,9 @@ class Base(ABC):
     @staticmethod
     def _init_platform(**kwargs) -> str:
         """Init device platform type: "ios", "cnx" """
-        platform: str = kwargs.get("platform") or DEFAULT_PLATFORM
-        if not isinstance(platform, str):
-            raise TypeError(f"{platform=} {str} expected")
-        if not platform:
-            platform = DEFAULT_PLATFORM
-        expected = PLATFORMS
-        if platform not in expected:
-            raise ValueError(f"invalid {platform=}, {expected=}")
+        platform = kwargs.get("platform") or DEFAULT_PLATFORM
+        if platform not in PLATFORMS:
+            raise ValueError(f"invalid {platform=}, expected={PLATFORMS}")
         return platform
 
     @staticmethod
@@ -110,6 +105,10 @@ class Base(ABC):
     def platform(self) -> str:
         """Device platform type: "ios", "cnx" """
         return self._platform
+
+    @platform.setter
+    def platform(self, platform: str) -> None:
+        self._platform = self._init_platform(platform=platform)
 
     @property
     def note(self) -> str:
