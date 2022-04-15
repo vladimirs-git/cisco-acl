@@ -64,17 +64,6 @@ class Test(unittest.TestCase):
             with self.assertRaises(ValueError, msg=f"{sequence=}"):
                 Ace(f"{sequence} {PERMIT_IP}")
 
-    # =========================== helpers ============================
-
-    def test_invalid__check_line_length(self):
-        """AceGroup._check_line_length()"""
-        ace_o_ = Ace(PERMIT_IP)
-        for line, line_length, error in [
-            (PERMIT_IP, 2, ValueError),
-        ]:
-            with self.assertRaises(error, msg=f"{line=} {line_length=}"):
-                ace_o_.line_length = line_length
-                ace_o_._check_line_length(line)
 
 
 if __name__ == "__main__":

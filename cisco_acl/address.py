@@ -10,7 +10,6 @@ from cisco_acl.base import Base
 from cisco_acl.types_ import OIPNetwork
 
 
-# todo setters: _addrgroup, _prefix, _subnet, _wildcard, _ipnet
 class Address(Base):
     """ACE. Address."""
 
@@ -70,7 +69,16 @@ class Address(Base):
 
     @property
     def line(self) -> str:
-        """ACE address line: "any", "10.0.0.0 0.0.0.3", "10.0.0.1/32", "object-group NAME"."""
+        """ACE address line.
+        Line                    Platform    Description
+        ======================  ==========  ====================
+        "object-group NAME"     ios         Network object group
+        "addrgroup NAME"        cnx         Network object group
+        "any"                               Any source host
+        "host 10.0.0.1"         ios         Single source host
+        "10.0.0.1/32"           cnx         Network prefix
+        "10.0.0.0 0.0.0.3"                  Network wildcard
+        """
         return self._line
 
     @line.setter
@@ -102,8 +110,9 @@ class Address(Base):
             return
 
         # "object-group NAME"
-        regex = r"(?:object-group|addrgroup) (\S+)"
+        regex = r"(?:object-group|addrgroup) (.+)"
         if name := h.re_find_s(regex, line):
+            h.check_name(name)
             addr_line = "addrgroup" if self.platform == "cnx" else "object-group"
             addr_line = f"{addr_line} {name}"
 
@@ -117,6 +126,10 @@ class Address(Base):
 
         raise ValueError(f"invalid address {line=}")
 
+    @line.deleter
+    def line(self) -> None:
+        self._line__any()
+
     @property
     def addrgroup(self) -> str:
         """ACE address addrgroup.
@@ -125,13 +138,13 @@ class Address(Base):
             :return: "NAME" """
         return self._addrgroup
 
-    @property
-    def subnet(self) -> str:
-        """ACE address subnet.
-        Example:
-            Address("10.0.0.0 0.0.0.3")
-            :return: "10.0.0.0 255.255.255.252" """
-        return self._subnet
+    @addrgroup.setter
+    def addrgroup(self, name: str) -> None:
+        if self.platform == "cnx":
+            line = f"addrgroup {name}"
+        else:
+            line = f"object-group {name}"
+        self.line = line
 
     @property
     def ipnet(self) -> OIPNetwork:
@@ -141,6 +154,12 @@ class Address(Base):
             :return: IPNetwork("10.0.0.0/30") """
         return self._ipnet
 
+    @ipnet.setter
+    def ipnet(self, ipnet: IPNetwork) -> None:
+        if not isinstance(ipnet, IPNetwork):
+            raise TypeError(f"{ipnet=} {IPNetwork} expected")
+        self.line = str(ipnet)
+
     @property
     def prefix(self) -> str:
         """ACE address prefix.
@@ -149,6 +168,24 @@ class Address(Base):
             :return: "10.0.0.0/32" """
         return self._prefix
 
+    @prefix.setter
+    def prefix(self, prefix: str) -> None:
+        self.line = prefix
+
+    @property
+    def subnet(self) -> str:
+        """ACE address subnet.
+        Example:
+            Address("10.0.0.0 0.0.0.3")
+            :return: "10.0.0.0 255.255.255.252" """
+        return self._subnet
+
+    @subnet.setter
+    def subnet(self, subnet: str) -> None:
+        h.check_subnet(subnet)
+        subnet = h.invert_mask(subnet)
+        self.line = subnet
+
     @property
     def wildcard(self) -> str:
         """ACE address wildcard.
@@ -156,6 +193,11 @@ class Address(Base):
             Address("10.0.0.0 0.0.0.3")
             :return: "10.0.0.0 0.0.0.3" """
         return self._wildcard
+
+    @wildcard.setter
+    def wildcard(self, wildcard: str) -> None:
+        h.check_subnet(wildcard)
+        self.line = wildcard
 
     # =========================== helpers ============================
 

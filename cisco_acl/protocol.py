@@ -3,7 +3,7 @@
 from typing import List
 
 from cisco_acl.base import Base
-from cisco_acl.static_ import PROTOCOL_TO_NR, NR_TO_PROTOCOL
+from cisco_acl.static import NR_TO_PROTOCOL, ANY_PROTOCOLS
 from cisco_acl.types_ import StrInt
 
 
@@ -62,11 +62,12 @@ class Protocol(Base):
 
         # permit icmp any any
         else:
-            expected = list(PROTOCOL_TO_NR[self.platform])
-            if line not in expected:
-                raise ValueError(f"invalid protocol {line=}, {expected=}")
-            name = line
-            number = PROTOCOL_TO_NR[self.platform][name]
+            number_ = ANY_PROTOCOLS.get(line)
+            if number_ is None:
+                raise ValueError(f"invalid protocol {line=}, expected={list(ANY_PROTOCOLS)}")
+
+            name = NR_TO_PROTOCOL[self.platform].get(number_) or str(number_)
+            number = int(number_)
 
         self._line = name or str(number)
         self._name = name
@@ -85,21 +86,7 @@ class Protocol(Base):
     def name(self, name: str) -> None:
         if not isinstance(name, str):
             raise TypeError(f"protocol {name=} {str} expected")
-        if not name:
-            self._set_default()
-            return
-        expected = list(PROTOCOL_TO_NR[self.platform])
-        if name not in expected:
-            raise ValueError(f"invalid protocol {name=}, {expected=}")
-        number = PROTOCOL_TO_NR[self.platform][name]
-
-        self._line = name
-        self._name = name
-        self._number = number
-
-    @name.deleter
-    def name(self) -> None:
-        self._set_default()
+        self.line = name
 
     @property
     def number(self) -> int:
@@ -108,26 +95,21 @@ class Protocol(Base):
 
     @number.setter
     def number(self, number: StrInt) -> None:
-        if isinstance(number, int):
-            number_: int = number
-        elif isinstance(number, str) and number.isdigit():
-            number_ = int(number)
-        else:
+        if isinstance(number, str) and number.isdigit():
+            number = int(number)
+        if not isinstance(number, int):
             raise TypeError(f"protocol {number=} {int} expected")
-        if not number_:
-            self._set_default()
-            return
-        if not 0 <= number_ <= 255:
-            raise ValueError(f"invalid protocol {number_=}, expected 0..255")
-        name: str = str(NR_TO_PROTOCOL[self.platform].get(number_) or "")
+        self.line = str(number)
 
-        self._line = name or str(number_)
-        self._name = name
-        self._number = number_
+    @property
+    def platform(self) -> str:
+        """Platforms: "ios", "cnx"."""
+        return self._platform
 
-    @number.deleter
-    def number(self) -> None:
-        self._set_default()
+    @platform.setter
+    def platform(self, platform: str):
+        self._platform = self._init_platform(platform=platform)
+        self.line = self.line
 
     # =========================== helpers ============================
 

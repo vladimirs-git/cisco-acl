@@ -113,6 +113,7 @@ CNX_PROTOCOLS = {
     "tcp": 6,
     "udp": 17,
 }
+ANY_PROTOCOLS = {**IOS_PROTOCOLS, **CNX_PROTOCOLS}
 PROTOCOL_TO_NR = dict(
     ios=IOS_PROTOCOLS,
     cnx=CNX_PROTOCOLS,

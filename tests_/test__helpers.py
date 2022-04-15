@@ -69,6 +69,47 @@ class Test(unittest.TestCase):
 
     # =============================== str ================================
 
+    def test_valid__check_line_length(self):
+        """check_line_length()"""
+        for line, req in [
+            ("", True),
+            ("a" * 100, True),
+        ]:
+            result = h.check_line_length(line)
+            self.assertEqual(result, req, msg=f"{line=}")
+
+    def test_invalid__check_line_length(self):
+        """check_line_length()"""
+        for line, error in [
+            (1, TypeError),
+            ("a" * 101, ValueError),
+        ]:
+            with self.assertRaises(error, msg=f"{line=}"):
+                h.check_line_length(line)
+
+    def test_valid__check_name(self):
+        """check_name()"""
+        ascii_letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        digits = "0123456789"
+        punctuation = r"""!"#$%&'()*+,-./:;<=>@[\]^_`{|}~"""
+        valid_chars = f"{ascii_letters}{digits}{punctuation}"
+        for line, req in [
+            (valid_chars, True),
+        ]:
+            result = h.check_name(line)
+            self.assertEqual(result, req, msg=f"{line=}")
+
+    def test_invalid__check_name(self):
+        """check_name()"""
+        for line, error in [
+            ("", ValueError),
+            ("1", ValueError),
+            ("_", ValueError),
+            ("a?", ValueError),
+        ]:
+            with self.assertRaises(error, msg=f"{line=}"):
+                h.check_name(line)
+
     def test_valid__line_wo_spaces(self):
         """line_wo_spaces()"""
         for line, req in [
@@ -258,8 +299,50 @@ class Test(unittest.TestCase):
 
     # ========================== ip address ==========================
 
-    def test_valid__wildcard(self):
-        """wildcard()"""
+    def test_valid__check_subnet(self):
+        """check_subnet()"""
+        for subnet, req in [
+            ("1.0.0.0 255.0.0.0", True),
+            ("3.3.0.0 0.0.3.3", True),
+        ]:
+            result = h.check_subnet(subnet)
+            self.assertEqual(result, req, msg=f"{subnet=}")
+
+    def test_invalid__check_subnet(self):
+        """check_subnet()"""
+        for subnet, error in [
+            (1, TypeError),
+            ("", ValueError),
+            ("1.0.0.0", ValueError),
+            ("1.0.0.0/24", ValueError),
+            ("1.0.0.0   255.0.0.0", ValueError),
+        ]:
+            with self.assertRaises(error, msg=f"{subnet=}"):
+                h.check_subnet(subnet)
+
+    def test_valid__invert_mask(self):
+        """invert_mask()"""
+        for subnet, req in [
+            ("1.0.0.0 255.0.0.0", "1.0.0.0 0.255.255.255"),
+            ("3.3.0.0 0.0.3.3", "3.3.0.0 255.255.252.252"),
+        ]:
+            result = h.invert_mask(subnet)
+            self.assertEqual(result, req, msg=f"{subnet=}")
+
+    def test_invalid__invert_mask(self):
+        """invert_mask()"""
+        for subnet, error in [
+            (1, AttributeError),
+            ("", ValueError),
+            ("1.0.0.0", ValueError),
+            ("1.0.0.0/24", ValueError),
+            ("1.0.0.0   255.0.0.0", ValueError),
+        ]:
+            with self.assertRaises(error, msg=f"{subnet=}"):
+                h.invert_mask(subnet)
+
+    def test_valid__make_wildcard(self):
+        """make_wildcard()"""
         for prefix, req in [
             ("10.0.0.0/30", "10.0.0.0 0.0.0.3"),
             ("10.0.0.1/32", "host 10.0.0.1"),
@@ -269,8 +352,8 @@ class Test(unittest.TestCase):
             result = h.make_wildcard(prefix=prefix)
             self.assertEqual(result, req, msg=f"{prefix=}")
 
-    def test_invalid__wildcard(self):
-        """wildcard()"""
+    def test_invalid__make_wildcard(self):
+        """make_wildcard()"""
         for prefix, error in [
             (1, TypeError),
             ("", ValueError),
@@ -278,6 +361,36 @@ class Test(unittest.TestCase):
         ]:
             with self.assertRaises(error, msg=f"{prefix=}"):
                 h.make_wildcard(prefix=prefix)
+
+    # ============================ ports =============================
+
+    def test_valid__ports_to_string(self):
+        """ports_to_string()"""
+        for items, req in [
+            ([], ""),
+            ([1, 2], "1-2"),
+            ([2, 1], "1-2"),
+            ([0, 1, 2], "0-2"),
+            ([1, 3, 4, 5], "1,3-5"),
+            ([5, 1, 4, 3], "1,3-5"),
+            ([1, 2, 4, 6, 7], "1-2,4,6-7"),
+        ]:
+            result = h.ports_to_string(items)
+            self.assertEqual(result, req, msg=f"{items=}")
+
+    def test__string_to_ports(self):
+        """Port._string_to_ports()"""
+        for line, req in [
+            ("", []),
+            ("1", [1]),
+            ("1,2", [1, 2]),
+            ("1-2", [1, 2]),
+            ("1-3", [1, 2, 3]),
+            ("1,3-5", [1, 3, 4, 5]),
+            ("3-5,1", [1, 3, 4, 5]),
+        ]:
+            result = h.string_to_ports(line)
+            self.assertEqual(result, req, msg=f"{line=}")
 
 
 if __name__ == "__main__":

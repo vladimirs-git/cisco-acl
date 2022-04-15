@@ -203,14 +203,6 @@ class Test(unittest.TestCase):
             with self.assertRaises(error, msg=f"{platform=} {ace_o=}"):
                 aceg_o._check_platform(ace_o)
 
-    def test_valid__check_line_length(self):
-        """AceGroup._check_line_length()"""
-        for line_length, ace_o, req in [
-            (50, Ace(PERMIT_IP, line_length=40), True),
-        ]:
-            aceg_o = AceGroup(line_length=line_length)
-            result = aceg_o._check_line_length(ace_o)
-            self.assertEqual(result, req, msg=f"{line_length=} {ace_o=}")
 
 
 if __name__ == "__main__":

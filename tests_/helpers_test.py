@@ -1,5 +1,7 @@
 """unittest helpers"""
 
+import unittest
+
 ACL_IOS = "ip access-list extended "
 ACL_NAME_IOS = "ip access-list extended A"
 ACL_NAME_RP_IOS = "ip access-list extended A\n  remark text\n  permit ip any any"
@@ -29,3 +31,22 @@ REMARK_3 = "3 remark text"
 
 ETH1 = "interface Ethernet1"
 ETH2 = "interface Ethernet2"
+
+
+class Helpers(unittest.TestCase):
+    """Address"""
+
+    def _test_attrs(self, obj, req_d, msg: str):
+        """Test obj.line and attributes in req_d.
+        :param obj: Tested object.
+        :param req_d: Valid attributes and values.
+        :param msg: Message.
+        """
+        result = obj.line
+        req = req_d["line"]
+        self.assertEqual(result, req, msg=f"{msg} line")
+        result = str(obj)
+        self.assertEqual(result, req, msg=f"{msg} str")
+        for attr, req in req_d.items():
+            result = getattr(obj, attr)
+            self.assertEqual(result, req, msg=f"{msg} {attr=}")

@@ -1,15 +1,40 @@
 """ACE helper functions"""
 
 import re
-from typing import Any
+from string import ascii_letters, digits, punctuation
+from typing import Any, List, NamedTuple
 
 from netaddr import IPNetwork  # type: ignore
 
-from cisco_acl.static_ import ACTIONS, OPERATORS, PORTS
-from cisco_acl.types_ import DStr, LStr, StrInt
+from cisco_acl.static import ACTIONS, OPERATORS, PORTS, MAX_LINE_LENGTH
+from cisco_acl.types_ import DStr, LStr, StrInt, LInt, OInt, SInt
 
 
 # =============================== str ================================
+
+
+def check_line_length(line: str) -> bool:
+    """True if line length <= 100 chars, else raise ERROR"""
+    length = len(line)
+    expected = MAX_LINE_LENGTH
+    if length > expected:
+        raise ValueError(f"invalid line {length=}, {expected=}")
+    return True
+
+
+def check_name(name: str) -> bool:
+    """True if first char is ascii_letters, other chars can be punctuation, else raise ERROR"""
+    if not name:
+        raise ValueError(f"absent {name=}")
+    first_char = name[0]
+    if first_char not in ascii_letters:
+        raise ValueError(f"acl name {first_char=}, expected={ascii_letters}")
+    skip_chas = {"?"}
+    valid_chars = set(ascii_letters + digits + punctuation).difference(skip_chas)
+    if invalid_chars := set(name).difference(valid_chars):
+        raise ValueError(f"{invalid_chars=} in name")
+    return True
+
 
 def replace_spaces(line: str) -> str:
     """Replace multiple white spaces with single space."""
@@ -234,6 +259,25 @@ def is_valid_wildcard(wildcard: str) -> bool:
 
 # ============================ ip address ============================
 
+def check_subnet(subnet: str) -> bool:
+    """True if subnet has format A.B.C.D A.B.C.D, else raise ERROR"""
+    octets = r"\d+\.\d+\.\d+\.\d+"
+    regex = f"{octets} {octets}$"
+    if not re.match(regex, subnet):
+        raise ValueError(f"{subnet=} expected A.B.C.D A.B.C.D")
+    return True
+
+
+def invert_mask(subnet: str) -> str:
+    """Invert mask to wildcard and vice versa. Example:
+    :param subnet: "10.0.0.0 0.0.0.3"
+    :return: "10.0.0.0 0.0.0.252"
+    """
+    net, mask = subnet.split(" ")[:2]
+    inverted = ".".join([str(255 - int(s)) for s in mask.split(".")])
+    return f"{net} {inverted}"
+
+
 def make_wildcard(prefix: str) -> str:
     """Convert prefix to wildcard. Ready for ACL.
     :param prefix: prefix A.B.C.D/E
@@ -282,11 +326,69 @@ def make_wildcard(prefix: str) -> str:
     raise ValueError(f"invalid {prefix=}")
 
 
-def invert_mask(subnet: str) -> str:
-    """Invert mask to wildcard and vice versa. Example:
-    :param subnet: "10.0.0.0 0.0.0.3"
-    :return: "10.0.0.0 0.0.0.252"
+# ============================== ports ===============================
+
+class PortRange(NamedTuple):
+    """helper, tcp/udp ports range"""
+    string: str
+    range: range
+    min: int
+    max: int
+
+
+def ports_to_string(items: LInt) -> str:
+    """Convert list of ports to string.
+    Example:
+        :param items: [1,3,4,5]
+        :return: "1,3-5"
     """
-    net, mask = subnet.split(" ")[:2]
-    inverted = ".".join([str(255 - int(s)) for s in mask.split(".")])
-    return f"{net} {inverted}"
+    if not items:
+        return ""
+    # if self.operator in ["eq", "neq"]:
+    #     return ",".join([str(i) for i in items])
+
+    items = sorted(items)
+    ranges: LStr = []  # return
+    item_1st: OInt = None
+    for idx, item in enumerate(items, start=1):
+        # not last iteration
+        if idx < len(items):
+            item_next = items[idx]
+            if item_next - item <= 1:  # range
+                if item_1st is None:  # start new range
+                    item_1st = item
+            else:  # int or end of range
+                ranges.append(str(item) if item_1st is None else f"{item_1st}-{item}")
+                item_1st = None
+        # last iteration
+        else:
+            item_ = str(item) if item_1st is None else f"{item_1st}-{item}"
+            ranges.append(item_)
+    return ",".join(ranges)
+
+
+def string_to_ports(ports: str) -> LInt:
+    """Convert string to list of ports
+    Example:
+        :param ports: "1,3-5"
+        :return: [1, 3, 4, 5]
+    """
+    values = [s for s in ports.split(",") if s]
+    ints: SInt = {int(s) for s in values if re.match(r"\d+$", s)}
+    ranges = {s for s in values if re.match(r"\d+-\d+$", s)}
+    ranges_t = _port_range_min_max(ranges)
+    ports_calc = {i for o in ranges_t for i in o.range}  # ports in all ranges
+    ports_calc.update(ints)
+    ports_ = [i for i in ports_calc if 1 <= i <= 65535]
+    return ports_
+
+
+def _port_range_min_max(ranges) -> List[PortRange]:
+    """Return named tuple of range_sting, range_int, port_min, port_max"""
+    ranges_tup = []
+    for range_string in ranges:
+        port_min, port_max = map(int, range_string.split("-"))
+        range_int = range(port_min, port_max + 1)
+        ranges_tup.append(PortRange(range_string, range_int, port_min, port_max))
+    ranges_tup = sorted(ranges_tup, key=lambda o: o.min)
+    return ranges_tup

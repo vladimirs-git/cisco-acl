@@ -2,12 +2,12 @@
 
 from typing import List
 
+from cisco_acl import helpers as h
 from cisco_acl.base import Base
-from cisco_acl.static_ import OPERATORS, PORTS
-from cisco_acl.types_ import LInt, LStr, OInt
+from cisco_acl.static import OPERATORS, PORTS
+from cisco_acl.types_ import LInt, LStr, IInt
 
 
-# todo setters: _operator, _port, _sport
 class Port(Base):
     """ACE. TCP/UDP Port."""
 
@@ -64,9 +64,13 @@ class Port(Base):
         self._line = line
         self._operator = self._line__operator(items)
         ports: LInt = self._line__ports(items[1:])
-        ports = self._port_by_operator(ports)
+        ports = self._items_to_ports(ports)
         self._ports = ports
-        self._sport = self._line__sport(ports)
+        self._sport = h.ports_to_string(ports)
+
+    @line.deleter
+    def line(self) -> None:
+        self._delete_port()
 
     @property
     def operator(self) -> str:
@@ -77,6 +81,20 @@ class Port(Base):
         """
         return self._operator
 
+    @operator.setter
+    def operator(self, operator: str) -> None:
+        if operator != self.operator and "range" in [operator, self.operator]:
+            expected = [s for s in OPERATORS if s != "range"]
+            raise ValueError(f"invalid {operator=}, {expected=}")
+        items = self.line.split()
+        items[0] = operator
+
+        self.line = " ".join(items)
+
+    @operator.deleter
+    def operator(self) -> None:
+        self._delete_port()
+
     @property
     def ports(self) -> LInt:
         """ACE TCP/UDP list of ports as int.
@@ -85,6 +103,14 @@ class Port(Base):
             :return: [80, 443]
         """
         return self._ports
+
+    @ports.setter
+    def ports(self, ports: IInt) -> None:
+        ports = list(ports)
+        ports = self._ports_to_items(ports)
+        items = [str(i) for i in ports]
+        items.insert(0, self.operator)
+        self.line = " ".join(items)
 
     @property
     def sport(self) -> str:
@@ -97,6 +123,11 @@ class Port(Base):
             return: "80-82"
         """
         return self._sport
+
+    @sport.setter
+    def sport(self, sport: str) -> None:
+        ports: LInt = h.string_to_ports(sport)
+        self.ports = ports
 
     # =========================== helpers ============================
 
@@ -152,59 +183,66 @@ class Port(Base):
 
         return sorted(ports)
 
-    def _port_by_operator(self, ports: LInt) -> LInt:
-        """Transform ports by operator.
-        Example:
-            :param ports: [1, 4]
+    def _items_to_ports(self, items: LInt) -> LInt:
+        """Transform line items to ports.
+
+        Example1:
+            :param items: [1, 4]
                 self.operator="range"
             :return: [1, 2, 3, 4]
+
+        Example2:
+            :param items: [4]
+                self.operator="ge"
+            :return: [4, 5, 6, ..., 65535]
+        """
+        operator = self._operator
+        if operator == "eq":
+            return items
+        if operator == "range":
+            items = list(range(items[0], items[-1] + 1))
+            return items
+
+        all_ports = list(range(1, 65535 + 1))
+        if operator == "neq":
+            items = [i for i in all_ports if i not in items]
+            return items
+        if operator == "gt":
+            items = [i for i in all_ports if i > items[0]]
+            return items
+        if operator == "lt":
+            items = [i for i in all_ports if i < items[0]]
+            return items
+        raise ValueError(f"invalid port {operator=}")
+
+    def _ports_to_items(self, ports: LInt) -> LInt:
+        """Transform ports to line items.
+
+        Example1:
+            :param ports: [1, 2, 3, 4]
+                self.operator="range"
+            :return: [1, 4]
+
+        Example2:
+            :param ports: [4, 5, 6, ..., 65535]
+                self.operator="ge"
+            :return: [4]
         """
         operator = self._operator
         if operator == "eq":
             return ports
         if operator == "range":
-            ports = list(range(ports[0], ports[-1] + 1))
-            return ports
-
-        all_ports = list(range(1, 65535 + 1))
+            return [ports[0], ports[-1]]
         if operator == "neq":
-            ports = [i for i in all_ports if i not in ports]
-            return ports
+            items: LInt = list(range(1, 65535 + 1))
+            for port in ports:
+                items.remove(port)
+            return items
         if operator == "gt":
-            ports = [i for i in all_ports if i > ports[0]]
-            return ports
+            return [ports[0] - 1]
         if operator == "lt":
-            ports = [i for i in all_ports if i < ports[0]]
-            return ports
+            return [ports[1] + 1]
         raise ValueError(f"invalid port {operator=}")
-
-    @staticmethod
-    def _line__sport(items: LInt) -> str:
-        """Convert list of ports to string.
-        Example:
-            :param items: [1,3,4,5]
-            :return: "1,3-5"
-        """
-        if not items:
-            return ""
-        items = sorted(items)
-        ranges: LStr = []  # return
-        item_1st: OInt = None
-        for idx, item in enumerate(items, start=1):
-            # not last iteration
-            if idx < len(items):
-                item_next = items[idx]
-                if item_next - item <= 1:  # range
-                    if item_1st is None:  # start new range
-                        item_1st = item
-                else:  # int or end of range
-                    ranges.append(str(item) if item_1st is None else f"{item_1st}-{item}")
-                    item_1st = None
-            # last iteration
-            else:
-                item_ = str(item) if item_1st is None else f"{item_1st}-{item}"
-                ranges.append(item_)
-        return ",".join(ranges)
 
 
 LPort = List[Port]

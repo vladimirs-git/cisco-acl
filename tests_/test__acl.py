@@ -262,6 +262,29 @@ class Test(unittest.TestCase):
 
     # =========================== methods ============================
 
+    def test_valid__convert(self):  # TODO
+        """Ace.convert()"""
+        acl_ios = "ip access-list extended NAME\n" \
+                  "  remark text\n" \
+                  "  permit tcp object-group NAME eq 1 2 host 1.1.1.1 neq 3 4 log\n" \
+                  "  deny udp 1.1.1.0 0.0.0.255 gt 65532 3.3.0.0 0.0.3.3 lt 3\n" \
+                  "  permit tcp host 1.1.1.1 range 1 3 host 2.2.2.2 ack"
+        acl_cnx = "ip access-list NAME\n" \
+                  "  remark text\n" \
+                  "  permit tcp object-group NAME eq 1 2 host 1.1.1.1 neq 3 4 log\n" \
+                  "  deny udp 1.1.1.0 0.0.0.255 gt 65532 3.3.0.0 0.0.3.3 lt 3\n" \
+                  "  permit tcp host 1.1.1.1 range 1 3 host 2.2.2.2 ack"
+        for platform, to_platform, line, req in [
+            ("ios", "ios", acl_ios, acl_ios),
+            ("ios", "cnx", acl_ios, acl_cnx),
+            ("cnx", "ios", acl_cnx, acl_ios),
+            ("cnx", "cnx", acl_cnx, acl_cnx),
+        ]:
+            acl_o = Acl(line, platform=platform)
+            acl_o.convert(platform=to_platform)
+            result = str(acl_o)
+            self.assertEqual(result, req, msg=f"{platform=} {to_platform=} {line=}")
+
     def test_valid__copy(self):
         """Acl.copy()"""
         acl_o1 = Acl(items=[PERMIT_IP, DENY_IP], input=[ETH1, ETH2])
@@ -336,6 +359,8 @@ class Test(unittest.TestCase):
         acl_o.delete_sequence()
         result = sum([o.sequence for o in acl_o])
         self.assertEqual(result, 0, msg="after sorting")
+
+
 
 
 if __name__ == "__main__":
