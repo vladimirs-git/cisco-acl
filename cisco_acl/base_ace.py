@@ -3,7 +3,6 @@ BaseAce - Parent of: Ace, Remark."""
 
 from cisco_acl import helpers as h
 from cisco_acl.base import Base
-from cisco_acl.static_ import MAX_LINE_LENGTH
 from cisco_acl.types_ import StrInt
 
 
@@ -20,7 +19,6 @@ class BaseAce(Base):
             note: Object description (used only in object).
         """
         super().__init__(**kwargs)
-        self.line_length = MAX_LINE_LENGTH
         self._sequence: int = 0
         self.line = line
 
@@ -71,11 +69,3 @@ class BaseAce(Base):
             :return: "10"
         """
         return str(self.sequence) if self.sequence else ""
-
-    # =========================== helpers ============================
-
-    def _check_line_length(self, line) -> bool:
-        line_length = len(line)
-        if line_length > self.line_length:
-            raise ValueError(f"{line_length=}, expected={self.line_length}")
-        return True
