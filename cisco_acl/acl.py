@@ -34,6 +34,7 @@ class Acl(AceGroup):
             output: Interfaces, where Acl is used on output.
             indent: ACE lines indentation. By default 2 spaces.
             note: Object description (used only in object).
+            items: list of Ace, AceGroup, Remark objects
 
         Example:
         line: "ip access-list extended NAME
@@ -48,11 +49,11 @@ class Acl(AceGroup):
             self.platform = "ios"
             self.name = "NAME"
             self.ip_acl_name = "ip access-list NAME"
-            self.items = [Remark("remark TEXT"), Ace("permit icmp any any")]
             self.interface.input = ["interface FastEthernet1"]
             self.interface.output = []
             self.indent = "  "
             self.note = ""
+            self.items = [Remark("remark TEXT"), Ace("permit icmp any any")]
         """
         super().__init__(**kwargs)
         self.line = line
@@ -172,7 +173,7 @@ class Acl(AceGroup):
         self.items = []
 
     @property
-    def indent(self) -> str:
+    def indent(self) -> str:  # TODO private
         """ACL indent"""
         return self._indent
 
@@ -253,6 +254,22 @@ class Acl(AceGroup):
     @name.deleter
     def name(self) -> None:
         self._name = ""
+
+    @property
+    def platform(self) -> str:
+        """Platforms: "ios", "cnx"."""
+        return self._platform
+
+    @platform.setter
+    def platform(self, platform: str):
+        if platform not in PLATFORMS:
+            raise ValueError(f"invalid {platform=}, expected={PLATFORMS}")
+        if platform == self.platform:
+            return
+
+        self._platform = platform
+        for ace_o in self.items:
+            ace_o.platform = platform
 
     # =========================== methods ============================
 

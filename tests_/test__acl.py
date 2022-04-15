@@ -259,30 +259,47 @@ class Test(unittest.TestCase):
             # noinspection PyUnboundLocalVariable
             self.assertEqual(result, "", msg=f"deleter {name=}")
 
-    # =========================== methods ============================
-
-    def test_valid__convert(self):  # TODO
-        """Ace.convert()"""
+    def test_valid__platform(self):
+        """Ace.platform()"""
         acl_ios = "ip access-list extended NAME\n" \
                   "  remark text\n" \
-                  "  permit tcp object-group NAME eq 1 2 host 1.1.1.1 neq 3 4 log\n" \
-                  "  deny udp 1.1.1.0 0.0.0.255 gt 65532 3.3.0.0 0.0.3.3 lt 3\n" \
-                  "  permit tcp host 1.1.1.1 range 1 3 host 2.2.2.2 ack"
+                  "  permit ip object-group A object-group B log\n" \
+                  "  permit ip host 1.1.1.1 host 2.2.2.2\n" \
+                  "  permit ip 1.1.1.0 0.0.0.255 2.2.2.0 0.0.0.255\n" \
+                  "  permit ip 1.1.0.0 0.0.3.3 2.2.0.0 0.0.3.3\n" \
+                  "  permit tcp any eq 1 any neq 3\n" \
+                  "  permit tcp any gt 65533 any lt 3"
         acl_cnx = "ip access-list NAME\n" \
                   "  remark text\n" \
-                  "  permit tcp object-group NAME eq 1 2 host 1.1.1.1 neq 3 4 log\n" \
-                  "  deny udp 1.1.1.0 0.0.0.255 gt 65532 3.3.0.0 0.0.3.3 lt 3\n" \
-                  "  permit tcp host 1.1.1.1 range 1 3 host 2.2.2.2 ack"
+                  "  permit ip addrgroup A addrgroup B log\n" \
+                  "  permit ip 1.1.1.1/32 2.2.2.2/32\n" \
+                  "  permit ip 1.1.1.0/24 2.2.2.0/24\n" \
+                  "  permit ip 1.1.0.0 0.0.3.3 2.2.0.0 0.0.3.3\n" \
+                  "  permit tcp any eq 1 any neq 3\n" \
+                  "  permit tcp any gt 65533 any lt 3"
         for platform, to_platform, line, req in [
             ("ios", "ios", acl_ios, acl_ios),
             ("ios", "cnx", acl_ios, acl_cnx),
             ("cnx", "ios", acl_cnx, acl_ios),
             ("cnx", "cnx", acl_cnx, acl_cnx),
         ]:
+            # getter
             acl_o = Acl(line, platform=platform)
-            acl_o.convert(platform=to_platform)
+            result = acl_o.line
+            self.assertEqual(result, line, msg=f"{platform=} {to_platform=} {line=}")
+
+            acl_o.platform = to_platform
             result = str(acl_o)
+            req_l = req.split("\n")
+            result_l = result.split("\n")
+            for idx, result_ in enumerate(result_l):
+                req_ = req_l[idx]
+                if result_ != req_:
+                    self.assertEqual(result_, req_, msg=f"{idx=} {req_=}")
             self.assertEqual(result, req, msg=f"{platform=} {to_platform=} {line=}")
+
+    # =========================== methods ============================
+
 
     def test_valid__copy(self):
         """Acl.copy()"""

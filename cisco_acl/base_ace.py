@@ -35,7 +35,7 @@ class BaseAce(Base):
         return
 
     @property
-    def sequence(self) -> int:
+    def sequence(self) -> int:  # TODO object
         """ACE sequence number <int>.
 
         Example1:
@@ -57,7 +57,7 @@ class BaseAce(Base):
         self._sequence = 0
 
     @property
-    def ssequence(self) -> str:
+    def ssequence(self) -> str:  # TODO object
         """ACE sequence number <str>.
 
         Example1:
