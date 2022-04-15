@@ -261,27 +261,47 @@ class Test(unittest.TestCase):
 
     def test_valid__platform(self):
         """Ace.platform()"""
-        acl_ios = "ip access-list extended NAME\n" \
-                  "  remark text\n" \
-                  "  permit ip object-group A object-group B log\n" \
-                  "  permit ip host 1.1.1.1 host 2.2.2.2\n" \
-                  "  permit ip 1.1.1.0 0.0.0.255 2.2.2.0 0.0.0.255\n" \
-                  "  permit ip 1.1.0.0 0.0.3.3 2.2.0.0 0.0.3.3\n" \
-                  "  permit tcp any eq 1 any neq 3\n" \
-                  "  permit tcp any gt 65533 any lt 3"
-        acl_cnx = "ip access-list NAME\n" \
-                  "  remark text\n" \
-                  "  permit ip addrgroup A addrgroup B log\n" \
-                  "  permit ip 1.1.1.1/32 2.2.2.2/32\n" \
-                  "  permit ip 1.1.1.0/24 2.2.2.0/24\n" \
-                  "  permit ip 1.1.0.0 0.0.3.3 2.2.0.0 0.0.3.3\n" \
-                  "  permit tcp any eq 1 any neq 3\n" \
-                  "  permit tcp any gt 65533 any lt 3"
+        # multiple ports in single line
+        acl1_ios = "ip access-list extended NAME\n" \
+                   "  permit tcp any eq 1 2 any neq 3 4"
+        acl2_ios = "ip access-list extended NAME\n" \
+                   "  permit tcp any eq 1 any neq 3\n" \
+                   "  permit tcp any eq 1 any neq 4\n" \
+                   "  permit tcp any eq 2 any neq 3\n" \
+                   "  permit tcp any eq 2 any neq 4"
+        # one ports in single line
+        acl1_cnx = "ip access-list NAME\n" \
+                   "  permit tcp any eq 1 any neq 3\n" \
+                   "  permit tcp any eq 1 any neq 4\n" \
+                   "  permit tcp any eq 2 any neq 3\n" \
+                   "  permit tcp any eq 2 any neq 4"
+        # combo
+        acl3_ios = "ip access-list extended NAME\n" \
+                   "  remark text\n" \
+                   "  permit ip object-group A object-group B log\n" \
+                   "  permit ip host 1.1.1.1 host 2.2.2.2\n" \
+                   "  permit ip 1.1.1.0 0.0.0.255 2.2.2.0 0.0.0.255\n" \
+                   "  permit udp 1.1.0.0 0.0.3.3 2.2.0.0 0.0.3.3 range 1 3\n" \
+                   "  permit tcp any eq 1 2 any neq 3 4\n" \
+                   "  permit tcp any gt 65533 any lt 3"
+        acl3_cnx = "ip access-list NAME\n" \
+                   "  remark text\n" \
+                   "  permit ip addrgroup A addrgroup B log\n" \
+                   "  permit ip 1.1.1.1/32 2.2.2.2/32\n" \
+                   "  permit ip 1.1.1.0/24 2.2.2.0/24\n" \
+                   "  permit udp 1.1.0.0 0.0.3.3 2.2.0.0 0.0.3.3 range 1 3\n" \
+                   "  permit tcp any eq 1 any neq 3\n" \
+                   "  permit tcp any eq 1 any neq 4\n" \
+                   "  permit tcp any eq 2 any neq 3\n" \
+                   "  permit tcp any eq 2 any neq 4\n" \
+                   "  permit tcp any gt 65533 any lt 3"
         for platform, to_platform, line, req in [
-            ("ios", "ios", acl_ios, acl_ios),
-            ("ios", "cnx", acl_ios, acl_cnx),
-            ("cnx", "ios", acl_cnx, acl_ios),
-            ("cnx", "cnx", acl_cnx, acl_cnx),
+            ("ios", "ios", acl1_ios, acl1_ios),
+            ("ios", "cnx", acl1_ios, acl1_cnx),
+            ("cnx", "ios", acl1_cnx, acl2_ios),
+            ("cnx", "cnx", acl1_cnx, acl1_cnx),
+
+            ("ios", "cnx", acl3_ios, acl3_cnx),
         ]:
             # getter
             acl_o = Acl(line, platform=platform)
@@ -299,7 +319,6 @@ class Test(unittest.TestCase):
             self.assertEqual(result, req, msg=f"{platform=} {to_platform=} {line=}")
 
     # =========================== methods ============================
-
 
     def test_valid__copy(self):
         """Acl.copy()"""

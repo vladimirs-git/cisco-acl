@@ -3,6 +3,7 @@
 import unittest
 
 from cisco_acl import Ace, Remark
+from helpers_test import Helpers
 from tests_.helpers_test import (
     DENY_IP,
     DENY_IP_1,
@@ -11,7 +12,7 @@ from tests_.helpers_test import (
     PERMIT_IP_2,
     REMARK,
 )
-from helpers_test import Helpers
+
 
 # noinspection DuplicatedCode
 class Test(Helpers):

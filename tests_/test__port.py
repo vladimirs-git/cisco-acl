@@ -28,19 +28,19 @@ LT3 = "lt 3"
 RANGE13 = "range 1 3"
 RANGE24 = "range 2 4"
 
-EQ0_D = dict(line="", operator="", sport="", ports=[])
-EQ1_D = dict(line=EQ1, operator="eq", sport="1", ports=[1])
-EQ12_D = dict(line=EQ12, operator="eq", sport="1-2", ports=[1, 2])
-EQ13_D = dict(line=EQ13, operator="eq", sport="1,3", ports=[1, 3])
-EQ123_D = dict(line=EQ123, operator="eq", sport="1-3", ports=[1, 2, 3])
-EQ2456_D = dict(line=EQ2456, operator="eq", sport="2,4-6", ports=[2, 4, 5, 6])
-NEQ1_D = dict(line=NEQ1, operator="neq", sport="2-65535", ports=WO_1)
-NEQ13_D = dict(line=NEQ13, operator="neq", sport="2,4-65535", ports=WO_13)
-GT_D = dict(line=GT, operator="gt", sport="65533-65535", ports=GT_65532)
-GT1_D = dict(line=GT1, operator="gt", sport="2-65535", ports=WO_1)
-LT1_D = dict(line=LT1, operator="lt", sport="", ports=[])
-LT3_D = dict(line=LT3, operator="lt", sport="1-2", ports=[1, 2])
-RANGE24_D = dict(line=RANGE24, operator="range", sport="2-4", ports=[2, 3, 4])
+EQ0_D = dict(line="", operator="", items=[], ports=[], sport="")
+EQ1_D = dict(line=EQ1, operator="eq", items=[1], ports=[1], sport="1")
+EQ12_D = dict(line=EQ12, operator="eq", items=[1, 2], ports=[1, 2], sport="1-2")
+EQ13_D = dict(line=EQ13, operator="eq", items=[1, 3], ports=[1, 3], sport="1,3")
+EQ123_D = dict(line=EQ123, operator="eq", items=[1, 2, 3], ports=[1, 2, 3], sport="1-3")
+EQ2456_D = dict(line=EQ2456, operator="eq", items=[2, 4, 5, 6], ports=[2, 4, 5, 6], sport="2,4-6")
+NEQ1_D = dict(line=NEQ1, operator="neq", items=[1], ports=WO_1, sport="2-65535")
+NEQ13_D = dict(line=NEQ13, operator="neq", items=[1, 3], ports=WO_13, sport="2,4-65535")
+GT_D = dict(line=GT, operator="gt", items=[65532], ports=GT_65532, sport="65533-65535")
+GT1_D = dict(line=GT1, operator="gt", items=[1], ports=WO_1, sport="2-65535")
+LT1_D = dict(line=LT1, operator="lt", items=[1], ports=[], sport="")
+LT3_D = dict(line=LT3, operator="lt", items=[3], ports=[1, 2], sport="1-2")
+RANGE24_D = dict(line=RANGE24, operator="range", items=[2, 4], ports=[2, 3, 4], sport="2-4")
 
 
 # noinspection DuplicatedCode
@@ -104,6 +104,47 @@ class Test(Helpers):
         ]:
             with self.assertRaises(error, msg=f"{line=}"):
                 Port(line, platform=platform)
+
+    def test_valid__items(self):
+        """Port.items"""
+        for platform, line, items, req_d in [
+            ("ios", EQ2, [1, 2, 3], EQ123_D),
+            ("ios", NEQ2, [1, 3], NEQ13_D),
+            ("ios", GT1, [65532], GT_D),
+            ("ios", LT1, [3], LT3_D),
+            ("ios", RANGE13, [2, 4], RANGE24_D),
+
+            ("cnx", EQ2, [1], EQ1_D),
+            ("cnx", NEQ2, [1], NEQ1_D),
+            ("cnx", GT1, [65532], GT_D),
+            ("cnx", LT1, [3], LT3_D),
+            ("cnx", RANGE13, [2, 4], RANGE24_D),
+
+        ]:
+            # setter
+            port_o = Port(line=line, platform=platform)
+            port_o.items = items
+            self._test_attrs(obj=port_o, req_d=req_d, msg=f"setter {line=}")
+
+        # deleter
+        port_o = Port(EQ1)
+        with self.assertRaises(AttributeError, msg=f"{items=}"):
+            # noinspection PyPropertyAccess
+            del port_o.items
+
+    def test_invalid__items(self):
+        """Port.items"""
+        for platform, line, items, error in [
+            ("ios", EQ2, [], ValueError),
+            ("ios", GT1, [1, 2], ValueError),
+            ("ios", LT1, [1, 2], ValueError),
+            ("ios", LT1, [1, 2], ValueError),
+            ("cnx", RANGE13, [1, 2, 3], ValueError),
+            ("cnx", NEQ2, [1, 2], ValueError),
+        ]:
+            port_o = Port(line, platform=platform)
+            with self.assertRaises(error, msg=f"{items=}"):
+                port_o.items = items
 
     def test_valid__operator(self):
         """Port.operator"""
@@ -189,9 +230,7 @@ class Test(Helpers):
     def test_valid__ports(self):
         """Port.ports"""
         for platform, line, ports, req_d in [
-            ("ios", EQ2, [1], EQ1_D),
             ("ios", EQ2, [1, 2, 3], EQ123_D),
-            ("ios", NEQ2, WO_1, NEQ1_D),
             ("ios", NEQ2, WO_13, NEQ13_D),
             ("ios", GT1, GT_65532, GT_D),
             ("ios", LT1, [1, 2], LT3_D),
@@ -229,9 +268,7 @@ class Test(Helpers):
     def test_valid__sport(self):
         """Port.sport"""
         for platform, line, sport, req_d in [
-            ("ios", EQ2, "1", EQ1_D),
             ("ios", EQ2, "1-3", EQ123_D),
-            ("ios", NEQ2, "2-65535", NEQ1_D),
             ("ios", NEQ2, "2,4-65535", NEQ13_D),
             ("ios", GT1, "65533-65535", GT_D),
             ("ios", LT1, "1-2", LT3_D),
@@ -291,8 +328,8 @@ class Test(Helpers):
             with self.assertRaises(error, msg=f"{items=}"):
                 port_o._line__operator(items)
 
-    def test_valid__line__ports(self):
-        """Port._line__ports()"""
+    def test_valid__line__items_to_ints(self):
+        """Port._line__items_to_ints()"""
         for platform, line, items, req in [
             ("ios", EQ1, ["1"], [1]),
             ("ios", EQ1, ["1", "2"], [1, 2]),
@@ -309,11 +346,11 @@ class Test(Helpers):
             ("cnx", RANGE24, ["1", "3"], [1, 3]),
         ]:
             port_o = Port(line, platform=platform)
-            result = port_o._line__ports(items)
+            result = port_o._line__items_to_ints(items)
             self.assertEqual(result, req, msg=f"{items=}")
 
-    def test_invalid__line__ports(self):
-        """Port._line__ports()"""
+    def test_invalid__line__items_to_ints(self):
+        """Port._line__items_to_ints()"""
         for platform, line, ports, error in [
             ("ios", EQ1, [], ValueError),
             ("ios", LT1, ["1", "2"], ValueError),
@@ -326,7 +363,7 @@ class Test(Helpers):
         ]:
             port_o = Port(line, platform=platform)
             with self.assertRaises(error, msg=f"{platform=} {line=} {ports=}"):
-                port_o._line__ports(ports)
+                port_o._line__items_to_ints(ports)
 
     def test_valid__items_to_ports(self):
         """Port._items_to_ports()"""

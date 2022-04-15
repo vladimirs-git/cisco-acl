@@ -75,4 +75,4 @@ print()
 #   permit tcp host 1.1.1.1 eq 1 2 2.2.2.0 0.0.0.255 eq 3 4
 
 # Change syntax from Cisco IOS platform to Cisco Nexus NX-OS.
-acl1.platform = "cnx"
+acl1.platform = "cnx"  # TODO

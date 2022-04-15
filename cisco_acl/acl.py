@@ -9,12 +9,12 @@ from cisco_acl import helpers as h
 from cisco_acl.ace import Ace
 from cisco_acl.ace_group import AceGroup, LUAcl
 from cisco_acl.interface import Interface
+from cisco_acl.port import Port
 from cisco_acl.remark import Remark
 from cisco_acl.static import (
     SEQUENCE_MAX,
     DEFAULT_PLATFORM,
     INDENTATION,
-    PLATFORMS,
 )
 
 
@@ -262,31 +262,43 @@ class Acl(AceGroup):
 
     @platform.setter
     def platform(self, platform: str):
-        if platform not in PLATFORMS:
-            raise ValueError(f"invalid {platform=}, expected={PLATFORMS}")
+        platform = self._init_platform(platform=platform)
         if platform == self.platform:
             return
 
         self._platform = platform
+        if platform == "cnx":
+            self._split_aces_by_ports(attr="srcport")
+            self._split_aces_by_ports(attr="dstport")
+        for item in self.items:
+            item.platform = platform
+
+    def _split_aces_by_ports(self, attr: str) -> None:
+        """CNX. Split Aces with multiple ports in single line to multiple lines.
+        :param attr: "srcport", "dstport"
+        Example:
+            self.items = [Ace("permit tcp any eq 1 2 any eq 3 4")]
+        result:
+            self.items = [Ace("permit tcp any eq 1 any eq 3"),
+                          Ace("permit tcp any eq 1 any eq 3"),
+                          Ace("permit tcp any eq 2 any eq 4"),
+                          Ace("permit tcp any eq 2 any eq 4")]
+        """
+        items_: LUAcl = []  # return
         for ace_o in self.items:
-            ace_o.platform = platform
+            if isinstance(ace_o, Ace):
+                port_o: Port = getattr(ace_o, attr)
+                if port_o.operator in ["eq", "neq"]:
+                    for port in port_o.items:
+                        ace_o_ = ace_o.copy()
+                        port_o_: Port = getattr(ace_o_, attr)
+                        port_o_.items = [port]
+                        items_.append(ace_o_)
+                    continue
+            items_.append(ace_o)
+        self.items = items_
 
     # =========================== methods ============================
-
-    def convert(self, platform: str) -> None:  # TODO
-        """Convert ACL syntax to other platform.
-        :param platform: New platform.
-        Example:
-            platform: "cnx"
-            self.platform: "ios"
-            self.line = "ip access-list extended NAME\npermit ip host 1.1.1.1 any"
-
-        result:
-            self.platform: "cnx"
-            self.line = "ip access-list NAME\npermit ip 1.1.1.1/32 any"
-        """
-        if platform not in PLATFORMS:
-            raise ValueError(f"invalid {platform=}, expected={PLATFORMS}")
 
     def copy(self) -> Acl:
         """Copy Acl"""

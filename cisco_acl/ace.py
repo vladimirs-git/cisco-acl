@@ -9,7 +9,7 @@ from cisco_acl.address import Address
 from cisco_acl.base_ace import BaseAce
 from cisco_acl.port import Port
 from cisco_acl.protocol import Protocol
-from cisco_acl.static import DEFAULT_PLATFORM, PLATFORMS
+from cisco_acl.static import DEFAULT_PLATFORM
 from cisco_acl.types_ import LStr, LInt
 
 
@@ -193,7 +193,8 @@ class Ace(BaseAce):
         line = self._init_line(line)
         h.check_line_length(line)
         ace_d = h.parse_ace(line)
-        self.sequence = int(ace_d["sequence"]) if ace_d["sequence"] else 0  # TODO object Sequence(), delete self.ssequence
+        # TODO object Sequence(), delete self.ssequence
+        self.sequence = int(ace_d["sequence"]) if ace_d["sequence"] else 0
         self.action: str = ace_d["action"]
         self.protocol: Protocol = Protocol(ace_d["protocol"], platform=self.platform)
         self.srcaddr: Address = Address(ace_d["srcaddr"], platform=self.platform)
@@ -209,8 +210,7 @@ class Ace(BaseAce):
 
     @platform.setter
     def platform(self, platform: str):
-        if platform not in PLATFORMS:
-            raise ValueError(f"invalid {platform=}, expected={PLATFORMS}")
+        platform = self._init_platform(platform=platform)
         if platform == self.platform:
             return
 

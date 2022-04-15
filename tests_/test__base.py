@@ -159,9 +159,9 @@ class Test(unittest.TestCase):
                 self.assertEqual(result, req, msg=f"getter {platform=}")
 
                 # setter
-                with self.assertRaises(AttributeError, msg=f"setter {platform=}"):
-                    # noinspection PyPropertyAccess
-                    obj.platform = platform
+                obj.platform = platform
+                result = obj.platform
+                self.assertEqual(result, req, msg=f"getter {platform=}")
 
                 # deleter
                 with self.assertRaises(AttributeError, msg=f"deleter {platform=}"):

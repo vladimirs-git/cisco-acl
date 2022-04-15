@@ -204,6 +204,5 @@ class Test(unittest.TestCase):
                 aceg_o._check_platform(ace_o)
 
 
-
 if __name__ == "__main__":
     unittest.main()

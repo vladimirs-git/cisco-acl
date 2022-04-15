@@ -65,6 +65,5 @@ class Test(unittest.TestCase):
                 Ace(f"{sequence} {PERMIT_IP}")
 
 
-
 if __name__ == "__main__":
     unittest.main()
