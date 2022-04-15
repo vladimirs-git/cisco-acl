@@ -4,7 +4,7 @@ from cisco_acl import Acl, Ace, AceGroup, Remark
 
 print("""
 ============================= Example1 =============================
-- Create ACL from strings. 
+- Create ACL from strings.
 """)
 name1 = "ACL1"
 items1 = [
@@ -37,7 +37,7 @@ print()
 
 print("""
 ============================= Example2 =============================
-- Create ACL from objects. 
+- Create ACL from objects.
 """)
 
 name2 = "ACL2"

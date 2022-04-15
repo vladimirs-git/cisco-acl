@@ -167,18 +167,21 @@ assert remark.note == "description"
 
 # Examples
 [examples/examples_acl.py](examples/examples_acl.py) 
-- Create flat ACL.
-- Generate sequences for ACEs.
-- Move one ACE.
-- Resequence ACEs.
+- Create ACL.
+- Generate sequence numbers.
+- Moved up ACE "deny tcp any any eq 53".
+- Resequence numbers.
+- Delete sequences.
+- Change syntax from Cisco IOS platform to Cisco Nexus NX-OS.
+- Change syntax from Cisco Nexus NX-OS platform to Cisco IOS.
 
 [examples/examples_acl.py](examples/examples_acl_objects.py) 
 - Create ACL from strings.
 - Create ACL from objects.
 - Create ACL with groups (rules). 
-- Generate sequences for ACEs.
-- Move group and resequence ACEs.
-
+  - Generate sequences for ACEs.
+  - Move group and resequence ACEs.
+  - Resequence numbers.
 
 # Planned features
 [TODO.md](TODO.md) 

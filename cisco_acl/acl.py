@@ -22,19 +22,18 @@ from cisco_acl.static import (
 class Acl(AceGroup):
     """ACL (Access Control List)"""
 
-    def __init__(self, line: str = "", items: Any = None, **kwargs):
+    def __init__(self, line: str = "", **kwargs):
         """ACL (Access Control List).
-        ACL index (self.sequence) is taken from the first ACE in items.
-        :param name: ACL name.
-        :param items: List of ACE (strings or Ace objects).
+        :param line: ACL config (name and following remarks and access entries).
         :param kwargs:
             platform: Supported platforms: "ios", "cnx". By default: "ios".
-            name: ACL name (by default taken from line param).
+            name: ACL name. By default taken from line param.
+            items: List of ACE (strings or Ace, AceGroup, Remark objects).
+                    By default taken from line param.
             input: Interfaces, where Acl is used on input.
             output: Interfaces, where Acl is used on output.
             indent: ACE lines indentation. By default 2 spaces.
             note: Object description (used only in object).
-            items: list of Ace, AceGroup, Remark objects
 
         Example:
         line: "ip access-list extended NAME
@@ -59,7 +58,8 @@ class Acl(AceGroup):
         self.line = line
         if not line:
             self.name = kwargs.get("name") or ""
-            self.items = self._convert_any_to_acl(items or [])
+            items = kwargs.get("items") or []
+            self.items = self._convert_any_to_acl(items)
         self.indent = kwargs.get("indent", INDENTATION)
         self.interface = Interface(**kwargs)
 
@@ -173,7 +173,7 @@ class Acl(AceGroup):
         self.items = []
 
     @property
-    def indent(self) -> str:  # TODO private
+    def indent(self) -> str:
         """ACL indent"""
         return self._indent
 

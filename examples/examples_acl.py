@@ -8,6 +8,8 @@ print("""
 - Moved up ACE "deny tcp any any eq 53".
 - Resequence numbers.
 - Delete sequences.
+- Change syntax from Cisco IOS platform to Cisco Nexus NX-OS.
+- Change syntax from Cisco Nexus NX-OS platform to Cisco IOS.
 """)
 
 lines1 = """
@@ -75,4 +77,31 @@ print()
 #   permit tcp host 1.1.1.1 eq 1 2 2.2.2.0 0.0.0.255 eq 3 4
 
 # Change syntax from Cisco IOS platform to Cisco Nexus NX-OS.
-acl1.platform = "cnx"  # TODO
+acl1.platform = "cnx"
+print(f"{acl1.platform=}")
+print(acl1)
+print()
+# acl1.platform='cnx'
+# ip access-list ACL1
+#   deny tcp any any eq 53
+#   permit icmp any any
+#   permit ip addrgroup A addrgroup B log
+#   permit tcp 1.1.1.1/32 eq 1 2.2.2.0/24 eq 3
+#   permit tcp 1.1.1.1/32 eq 1 2.2.2.0/24 eq 4
+#   permit tcp 1.1.1.1/32 eq 2 2.2.2.0/24 eq 3
+#   permit tcp 1.1.1.1/32 eq 2 2.2.2.0/24 eq 4
+
+# Change syntax from Cisco Nexus NX-OS platform to Cisco IOS.
+acl1.platform = "ios"
+print(f"{acl1.platform=}")
+print(acl1)
+print()
+# acl1.platform='ios'
+# ip access-list extended ACL1
+#   deny tcp any any eq 53
+#   permit icmp any any
+#   permit ip object-group A object-group B log
+#   permit tcp host 1.1.1.1 eq 1 2.2.2.0 0.0.0.255 eq 3
+#   permit tcp host 1.1.1.1 eq 1 2.2.2.0 0.0.0.255 eq 4
+#   permit tcp host 1.1.1.1 eq 2 2.2.2.0 0.0.0.255 eq 3
+#   permit tcp host 1.1.1.1 eq 2 2.2.2.0 0.0.0.255 eq 4
