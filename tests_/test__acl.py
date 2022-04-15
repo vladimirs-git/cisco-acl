@@ -102,31 +102,57 @@ class Test(unittest.TestCase):
                 Acl(items=items, platform="ios")
 
     # =========================== property ===========================
+    def test_valid__line(self):
+        """Acl.line"""
+        for platform, line, req_d, in [
+            ("ios", "\n", dict(line=f"{ACL_IOS}\n", name="")),
+            ("ios", ACL_IOS, dict(line=f"{ACL_IOS}\n", name="")),
+            ("ios", ACL_NAME_IOS, dict(line=f"{ACL_NAME_IOS}\n", name="A")),
+            ("ios", PERMIT_IP, dict(line=f"{ACL_IOS}\n  {PERMIT_IP}", name="")),
+            ("ios", ACL_RP_IOS, dict(line=ACL_RP_IOS, name="")),
+            ("ios", ACL_NAME_RP_IOS, dict(line=ACL_NAME_RP_IOS, name="A")),
 
-    def test_valid__name(self):
-        """Acl.name"""
-        for name, req in [
-            (None, ""),
-            ("", ""),
-            ("A1", "A1"),
-            ("a_", "a_"),
-            ("\tab\n", "ab"),
+            ("cnx", "\n", dict(line=f"{ACL_CNX}\n", name="")),
+            ("cnx", ACL_CNX, dict(line=f"{ACL_CNX}\n", name="")),
+            ("cnx", ACL_NAME_CNX, dict(line=f"{ACL_NAME_CNX}\n", name="A")),
+            ("cnx", PERMIT_IP, dict(line=f"{ACL_CNX}\n  {PERMIT_IP}", name="")),
+            ("cnx", ACL_RP_CNX, dict(line=ACL_RP_CNX, name="")),
+            ("cnx", ACL_NAME_RP_CNX, dict(line=ACL_NAME_RP_CNX, name="A")),
         ]:
             # getter
-            acl_o = Acl(name=name, line_length=2)
-            result = acl_o.name
-            self.assertEqual(result, req, msg=f"getter {name=}")
+            acl_o = Acl(line, platform=platform)
+            result = str(acl_o)
+            req = req_d["line"]
+            self.assertEqual(result, req, msg=f"{line=}")
+            for attr, req in req_d.items():
+                result = getattr(acl_o, attr)
+                self.assertEqual(result, req, msg=f"{line=}")
 
             # setter
-            acl_o.name = name
-            result = acl_o.name
-            self.assertEqual(result, req, msg=f"setter {name=}")
+            acl_o.line = line
+            result = str(acl_o)
+            req = req_d["line"]
+            self.assertEqual(result, req, msg=f"{line=}")
+            for attr, req in req_d.items():
+                result = getattr(acl_o, attr)
+                self.assertEqual(result, req, msg=f"{line=}")
 
             # deleter
-            del acl_o.name
-            result = acl_o.name
+            del acl_o.line
+            result = str(acl_o)
+            req = f"{ACL_CNX}\n" if acl_o.platform == "cnx" else f"{ACL_IOS}\n"
             # noinspection PyUnboundLocalVariable
-            self.assertEqual(result, "", msg=f"deleter {name=}")
+            self.assertEqual(result, req, msg=f"{line=}")
+
+    def test_invalid__line(self):
+        """Acl.line"""
+        acl_o = Acl()
+        for line, error, in [
+            ("typo", ValueError),
+            (f"{ACL_NAME_RP_IOS}\ntypo", ValueError),
+        ]:
+            with self.assertRaises(error, msg=f"{line=}"):
+                acl_o.line = line
 
     def test_valid__indent(self):
         """Acl.indent"""
@@ -208,57 +234,30 @@ class Test(unittest.TestCase):
             with self.assertRaises(error, msg=f"{items=}"):
                 acl_o.items = items
 
-    def test_valid__line(self):
-        """Acl.line"""
-        for platform, line, req_d, in [
-            ("ios", "\n", dict(line=f"{ACL_IOS}\n", name="")),
-            ("ios", ACL_IOS, dict(line=f"{ACL_IOS}\n", name="")),
-            ("ios", ACL_NAME_IOS, dict(line=f"{ACL_NAME_IOS}\n", name="A")),
-            ("ios", PERMIT_IP, dict(line=f"{ACL_IOS}\n  {PERMIT_IP}", name="")),
-            ("ios", ACL_RP_IOS, dict(line=ACL_RP_IOS, name="")),
-            ("ios", ACL_NAME_RP_IOS, dict(line=ACL_NAME_RP_IOS, name="A")),
-
-            ("cnx", "\n", dict(line=f"{ACL_CNX}\n", name="")),
-            ("cnx", ACL_CNX, dict(line=f"{ACL_CNX}\n", name="")),
-            ("cnx", ACL_NAME_CNX, dict(line=f"{ACL_NAME_CNX}\n", name="A")),
-            ("cnx", PERMIT_IP, dict(line=f"{ACL_CNX}\n  {PERMIT_IP}", name="")),
-            ("cnx", ACL_RP_CNX, dict(line=ACL_RP_CNX, name="")),
-            ("cnx", ACL_NAME_RP_CNX, dict(line=ACL_NAME_RP_CNX, name="A")),
+    def test_valid__name(self):
+        """Acl.name"""
+        for name, req in [
+            (None, ""),
+            ("", ""),
+            ("A1", "A1"),
+            ("a_", "a_"),
+            ("\tab\n", "ab"),
         ]:
             # getter
-            acl_o = Acl(line, platform=platform)
-            result = str(acl_o)
-            req = req_d["line"]
-            self.assertEqual(result, req, msg=f"{line=}")
-            for attr, req in req_d.items():
-                result = getattr(acl_o, attr)
-                self.assertEqual(result, req, msg=f"{line=}")
+            acl_o = Acl(name=name, line_length=2)
+            result = acl_o.name
+            self.assertEqual(result, req, msg=f"getter {name=}")
 
             # setter
-            acl_o.line = line
-            result = str(acl_o)
-            req = req_d["line"]
-            self.assertEqual(result, req, msg=f"{line=}")
-            for attr, req in req_d.items():
-                result = getattr(acl_o, attr)
-                self.assertEqual(result, req, msg=f"{line=}")
+            acl_o.name = name
+            result = acl_o.name
+            self.assertEqual(result, req, msg=f"setter {name=}")
 
             # deleter
-            del acl_o.line
-            result = str(acl_o)
-            req = f"{ACL_CNX}\n" if acl_o.platform == "cnx" else f"{ACL_IOS}\n"
+            del acl_o.name
+            result = acl_o.name
             # noinspection PyUnboundLocalVariable
-            self.assertEqual(result, req, msg=f"{line=}")
-
-    def test_invalid__line(self):
-        """Acl.line"""
-        acl_o = Acl()
-        for line, error, in [
-            ("typo", ValueError),
-            (f"{ACL_NAME_RP_IOS}\ntypo", ValueError),
-        ]:
-            with self.assertRaises(error, msg=f"{line=}"):
-                acl_o.line = line
+            self.assertEqual(result, "", msg=f"deleter {name=}")
 
     # =========================== methods ============================
 
@@ -359,8 +358,6 @@ class Test(unittest.TestCase):
         acl_o.delete_sequence()
         result = sum([o.sequence for o in acl_o])
         self.assertEqual(result, 0, msg="after sorting")
-
-
 
 
 if __name__ == "__main__":

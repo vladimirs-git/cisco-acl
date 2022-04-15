@@ -133,32 +133,43 @@ class Acl(AceGroup):
     # =========================== property ===========================
 
     @property
-    def name(self) -> str:
-        """ACL name"""
-        return self._name
+    def line(self) -> str:
+        """ACEs in string format"""
+        items = []
+        for item in self.items:
+            if isinstance(item, AceGroup):
+                for item_ in item:
+                    items.append(item_)
+                continue
+            items.append(item)
+        ace = "\n".join([f"{self.indent}{o}" for o in items])
+        return "\n".join([self.ip_acl_name, ace])
 
-    @name.setter
-    def name(self, name: str) -> None:
-        """ACL name.
-        - length <= 100 chars,
-        - first char is ascii_letters,
-        - other chars are ascii_letters and punctuation,
-        """
-        if name is None:
-            name = ""
-        if not isinstance(name, str):
-            raise TypeError(f"acl {name=} {str} expected")
-        name = name.strip()
-        if not name:
-            self._name = ""
+    @line.setter
+    def line(self, line: str) -> None:
+        items = h.lines_wo_spaces(line)
+        if not items:
+            self.name = ""
+            self.items = []
             return
-        h.check_line_length(name)
-        h.check_name(name)
-        self._name = name
 
-    @name.deleter
-    def name(self) -> None:
-        self._name = ""
+        name = ""
+        first_line = items[0]
+        if re.match("ip access-list", first_line):
+            ip_acl_name, *items = items
+            regex = r"^ip access-list (\S+)"
+            if self.platform == "ios":
+                regex = r"^ip access-list extended (\S+)"
+            name = h.re_find_s(regex, ip_acl_name)
+
+        aces: LUAcl = [self._convert_str_to_ace(s) for s in items]
+        self.name = name
+        self.items = aces
+
+    @line.deleter
+    def line(self) -> None:
+        self.name = ""
+        self.items = []
 
     @property
     def indent(self) -> str:
@@ -216,43 +227,32 @@ class Acl(AceGroup):
         self._items = []
 
     @property
-    def line(self) -> str:
-        """ACEs in string format"""
-        items = []
-        for item in self.items:
-            if isinstance(item, AceGroup):
-                for item_ in item:
-                    items.append(item_)
-                continue
-            items.append(item)
-        ace = "\n".join([f"{self.indent}{o}" for o in items])
-        return "\n".join([self.ip_acl_name, ace])
+    def name(self) -> str:
+        """ACL name"""
+        return self._name
 
-    @line.setter
-    def line(self, line: str) -> None:
-        items = h.lines_wo_spaces(line)
-        if not items:
-            self.name = ""
-            self.items = []
+    @name.setter
+    def name(self, name: str) -> None:
+        """ACL name.
+        - length <= 100 chars,
+        - first char is ascii_letters,
+        - other chars are ascii_letters and punctuation,
+        """
+        if name is None:
+            name = ""
+        if not isinstance(name, str):
+            raise TypeError(f"acl {name=} {str} expected")
+        name = name.strip()
+        if not name:
+            self._name = ""
             return
+        h.check_line_length(name)
+        h.check_name(name)
+        self._name = name
 
-        name = ""
-        first_line = items[0]
-        if re.match("ip access-list", first_line):
-            ip_acl_name, *items = items
-            regex = r"^ip access-list (\S+)"
-            if self.platform == "ios":
-                regex = r"^ip access-list extended (\S+)"
-            name = h.re_find_s(regex, ip_acl_name)
-
-        aces: LUAcl = [self._convert_str_to_ace(s) for s in items]
-        self.name = name
-        self.items = aces
-
-    @line.deleter
-    def line(self) -> None:
-        self.name = ""
-        self.items = []
+    @name.deleter
+    def name(self) -> None:
+        self._name = ""
 
     # =========================== methods ============================
 
