@@ -9,7 +9,7 @@ from cisco_acl.ace import Ace, LAce
 from cisco_acl.base_ace import BaseAce
 from cisco_acl.group import Group
 from cisco_acl.remark import Remark, LRemark
-from cisco_acl.static_ import ACTIONS
+from cisco_acl.static import ACTIONS
 from cisco_acl.types_ import LStr
 
 UAce = Union[Ace, Remark]
@@ -142,7 +142,6 @@ class AceGroup(Group, BaseAce):
                 item = self._convert_str_to_ace(item)
             if isinstance(item, (Ace, Remark)):
                 self._check_platform(item)
-                self._check_line_length(item)
             else:
                 raise TypeError(f"{item=} {str} {Ace} {Remark} expected")
             items_.append(item)
@@ -156,9 +155,9 @@ class AceGroup(Group, BaseAce):
         """
         action = h.parse_action(line)["action"]
         if action in ["permit", "deny"]:
-            return Ace(line, platform=self.platform, line_length=self.line_length)
+            return Ace(line, platform=self.platform)
         if action in ["remark"]:
-            return Remark(line, platform=self.platform, line_length=self.line_length)
+            return Remark(line, platform=self.platform)
         expected_actions = list(ACTIONS)
         raise ValueError(f"{line=} {expected_actions=}")
 
@@ -168,14 +167,6 @@ class AceGroup(Group, BaseAce):
         ace_platform = ace.platform
         if ace_platform != acl_platform:
             raise ValueError(f"{ace=} {ace_platform=}, expected {acl_platform=}")
-        return True
-
-    def _check_line_length(self, item: UAcl) -> bool:
-        """Check is Ace line_length == AceGroup platform"""
-        acl_line_length: int = self.line_length
-        ace_line_length = item.line_length
-        if ace_line_length > acl_line_length:
-            raise ValueError(f"{item=} {ace_line_length=}, expected {acl_line_length=}")
         return True
 
     def _init_sequence(self) -> int:
