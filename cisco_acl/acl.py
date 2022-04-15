@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import re
 from functools import total_ordering
-from string import ascii_letters, digits, punctuation
 from typing import Any, List
 
 from cisco_acl import helpers as h
@@ -11,7 +10,12 @@ from cisco_acl.ace import Ace
 from cisco_acl.ace_group import AceGroup, LUAcl
 from cisco_acl.interface import Interface
 from cisco_acl.remark import Remark
-from cisco_acl.static_ import SEQUENCE_MAX, DEFAULT_PLATFORM, MAX_LINE_LENGTH, INDENTATION
+from cisco_acl.static import (
+    SEQUENCE_MAX,
+    DEFAULT_PLATFORM,
+    INDENTATION,
+    PLATFORMS,
+)
 
 
 @total_ordering
@@ -66,8 +70,6 @@ class Acl(AceGroup):
             params.append(f"note={self.note!r}")
         if self.name:
             params.append(f"name={self.name!r}")
-        if self.line_length != MAX_LINE_LENGTH:
-            params.append(f"line_length={self.line_length!r}")
         if self.interface.input:
             params.append(f"input={self.interface.input!r}")
         if self.interface.output:
@@ -123,7 +125,6 @@ class Acl(AceGroup):
                 item = self._convert_str_to_ace(item)
             if isinstance(item, (Ace, Remark, AceGroup)):
                 self._check_platform(item)
-                self._check_line_length(item)
             else:
                 raise TypeError(f"{item=} {str} {Ace} {Remark} {AceGroup} expected")
             items_.append(item)
@@ -148,18 +149,11 @@ class Acl(AceGroup):
         if not isinstance(name, str):
             raise TypeError(f"acl {name=} {str} expected")
         name = name.strip()
-        if not 0 <= len(name) <= self.line_length:
-            raise ValueError(f"acl name length={len(name)}, expected < {self.line_length}")
         if not name:
             self._name = ""
             return
-        first_char = name[0]
-        if first_char not in ascii_letters:
-            raise ValueError(f"acl name {first_char=}, expected={ascii_letters}")
-        skip_chas = {"?"}
-        valid_chars = set(ascii_letters + digits + punctuation).difference(skip_chas)
-        if invalid_chars := set(name).difference(valid_chars):
-            raise ValueError(f"acl name {invalid_chars=}")
+        h.check_line_length(name)
+        h.check_name(name)
         self._name = name
 
     @name.deleter
@@ -262,14 +256,28 @@ class Acl(AceGroup):
 
     # =========================== methods ============================
 
+    def convert(self, platform: str) -> None:  # TODO
+        """Convert ACL syntax to other platform.
+        :param platform: New platform.
+        Example:
+            platform: "cnx"
+            self.platform: "ios"
+            self.line = "ip access-list extended NAME\npermit ip host 1.1.1.1 any"
+
+        result:
+            self.platform: "cnx"
+            self.line = "ip access-list NAME\npermit ip 1.1.1.1/32 any"
+        """
+        if platform not in PLATFORMS:
+            raise ValueError(f"invalid {platform=}, expected={PLATFORMS}")
+
     def copy(self) -> Acl:
         """Copy Acl"""
         acl = Acl(
             name=self.name,
-            items=self.items.copy(),
+            items=[o.copy() for o in self.items],
             platform=self.platform,
             note=self.note,
-            line_length=self.line_length,
             input=self.interface.input.copy(),
             output=self.interface.output.copy(),
         )
