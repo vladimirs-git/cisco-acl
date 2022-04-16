@@ -685,7 +685,3 @@ print()
 ```
 
 [examples/examples_acl_objects.py](examples/examples_acl_objects.py)
-
-# Planned features
-
-[TODO.md](TODO.md) 

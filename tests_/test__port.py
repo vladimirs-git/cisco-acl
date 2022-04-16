@@ -47,6 +47,48 @@ RANGE24_D = dict(line=RANGE24, operator="range", items=[2, 4], ports=[2, 3, 4], 
 class Test(Helpers):
     """Port"""
 
+    # ========================== redefined ===========================
+
+    def test_valid__hash__(self):
+        """Port.__hash__()"""
+        line = EQ1
+        port_o = Port(line)
+        result = port_o.__hash__()
+        req = EQ1.__hash__()
+        self.assertEqual(result, req, msg=f"{line=}")
+
+    def test_valid__eq__(self):
+        """Port.__eq__() __ne__()"""
+        port_o = Port(EQ1)
+        for other_o, req, in [
+            (EQ1, True),
+            (Port(EQ1), True),
+            (Port(EQ2), False),
+            (Port(RANGE13), False),
+        ]:
+            result = port_o.__eq__(other_o)
+            self.assertEqual(result, req, msg=f"{port_o=} {other_o=}")
+            result = port_o.__ne__(other_o)
+            self.assertEqual(result, not req, msg=f"{port_o=} {other_o=}")
+
+    def test_valid__lt__(self):
+        """Port.__lt__() __le__() __gt__() __ge__()"""
+        for port_o, other_o, req_lt, req_le, req_gt, req_ge in [
+            (Port(EQ1), Port(EQ1), False, True, False, True),
+            (Port(EQ1), Port(EQ2), True, True, False, False),
+            (Port(EQ1), Port(RANGE13), True, True, False, False),
+            (Port(EQ13), Port(RANGE13), True, True, False, False),
+            (Port(RANGE13), Port(RANGE24), True, True, False, False),
+        ]:
+            result = port_o.__lt__(other_o)
+            self.assertEqual(result, req_lt, msg=f"{port_o=} {other_o=}")
+            result = port_o.__le__(other_o)
+            self.assertEqual(result, req_le, msg=f"{port_o=} {other_o=}")
+            result = port_o.__gt__(other_o)
+            self.assertEqual(result, req_gt, msg=f"{port_o=} {other_o=}")
+            result = port_o.__ge__(other_o)
+            self.assertEqual(result, req_ge, msg=f"{port_o=} {other_o=}")
+
     # =========================== property ===========================
 
     def test_valid__line(self):

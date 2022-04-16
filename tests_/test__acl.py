@@ -23,7 +23,6 @@ from tests_.helpers_test import (
     PERMIT_IP_2,
     REMARK,
     REMARK_1,
-    REMARK_3,
 )
 
 REMARK_10 = Remark(f"10 {REMARK}")
@@ -359,7 +358,6 @@ class Test(unittest.TestCase):
             acl_o.sort()
             result = [str(o) for o in acl_o]
             self.assertEqual(result, req, msg=f"{acl_o=}")
-
 
 
 if __name__ == "__main__":

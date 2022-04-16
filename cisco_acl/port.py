@@ -1,5 +1,6 @@
 """ACE. TCP/UDP Port."""
 
+from functools import total_ordering
 from typing import List
 
 from cisco_acl import helpers as h
@@ -8,6 +9,7 @@ from cisco_acl.static import OPERATORS, PORTS
 from cisco_acl.types_ import LInt, LStr, IInt
 
 
+@total_ordering
 class Port(Base):
     """ACE. TCP/UDP Port."""
 
@@ -48,6 +50,27 @@ class Port(Base):
         """
         super().__init__(**kwargs)
         self.line = line
+
+    # ========================== redefined ===========================
+
+    def __hash__(self) -> int:
+        return self.line.__hash__()
+
+    def __eq__(self, other) -> bool:
+        """== equality"""
+        return self.__hash__() == other.__hash__()
+
+    def __lt__(self, other) -> bool:
+        """< less than"""
+        if self.__class__ == other.__class__:
+            if self.operator and other.operator:
+                if self.operator != other.operator:
+                    return self.operator < other.operator
+                if self.items[0] != other.items[0]:
+                    return self.items[0] < other.items[0]
+                if self.items[-1] != other.items[-1]:
+                    return self.items[-1] < other.items[-1]
+        return False
 
     # =========================== property ===========================
 

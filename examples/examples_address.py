@@ -1,5 +1,6 @@
-from cisco_acl import Address
 from netaddr import IPNetwork
+
+from cisco_acl import Address
 
 addr = Address("10.0.0.0 0.0.0.3", platform="ios")
 assert addr.line == "10.0.0.0 0.0.0.3"

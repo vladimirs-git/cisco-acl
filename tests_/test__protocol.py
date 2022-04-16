@@ -10,6 +10,45 @@ from tests_.helpers_test import Helpers
 class Test(Helpers):
     """Protocol"""
 
+    # ========================== redefined ===========================
+
+    def test_valid__hash__(self):
+        """Protocol.__hash__()"""
+        tcp = "tcp"
+        proto_o = Protocol(tcp)
+        result = proto_o.__hash__()
+        req = tcp.__hash__()
+        self.assertEqual(result, req, msg=f"{tcp=}")
+
+    def test_valid__eq__(self):
+        """Protocol.__eq__() __ne__()"""
+        proto_o = Protocol("tcp")
+        for other_o, req, in [
+            ("tcp", True),
+            (Protocol("tcp"), True),
+            (Protocol("udp"), False),
+        ]:
+            result = proto_o.__eq__(other_o)
+            self.assertEqual(result, req, msg=f"{proto_o=} {other_o=}")
+            result = proto_o.__ne__(other_o)
+            self.assertEqual(result, not req, msg=f"{proto_o=} {other_o=}")
+
+    def test_valid__lt__(self):
+        """Protocol.__lt__() __le__() __gt__() __ge__()"""
+        tcp, udp = "tcp", "udp"
+        for proto_o, other_o, req_lt, req_le, req_gt, req_ge in [
+            (Protocol(tcp), Protocol(tcp), False, True, False, True),
+            (Protocol(tcp), Protocol(udp), True, True, False, False),
+        ]:
+            result = proto_o.__lt__(other_o)
+            self.assertEqual(result, req_lt, msg=f"{proto_o=} {other_o=}")
+            result = proto_o.__le__(other_o)
+            self.assertEqual(result, req_le, msg=f"{proto_o=} {other_o=}")
+            result = proto_o.__gt__(other_o)
+            self.assertEqual(result, req_gt, msg=f"{proto_o=} {other_o=}")
+            result = proto_o.__ge__(other_o)
+            self.assertEqual(result, req_ge, msg=f"{proto_o=} {other_o=}")
+
     # =========================== property ===========================
 
     def test_valid__line(self):

@@ -7,6 +7,8 @@ from netaddr import IPNetwork  # type: ignore
 from cisco_acl import Address
 from tests_.helpers_test import Helpers
 
+OBJGROUP = "object-group NAME"
+ADDRGROUP = "addrgroup NAME"
 PREFIX0 = "0.0.0.0/0"
 PREFIX30 = "10.0.0.0/30"
 PREFIX32 = "10.0.0.1/32"
@@ -81,6 +83,65 @@ CNX_ADDRGROUP_D = dict(
 
 class Test(Helpers):
     """Address"""
+
+    # ========================== redefined ===========================
+
+    def test_valid__hash__(self):
+        """Address.__hash__()"""
+        line = PREFIX30
+        addr_o = Address(line, platform="cnx")
+        result = addr_o.__hash__()
+        req = PREFIX30.__hash__()
+        self.assertEqual(result, req, msg=f"{line=}")
+
+        addr_o.platform = "ios"
+        result = addr_o.__hash__()
+        self.assertNotEqual(result, req, msg=f"{line=}")
+
+    def test_valid__eq__(self):
+        """Address.__eq__() __ne__()"""
+        addr_o = Address(PREFIX30, platform="cnx")
+        for other_o, req, in [
+            (PREFIX30, True),
+            (Address(PREFIX30, platform="cnx"), True),
+            (Address(PREFIX30, platform="ios"), False),
+            (Address(OBJGROUP), False),
+        ]:
+            result = addr_o.__eq__(other_o)
+            self.assertEqual(result, req, msg=f"{addr_o=} {other_o=}")
+            result = addr_o.__ne__(other_o)
+            self.assertEqual(result, not req, msg=f"{addr_o=} {other_o=}")
+
+    def test_valid__lt__(self):
+        """Address.__lt__() __le__() __gt__() __ge__()"""
+        for ace_o, other_o, req_lt, req_le, req_gt, req_ge in [
+            (Address(PREFIX30), Address(PREFIX30), False, True, False, True),
+            (Address(PREFIX30), Address(PREFIX32), True, True, False, False),
+            (Address(PREFIX30), Address(OBJGROUP), True, True, False, False),
+        ]:
+            result = ace_o.__lt__(other_o)
+            self.assertEqual(result, req_lt, msg=f"{ace_o=} {other_o=}")
+            result = ace_o.__le__(other_o)
+            self.assertEqual(result, req_le, msg=f"{ace_o=} {other_o=}")
+            result = ace_o.__gt__(other_o)
+            self.assertEqual(result, req_gt, msg=f"{ace_o=} {other_o=}")
+            result = ace_o.__ge__(other_o)
+            self.assertEqual(result, req_ge, msg=f"{ace_o=} {other_o=}")
+
+    def test_valid__lt__sort(self):
+        """Address.__lt__(), Address.__le__()"""
+        for items in [
+            [Address(PREFIX30), Address(PREFIX30)],
+            [Address(PREFIX30), Address(PREFIX32)],
+            [Address(PREFIX30), Address(OBJGROUP)],
+            [Address(ADDRGROUP), Address(OBJGROUP)],
+        ]:
+            req = items.copy()
+            result = sorted(items)
+            self.assertEqual(result, req, msg=f"{items=}")
+            items[0], items[1] = items[1], items[0]
+            result = sorted(items)
+            self.assertEqual(result, req, msg=f"{items=}")
 
     # =========================== property ===========================
 

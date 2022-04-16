@@ -92,10 +92,10 @@ class Ace(BaseAce):
                 if self.srcport.operator and other.srcport.operator:
                     if self.srcport.operator != other.srcport.operator:
                         return self.srcport.operator < other.srcport.operator
-                    if self.srcport.ports[0] != other.srcport.ports[0]:
-                        return self.srcport.ports[0] < other.srcport.ports[0]
-                    if self.srcport.ports[-1] != other.srcport.ports[-1]:
-                        return self.srcport.ports[-1] < other.srcport.ports[-1]
+                    if self.srcport.items[0] != other.srcport.items[0]:
+                        return self.srcport.items[0] < other.srcport.items[0]
+                    if self.srcport.items[-1] != other.srcport.items[-1]:
+                        return self.srcport.items[-1] < other.srcport.items[-1]
                 # dstaddr
                 if self.dstaddr.ipnet != other.dstaddr.ipnet:
                     if self.dstaddr.ipnet and other.dstaddr.ipnet:
@@ -107,10 +107,10 @@ class Ace(BaseAce):
                 if self.dstport.operator and other.dstport.operator:
                     if self.dstport.operator != other.dstport.operator:
                         return self.dstport.operator < other.dstport.operator
-                    if self.dstport.ports[0] != other.dstport.ports[0]:
-                        return self.dstport.ports[0] < other.dstport.ports[0]
-                    if self.dstport.ports[-1] != other.dstport.ports[-1]:
-                        return self.dstport.ports[-1] < other.dstport.ports[-1]
+                    if self.dstport.items[0] != other.dstport.items[0]:
+                        return self.dstport.items[0] < other.dstport.items[0]
+                    if self.dstport.items[-1] != other.dstport.items[-1]:
+                        return self.dstport.items[-1] < other.dstport.items[-1]
                 # option, addrgroup
                 return self.line < other.line
             raise TypeError(f"{other=} {Ace} expected")

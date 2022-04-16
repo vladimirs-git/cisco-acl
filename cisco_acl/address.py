@@ -1,6 +1,7 @@
 """ACE. Address."""
 
 import re
+from functools import total_ordering
 from typing import List, Optional
 
 from netaddr import IPNetwork  # type: ignore
@@ -10,6 +11,7 @@ from cisco_acl.base import Base
 from cisco_acl.types_ import OIPNetwork
 
 
+@total_ordering
 class Address(Base):
     """ACE. Address."""
 
@@ -64,6 +66,27 @@ class Address(Base):
         """
         super().__init__(**kwargs)
         self.line = line
+
+    # ========================== redefined ===========================
+
+    def __hash__(self) -> int:
+        return self.line.__hash__()
+
+    def __eq__(self, other) -> bool:
+        """== equality"""
+        return self.__hash__() == other.__hash__()
+
+    def __lt__(self, other) -> bool:
+        """< less than"""
+        if self.__class__ == other.__class__:
+            if self.ipnet != other.ipnet:
+                if self.ipnet and other.ipnet:
+                    return self.ipnet < other.ipnet
+                if self.ipnet and not other.ipnet:
+                    return True
+                return False
+            return False
+        return False
 
     # =========================== property ===========================
 
