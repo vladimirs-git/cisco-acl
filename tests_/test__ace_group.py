@@ -7,13 +7,9 @@ from tests_.helpers_test import (
     DENY_IP,
     DENY_IP_2,
     Helpers,
-    PERMIT_ADDR_GR,
     PERMIT_IP,
     PERMIT_IP_1,
-    PERMIT_IP_2,
-    PERMIT_OBJ_GR,
     REMARK,
-    REMARK_1,
 )
 
 
@@ -23,13 +19,41 @@ class Test(Helpers):
 
     # ========================== redefined ===========================
 
+    def test_valid__hash__(self):
+        """AceGroup.__hash__()"""
+        line = f"{PERMIT_IP}\n{DENY_IP}"
+        aceg_o = AceGroup(line)
+        result = aceg_o.__hash__()
+        req = line.__hash__()
+        self.assertEqual(result, req, msg=f"{line=}")
+
+    def test_valid__eq__(self):
+        """AceGroup.__eq__() __ne__()"""
+        line = f"{PERMIT_IP}\n{DENY_IP}"
+        aceg_o = AceGroup(line)
+        for other_o, req, in [
+            (AceGroup(line), True),
+            (AceGroup(f"{PERMIT_IP_1}\n{DENY_IP}"), False),
+            (AceGroup(PERMIT_IP), False),
+            (Remark(REMARK), False),
+            (line, False),
+        ]:
+            result = aceg_o.__eq__(other_o)
+            self.assertEqual(result, req, msg=f"{aceg_o=} {other_o=}")
+            result = aceg_o.__ne__(other_o)
+            self.assertEqual(result, not req, msg=f"{aceg_o=} {other_o=}")
+
     def test_valid__lt__sort(self):
         """AceGroup.__lt__(), AceGroup.__le__()"""
-        aceg_o = AceGroup([Ace("permit icmp any any"), Ace("deny ip any any")])
+        line = f"{PERMIT_IP}\n{DENY_IP}"
+        aceg_o = AceGroup(line)
         for items in [
-            [AceGroup([Ace("deny ip any any"), Ace("permit icmp any any")]), aceg_o],
+            [AceGroup(line), aceg_o],
+            [AceGroup(f"{DENY_IP}\n{PERMIT_IP}"), aceg_o],
+            [aceg_o, AceGroup(f"{PERMIT_IP_1}\n{PERMIT_IP}")],
             [Remark("remark text"), aceg_o],
             [Ace("permit ip any any"), aceg_o],
+            [line, aceg_o],
         ]:
             req = items.copy()
             result = sorted(items)
@@ -66,122 +90,88 @@ class Test(Helpers):
 
     def test_valid__line(self):
         """AceGroup.line"""
+        acl1 = f"{PERMIT_IP}\n \n{DENY_IP}\n \n{REMARK}"
+        acl1_name = f"ip access-list NAME\n{acl1}"
+        acl2 = f"2 {acl1}"
+        group1 = f"{PERMIT_IP}\n{DENY_IP}\n{REMARK}"
+        group2 = f"2 {group1}"
 
-        for line, req, in [
-            ("\n", ""),
-            (PERMIT_IP, PERMIT_IP),
-            (f"{PERMIT_IP}\n \n{DENY_IP}\n \n{REMARK}", f"{PERMIT_IP}\n{DENY_IP}\n{REMARK}"),
+        for line, req_d, in [
+            ("", dict(line="", sequence="")),
+            ("typo", dict(line="", sequence="")),
+            (PERMIT_IP, dict(line=PERMIT_IP, sequence="")),
+            (PERMIT_IP_1, dict(line=PERMIT_IP_1, sequence="1")),
+            (acl1, dict(line=group1, sequence="")),
+            (acl1_name, dict(line=group1, sequence="")),
+            (acl2, dict(line=group2, sequence="2")),
         ]:
-            aceg_o = AceGroup()
+            # getter
+            aceg_o = AceGroup(line)
+            self._test_attrs(obj=aceg_o, req_d=req_d, msg=f"getter {line=}")
 
             # setter
             aceg_o.line = line
-            result = aceg_o.line
-            self.assertEqual(result, req, msg=f"setter {line=}")
-            result = str(aceg_o)
-            self.assertEqual(result, req, msg=f"__str__ {line=}")
+            self._test_attrs(obj=aceg_o, req_d=req_d, msg=f"setter {line=}")
 
-            # deleter
-            del aceg_o.line
-            result = aceg_o.line
-            # noinspection PyUnboundLocalVariable
-            self.assertEqual(result, "", msg=f"deleter {line=}")
-
-    def test_invalid__line(self):
-        """AceGroup.line"""
-        aceg_o = AceGroup()
-        for line, error, in [
-            ("typo", ValueError),
-            (f"{PERMIT_IP}\ntypo", ValueError),
-        ]:
-            with self.assertRaises(error, msg=f"{line=}"):
-                aceg_o.line = line
+        # deleter
+        aceg_o = AceGroup(PERMIT_IP)
+        del aceg_o.line
+        self._test_attrs(obj=aceg_o, req_d=dict(line="", sequence=""), msg="deleter line")
 
     # =========================== helpers ============================
 
     def test_valid__convert_any_to_aces(self):
         """AceGroup._convert_any_to_aces()"""
-        aceg_o_ = AceGroup()
-        for items, req, req_seq_i, req_seq_s in [
-            # str
-            (REMARK, [REMARK], 0, ""),
-            (REMARK_1, [REMARK_1], 1, "1"),
-            (PERMIT_IP, [PERMIT_IP], 0, ""),
-            (PERMIT_IP_1, [PERMIT_IP_1], 1, "1"),
-
-            # List[str]
-            ([], [], 0, ""),
-            ([REMARK, PERMIT_IP], [REMARK, PERMIT_IP], 0, ""),
-            ([REMARK_1, PERMIT_IP_2], [REMARK_1, PERMIT_IP_2], 1, "1"),
-            ([PERMIT_IP_2, REMARK_1], [PERMIT_IP_2, REMARK_1], 2, "2"),
-
-            # object
-            (Remark(REMARK), [REMARK], 0, ""),
-            (Ace(PERMIT_IP), [PERMIT_IP], 0, ""),
-            (Ace(PERMIT_ADDR_GR, platform="ios"), [PERMIT_OBJ_GR], 0, ""),
-
-            # List[object]
-            ([Remark(REMARK_1), Ace(PERMIT_IP_1)], [REMARK_1, PERMIT_IP_1], 1, "1"),
-            ([Ace(PERMIT_IP_1), Ace(DENY_IP_2)], [PERMIT_IP_1, DENY_IP_2], 1, "1"),
-            ([Ace(DENY_IP_2), Ace(PERMIT_IP_1)], [DENY_IP_2, PERMIT_IP_1], 2, "2"),
+        items0 = [Remark(REMARK), Ace(PERMIT_IP_1)]
+        items1 = [Ace(PERMIT_IP_1), Ace(DENY_IP_2)]
+        items2 = [Ace(DENY_IP_2), Ace(PERMIT_IP_1)]
+        for items, req_d in [
+            (items0, dict(line=f"{REMARK}\n{PERMIT_IP_1}", sequence="")),
+            (items1, dict(line=f"{PERMIT_IP_1}\n{DENY_IP_2}", sequence="1")),
+            (items2, dict(line=f"{DENY_IP_2}\n{PERMIT_IP_1}", sequence="2")),
         ]:
-            result_items = aceg_o_._convert_any_to_aces(items)
-            result = [str(o) for o in result_items]
-            self.assertEqual(result, req, msg=f"{items=}")
-
-            # sequence
+            # getter
             aceg_o = AceGroup(items=items)
-            result = int(aceg_o.sequence)
-            self.assertEqual(result, req_seq_i, msg="sequence int")
-            result_ = str(aceg_o.sequence)
-            self.assertEqual(result_, req_seq_s, msg="sequence str")
+            self._test_attrs(obj=aceg_o, req_d=req_d, msg=f"getter {items=}")
 
-        # input ios, output cnx
-        aceg_o = AceGroup(items=[PERMIT_OBJ_GR], platform="cnx")
-        result = [str(o) for o in aceg_o]
-        self.assertEqual(result, [PERMIT_ADDR_GR], msg=f"{items=}")
+            # setter
+            aceg_o.items = items
+            self._test_attrs(obj=aceg_o, req_d=req_d, msg=f"setter {items=}")
 
-    def test_invalid__convert_any_to_aces(self):
-        """AceGroup._convert_any_to_aces()"""
+        # deleter
+        aceg_o = AceGroup(items=[Remark(REMARK)])
+        del aceg_o.items
+        self._test_attrs(obj=aceg_o, req_d=dict(line="", sequence=""), msg="deleter items")
+
+    def test_invalid__init_items(self):
+        """AceGroup._init_items()"""
         acl_o = AceGroup()
         for items, error, in [
-            ("", ValueError),
-            (None, TypeError),
             (1, TypeError),
             ([1], TypeError),
-            ([""], ValueError),
-            (["typo"], ValueError),
-            ([Ace(PERMIT_IP, platform="cnx")], ValueError),
+            ([""], TypeError),
+            ([REMARK], TypeError),
+            (Remark(REMARK), TypeError),
         ]:
             with self.assertRaises(error, msg=f"{items=}"):
-                acl_o._convert_any_to_aces(items=items)
+                acl_o._init_items(items=items)
             if not items:
                 continue
             with self.assertRaises(error, msg=f"{items=}"):
-                AceGroup(items=items, platform="ios")
+                AceGroup(items=items)
 
-    def test_valid__convert_str_to_ace(self):
-        """AceGroup._convert_str_to_ace()"""
+    def test_valid__line_to_ace(self):
+        """AceGroup._line_to_ace()"""
         aceg_o = AceGroup()
-        for line in [
-            REMARK,
-            PERMIT_IP,
-            DENY_IP,
+        for line, req in [
+            (REMARK, Remark(REMARK)),
+            (PERMIT_IP, Ace(PERMIT_IP)),
+            (DENY_IP, Ace(DENY_IP)),
+            ("", None),
+            ("typo", None),
         ]:
-            req = line
-            ace_o = aceg_o._convert_str_to_ace(line)
-            result = str(ace_o)
+            result = aceg_o._line_to_ace(line)
             self.assertEqual(result, req, msg=f"{line=}")
-
-    def test_invalid__convert_str_to_ace(self):
-        """AceGroup._convert_str_to_ace()"""
-        aceg_o = AceGroup()
-        for items, error, in [
-            ("", ValueError),
-            ("typo", ValueError),
-        ]:
-            with self.assertRaises(error, msg=f"{items=}"):
-                aceg_o._convert_str_to_ace(items)
 
     def test_valid__check_platform(self):
         """AceGroup._check_platform()"""

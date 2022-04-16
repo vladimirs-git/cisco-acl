@@ -17,22 +17,21 @@ from tests_.helpers_test import (
     DENY_IP_2,
     ETH1,
     ETH2,
-    PERMIT_ADDR_GR,
     PERMIT_ICMP,
     PERMIT_IP,
     PERMIT_IP_1,
     PERMIT_IP_2,
-    PERMIT_OBJ_GR,
     REMARK,
     REMARK_1,
+    REMARK_3,
 )
 
 REMARK_10 = Remark(f"10 {REMARK}")
 REMARK_20 = Remark(f"20 {REMARK}")
 ACE_10 = Ace(f"10 {PERMIT_IP}")
 ACE_20 = Ace(f"20 {PERMIT_IP}")
-ACE_GR_10 = AceGroup([Ace(f"10 {DENY_IP}"), Ace(PERMIT_IP)])
-ACE_GR_20 = AceGroup([Ace(f"20 {DENY_IP}"), Ace(PERMIT_IP)])
+ACE_GR_10 = AceGroup(f"10 {DENY_IP}\n{PERMIT_IP}")
+ACE_GR_20 = AceGroup(f"20 {DENY_IP}\n{PERMIT_IP}")
 
 
 # noinspection DuplicatedCode
@@ -45,57 +44,30 @@ class Test(unittest.TestCase):
         """Acl._init_items()"""
         acl_o_ = Acl()
         for items, req in [
-            # str
-            (None, []),
-            ("", []),
-            (REMARK, [REMARK]),
-            (REMARK_1, [REMARK_1]),
-            (PERMIT_IP, [PERMIT_IP]),
-            (PERMIT_IP_1, [PERMIT_IP_1]),
-
-            # List[str]
-            ([], []),
-            ([REMARK, PERMIT_IP], [REMARK, PERMIT_IP]),
-            ([REMARK_1, PERMIT_IP_2], [REMARK_1, PERMIT_IP_2]),
-            ([PERMIT_IP_2, REMARK_1], [PERMIT_IP_2, REMARK_1]),
-
-            # object
-            (Remark(REMARK), [REMARK]),
-            (Ace(PERMIT_IP), [PERMIT_IP]),
-            (Ace(PERMIT_ADDR_GR, platform="ios"), [PERMIT_OBJ_GR]),
-
-            # List[object]
             ([Remark(REMARK_1), Ace(PERMIT_IP_1)], [REMARK_1, PERMIT_IP_1]),
             ([Ace(PERMIT_IP_1), Ace(DENY_IP_2)], [PERMIT_IP_1, DENY_IP_2]),
             ([Ace(DENY_IP_2), Ace(PERMIT_IP_1)], [DENY_IP_2, PERMIT_IP_1]),
         ]:
             if items:
-                result_items = acl_o_._convert_any_to_aces(items=items)
-                result = [str(o) for o in result_items]
+                acl_o_._init_items(items=items)
+                result = [str(o) for o in acl_o_.items]
                 self.assertEqual(result, req, msg=f"{items=}")
 
             acl_o = Acl(items=items)
             result = [str(o) for o in acl_o.items]
             self.assertEqual(result, req, msg=f"{items=}")
 
-        # input ios, output cnx
-        acl_o = Acl(items=[PERMIT_OBJ_GR], platform="cnx")
-        result = [str(o) for o in acl_o]
-        self.assertEqual(result, [PERMIT_ADDR_GR], msg=f"{items=}")
-
     def test_invalid__init_items(self):
         """Acl._init_items()"""
-        acl_o = Acl()
+        acl_o = Acl(platform="ios")
         for items, error, in [
-            (None, TypeError),
-            ("", ValueError),
             (1, TypeError),
             ([1], TypeError),
-            (["typo"], ValueError),
+            (REMARK, TypeError),
             ([Ace(PERMIT_IP, platform="cnx")], ValueError),
         ]:
             with self.assertRaises(error, msg=f"{items=}"):
-                acl_o._convert_any_to_aces(items=items)
+                acl_o._init_items(items=items)
             if not items:
                 continue
             with self.assertRaises(error, msg=f"{items=}"):
@@ -148,8 +120,7 @@ class Test(unittest.TestCase):
         """Acl.line"""
         acl_o = Acl()
         for line, error, in [
-            ("typo", ValueError),
-            (f"{ACL_NAME_RP_IOS}\ntypo", ValueError),
+            (1, TypeError),
         ]:
             with self.assertRaises(error, msg=f"{line=}"):
                 acl_o.line = line
@@ -217,7 +188,8 @@ class Test(unittest.TestCase):
             ([Ace(PERMIT_IP)], [PERMIT_IP]),
             ([AceGroup(PERMIT_IP)], [PERMIT_IP]),
             ([Remark(REMARK), AceGroup(PERMIT_IP), Ace(DENY_IP)], [REMARK, PERMIT_IP, DENY_IP]),
-            ([Remark(REMARK), AceGroup([PERMIT_IP, DENY_IP])], [REMARK, f"{PERMIT_IP}\n{DENY_IP}"]),
+            ([Remark(REMARK), AceGroup(f"{PERMIT_IP}\n{DENY_IP}")],
+             [REMARK, f"{PERMIT_IP}\n{DENY_IP}"]),
         ]:
             acl_o.items = items
             result = [str(o) for o in acl_o]
@@ -322,7 +294,7 @@ class Test(unittest.TestCase):
 
     def test_valid__copy(self):
         """Acl.copy()"""
-        acl_o1 = Acl(items=[PERMIT_IP, DENY_IP], input=[ETH1, ETH2])
+        acl_o1 = Acl(f"{PERMIT_IP}\n{DENY_IP}", input=[ETH1, ETH2])
         acl_o2 = acl_o1.copy()
         # mix data
         acl_o2.items[0], acl_o2.items[1] = acl_o2.items[1], acl_o2.items[0]
@@ -340,60 +312,54 @@ class Test(unittest.TestCase):
 
     def test_valid__resequence(self):
         """Acl.resequence()"""
-        aces = [Ace(PERMIT_IP_2), Ace(DENY_IP_1), Remark(REMARK)]
-        aces_req1 = [Ace(f"10 {PERMIT_IP}"), Ace(f"20 {DENY_IP}"), Remark(f"30 {REMARK}")]
-        aces_req2 = [Ace(f"2 {PERMIT_IP}"), Ace(f"5 {DENY_IP}"), Remark(f"8 {REMARK}")]
+        aces_0 = [Ace(PERMIT_IP), Ace(DENY_IP), Remark(REMARK)]
+        aces_10_10 = [Ace(f"10 {PERMIT_IP}"), Ace(f"20 {DENY_IP}"), Remark(f"30 {REMARK}")]
+        aces_2_3 = [Ace(f"2 {PERMIT_IP}"), Ace(f"5 {DENY_IP}"), Remark(f"8 {REMARK}")]
 
-        group = [Ace(PERMIT_IP_2), AceGroup([Ace(DENY_IP_1), Remark(REMARK)]), Ace(PERMIT_ICMP)]
-        group_req1 = [
+        group_0 = [Ace(PERMIT_IP), AceGroup(f"{DENY_IP}\n{REMARK}"), Ace(PERMIT_ICMP)]
+        group_10_10 = [
             Ace(f"10 {PERMIT_IP}"),
-            AceGroup([Ace(f"20 {DENY_IP}"), Remark(f"30 {REMARK}")]),
+            AceGroup(f"20 {DENY_IP}\n30 {REMARK}"),
             Ace(f"40 {PERMIT_ICMP}"),
         ]
+
         for items, kwargs, req in [
-            (aces, {}, aces_req1),
-            (aces, dict(start=2, step=3), aces_req2),
-            (group, {}, group_req1),
+            (aces_0, {}, aces_10_10),
+            (aces_0, dict(start=2, step=3), aces_2_3),
+            (aces_10_10, dict(start=0), aces_0),
+            (aces_10_10, dict(start=0, step=3), aces_0),
+            (group_0, {}, group_10_10),
+            (group_10_10, dict(start=0), group_0),
         ]:
             acl_o = Acl(items=items)
+            acl_o = acl_o.copy()
             acl_o.resequence(**kwargs)
             result = acl_o.items
             self.assertEqual(result, req, msg=f"{items=} {kwargs=}")
 
     def test_invalid__resequence(self):
         """Acl.resequence()"""
-        items1 = [PERMIT_IP_2, DENY_IP_1]
-        for items, kwargs, error in [
-            (items1, dict(start=0), ValueError),
-            (items1, dict(start=4294967296), ValueError),
-            (items1, dict(step=0), ValueError),
-            (items1, dict(step=4294967296), ValueError),
+        line = f"{PERMIT_IP_2}\n{DENY_IP_1}"
+        for kwargs, error in [
+            (dict(start=4294967296), ValueError),
+            (dict(step=0), ValueError),
+            (dict(step=4294967296), ValueError),
         ]:
-            acl_o = Acl(items=items)
-            with self.assertRaises(error, msg=f"{items=} {kwargs=}"):
+            acl_o = Acl(line)
+            with self.assertRaises(error, msg=f"{line=} {kwargs=}"):
                 acl_o.resequence(**kwargs)
 
     def test_valid__sort(self):
         """Acl.sort()"""
-        for items, req in [
-            ([DENY_IP, PERMIT_IP], [DENY_IP, PERMIT_IP]),
-            ([PERMIT_IP, DENY_IP], [DENY_IP, PERMIT_IP]),
+        for line, req in [
+            (f"{DENY_IP}\n{PERMIT_IP}", [DENY_IP, PERMIT_IP]),
+            (f"{PERMIT_IP}\n{DENY_IP}", [DENY_IP, PERMIT_IP]),
         ]:
-            acl_o = Acl(items=items)
+            acl_o = Acl(line)
             acl_o.sort()
             result = [str(o) for o in acl_o]
             self.assertEqual(result, req, msg=f"{acl_o=}")
 
-    def test_invalid__delete_sequence(self):
-        """Acl.delete_sequence()"""
-        acl_o = Acl(items=[REMARK, PERMIT_IP, AceGroup([DENY_IP, REMARK])])
-        acl_o.resequence()
-        result = sum([int(o.sequence) for o in acl_o])
-        self.assertEqual(result, 70, msg="before sorting")
-
-        acl_o.delete_sequence()
-        result = sum([int(o.sequence) for o in acl_o])
-        self.assertEqual(result, 0, msg="after sorting")
 
 
 if __name__ == "__main__":

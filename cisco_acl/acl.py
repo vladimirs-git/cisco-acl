@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import re
 from functools import total_ordering
-from typing import Any, List
+from typing import List
 
 from cisco_acl import helpers as h
 from cisco_acl.ace import Ace
@@ -59,8 +59,7 @@ class Acl(AceGroup):
         self.line = line
         if not line:
             self.name = kwargs.get("name") or ""
-            items = kwargs.get("items") or []
-            self.items = self._convert_any_to_acl(items)
+            self.items = kwargs.get("items") or []
         self.indent = kwargs.get("indent", INDENTATION)
         self.interface = Interface(**kwargs)
 
@@ -99,39 +98,6 @@ class Acl(AceGroup):
             return self.sequence < other.sequence
         return False
 
-    # ============================= init =============================
-
-    def _convert_any_to_acl(self, items: Any) -> LUAcl:
-        """Convert str, Ace, Remark, List[str], List[Ace], List[AceGroup]  to objects.
-        Example1:
-            :param items: ["remark text",
-                           "permit icmp any any",
-                           "deny ip any any"]
-            :return: [Remark("remark text"),
-                      Ace("permit ip any any"),
-                      Ace("deny ip any any")]
-        Example2:
-            :param items: [AceGroup("remark text\npermit icmp any any"),
-                           Ace("deny ip any any")]
-            :return: [AceGroup("remark text\npermit icmp any any"),
-                      Ace("deny ip any any")]
-        """
-        if isinstance(items, (str, Ace, Remark, AceGroup)):
-            items = [items]
-        if not isinstance(items, list):
-            raise TypeError(f"{items=} {list} expected")
-
-        items_: LUAcl = []  # return
-        for item in items:
-            if isinstance(item, str):
-                item = self._convert_str_to_ace(item)
-            if isinstance(item, (Ace, Remark, AceGroup)):
-                self._check_platform(item)
-            else:
-                raise TypeError(f"{item=} {str} {Ace} {Remark} {AceGroup} expected")
-            items_.append(item)
-        return items_
-
     # =========================== property ===========================
 
     @property
@@ -164,7 +130,8 @@ class Acl(AceGroup):
                 regex = r"^ip access-list extended (\S+)"
             name = h.re_find_s(regex, ip_acl_name)
 
-        aces: LUAcl = [self._convert_str_to_ace(s) for s in items]
+        aces_ = [self._line_to_ace(s) for s in items]
+        aces: LUAcl = [o for o in aces_ if isinstance(o, (Ace, Remark))]
         self.name = name
         self.items = aces
 
@@ -219,6 +186,10 @@ class Acl(AceGroup):
         items_: LUAcl = []
         for item in items:
             if isinstance(item, (Ace, Remark, AceGroup)):
+                if self.platform != item.platform:
+                    platform = item.platform
+                    expected = self.platform
+                    raise ValueError(f"invalid {platform=} in {item=}, {expected=}")
                 items_.append(item)
                 continue
             raise TypeError(f"{item=} {Ace} {Remark} {AceGroup} expected")
@@ -267,10 +238,10 @@ class Acl(AceGroup):
         if platform == self.platform:
             return
 
-        self._platform = platform
         if platform == "cnx":
             self._split_aces_by_ports(attr="srcport")
             self._split_aces_by_ports(attr="dstport")
+        self._platform = platform
         for item in self.items:
             item.platform = platform
 
@@ -302,7 +273,7 @@ class Acl(AceGroup):
     # =========================== methods ============================
 
     def copy(self) -> Acl:
-        """Copy Acl"""
+        """Returns a copy of the Acl object with the Ace elements copied."""
         acl = Acl(
             name=self.name,
             items=[o.copy() for o in self.items],
@@ -315,16 +286,18 @@ class Acl(AceGroup):
 
     def resequence(self, start: int = 10, step: int = 10, **kwargs) -> int:
         """Resequence all entries in an ACL.
-        :param start: Starting sequence number.
+        :param start: Starting sequence number. start=0 - delete all sequence numbers.
         :param step: Step to increment the sequence number.
         :param kwargs:
             items: List of Ace objects. By default self.items.
         :return: Last sequence number.
         """
-        if not 1 <= start <= SEQUENCE_MAX:
-            raise ValueError(f"{start=} expected=1..{SEQUENCE_MAX}")
-        if step < 1:
+        if not 0 <= start <= SEQUENCE_MAX:
+            raise ValueError(f"{start=} expected=0..{SEQUENCE_MAX}")
+        if start and step < 1:
             raise ValueError(f"{step=} expected >= 1")
+        if not start:
+            step = 0
         items: LUAcl = kwargs.get("items") or self.items
         sequence: int = int(start)
         count = len(items)
@@ -339,13 +312,6 @@ class Acl(AceGroup):
             raise ValueError(f"last {sequence=} expected=1..{SEQUENCE_MAX}")
         return sequence
 
-    def delete_sequence(self):
-        """Delete sequence numbers from ACEs"""
-        for item in self.items:
-            if isinstance(item, AceGroup):
-                for item_ in item:
-                    item_.sequence = 0
-            item.sequence = 0
 
 
 LAcl = List[Acl]

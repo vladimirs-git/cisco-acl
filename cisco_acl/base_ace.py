@@ -55,4 +55,3 @@ class BaseAce(Base):
     @sequence.deleter
     def sequence(self) -> None:
         del self.sequence.number
-

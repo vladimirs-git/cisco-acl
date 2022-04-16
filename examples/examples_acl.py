@@ -1,8 +1,4 @@
-"""Examples ACL objects"""
-from cisco_acl import Acl
-
-print("""
-============================= Example1 =============================
+"""============================= Example1 =============================
 - Create ACL.
 - Generate sequence numbers.
 - Moved up ACE "deny tcp any any eq 53".
@@ -10,7 +6,8 @@ print("""
 - Delete sequences.
 - Change syntax from Cisco IOS platform to Cisco Nexus NX-OS.
 - Change syntax from Cisco Nexus NX-OS platform to Cisco IOS.
-""")
+"""
+from cisco_acl import Acl
 
 lines1 = """
 ip access-list extended ACL1
@@ -44,7 +41,8 @@ print()
 
 # Moved up ACE "deny tcp any any eq 53".
 # Note that ACE have been moved up with the same sequence numbers.
-rule1 = acl1.pop()
+# Note, Ace class has list methods pop(), insert().
+rule1 = acl1.pop(3)
 acl1.insert(0, rule1)
 print(acl1)
 print()
@@ -65,7 +63,7 @@ print()
 #   103 permit tcp host 1.1.1.1 eq 1 2 2.2.2.0 0.0.0.255 eq 3 4
 
 # Delete sequences.
-acl1.delete_sequence()
+acl1.resequence(start=0)
 print(f"{acl1.platform=}")
 print(acl1)
 print()

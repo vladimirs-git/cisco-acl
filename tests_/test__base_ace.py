@@ -24,7 +24,7 @@ class Test(Helpers):
             for ace_o in [
                 Remark(f"{sequence} {REMARK}"),
                 Ace(f"{sequence} {PERMIT_IP}"),
-                AceGroup([f"{sequence} {REMARK}", PERMIT_IP]),
+                AceGroup(f"{sequence} {REMARK}\nPERMIT_IP"),
             ]:
                 # getter
                 result = str(ace_o.sequence)

@@ -1,7 +1,7 @@
 """ACE. Address."""
 
 import re
-from typing import List
+from typing import List, Optional
 
 from netaddr import IPNetwork  # type: ignore
 
@@ -42,7 +42,7 @@ class Address(Base):
                 self.prefix = "10.0.0.0/30"
                 self.subnet = "10.0.0.0 255.255.255.252"
                 self.wildcard = "10.0.0.0 0.0.0.3"
-                self.ipnet: IPNetwork(10.0.0.0/30)
+                self.ipnet: IPNetwork("10.0.0.0/30")
         Example2:
             line: "host 10.0.0.1"
             platform: "cnx"
@@ -116,12 +116,12 @@ class Address(Base):
             addr_line = "addrgroup" if self.platform == "cnx" else "object-group"
             addr_line = f"{addr_line} {name}"
 
-            self._line = addr_line
-            self._addrgroup = name
-            self._subnet = ""
-            self._ipnet = None
-            self._prefix = ""
-            self._wildcard = ""
+            self._line: str = addr_line
+            self._addrgroup: str = name
+            self._subnet: str = ""
+            self._ipnet: Optional[IPNetwork] = None
+            self._prefix: str = ""
+            self._wildcard: str = ""
             return
 
         raise ValueError(f"invalid address {line=}")
@@ -159,6 +159,16 @@ class Address(Base):
         if not isinstance(ipnet, IPNetwork):
             raise TypeError(f"{ipnet=} {IPNetwork} expected")
         self.line = str(ipnet)
+
+    @property
+    def platform(self) -> str:
+        """Device platform type: "ios", "cnx" """
+        return self._platform
+
+    @platform.setter
+    def platform(self, platform: str) -> None:
+        self._platform = self._init_platform(platform=platform)
+        self.line = self.line
 
     @property
     def prefix(self) -> str:
