@@ -2,8 +2,8 @@
 
 import unittest
 
-from cisco_acl.protocol import Protocol
-from helpers_test import Helpers
+from cisco_acl import Protocol
+from tests_.helpers_test import Helpers
 
 
 # noinspection DuplicatedCode
@@ -86,7 +86,7 @@ class Test(Helpers):
 
         # deleter
         proto_o = Protocol("ip")
-        with self.assertRaises(AttributeError, msg=f"deleter name"):
+        with self.assertRaises(AttributeError, msg="deleter name"):
             # noinspection PyPropertyAccess
             del proto_o.name
 
@@ -123,7 +123,7 @@ class Test(Helpers):
 
             # deleter
         proto_o = Protocol("ip")
-        with self.assertRaises(AttributeError, msg=f"deleter number"):
+        with self.assertRaises(AttributeError, msg="deleter number"):
             # noinspection PyPropertyAccess
             del proto_o.number
 
@@ -170,7 +170,7 @@ class Test(Helpers):
 
             # deleter
         proto_o = Protocol("ip")
-        with self.assertRaises(AttributeError, msg=f"deleter platform"):
+        with self.assertRaises(AttributeError, msg="deleter platform"):
             # noinspection PyPropertyAccess
             del proto_o.platform
 

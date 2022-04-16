@@ -2,8 +2,8 @@
 
 import unittest
 
-from cisco_acl.port import Port
-from helpers_test import Helpers
+from cisco_acl import Port
+from tests_.helpers_test import Helpers
 
 ALL_PORTS = list(range(1, 65535 + 1))
 WO_1 = [i for i in ALL_PORTS if i not in [1]]

@@ -52,7 +52,7 @@ class AceGroup(Group, BaseAce):
         BaseAce.__init__(self, "", **kwargs)
         Group.__init__(self)
         self.items = self._convert_any_to_aces(items or [])  # type:ignore
-        self.sequence = self._init_sequence()
+        self.sequence.number = self._init_sequence()
 
     def __hash__(self) -> int:
         return self.line.__hash__()
@@ -77,6 +77,14 @@ class AceGroup(Group, BaseAce):
                 raise TypeError(f"{other=} {AceGroup} expected")
             return self.sequence < other.sequence
         return False
+
+    # ============================= init =============================
+
+    def _init_sequence(self) -> int:
+        """Init Acl sequence. Index of 1st item in self.items."""
+        if self.items:
+            return int(self.items[0].sequence)
+        return 0
 
     # =========================== property ===========================
 
@@ -140,10 +148,10 @@ class AceGroup(Group, BaseAce):
         for item in items:
             if isinstance(item, str):
                 item = self._convert_str_to_ace(item)
-            if isinstance(item, (Ace, Remark)):
+            if isinstance(item, (Ace, AceGroup, Remark)):
                 self._check_platform(item)
             else:
-                raise TypeError(f"{item=} {str} {Ace} {Remark} expected")
+                raise TypeError(f"{item=} {str}, {Ace}, {AceGroup}, {Remark} expected")
             items_.append(item)
         return items_
 
@@ -169,11 +177,6 @@ class AceGroup(Group, BaseAce):
             raise ValueError(f"{ace=} {ace_platform=}, expected {acl_platform=}")
         return True
 
-    def _init_sequence(self) -> int:
-        """Init Acl sequence. Index of 1st item in self.items."""
-        if self.items:
-            return self.items[0].sequence
-        return 0
 
 
 UAcl = Union[Ace, Remark, AceGroup]

@@ -388,11 +388,11 @@ class Test(unittest.TestCase):
         """Acl.delete_sequence()"""
         acl_o = Acl(items=[REMARK, PERMIT_IP, AceGroup([DENY_IP, REMARK])])
         acl_o.resequence()
-        result = sum([o.sequence for o in acl_o])
+        result = sum([int(o.sequence) for o in acl_o])
         self.assertEqual(result, 70, msg="before sorting")
 
         acl_o.delete_sequence()
-        result = sum([o.sequence for o in acl_o])
+        result = sum([int(o.sequence) for o in acl_o])
         self.assertEqual(result, 0, msg="after sorting")
 
 

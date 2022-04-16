@@ -4,8 +4,8 @@ import unittest
 
 from netaddr import IPNetwork  # type: ignore
 
-from cisco_acl.address import Address
-from helpers_test import Helpers
+from cisco_acl import Address
+from tests_.helpers_test import Helpers
 
 PREFIX0 = "0.0.0.0/0"
 PREFIX30 = "10.0.0.0/30"
@@ -147,7 +147,7 @@ class Test(Helpers):
             self._test_attrs(obj=addr_o, req_d=req_d, msg=f"setter addrgroup {platform=}")
 
             # deleter
-            with self.assertRaises(AttributeError, msg=f"deleter addrgroup"):
+            with self.assertRaises(AttributeError, msg="deleter addrgroup"):
                 # noinspection PyPropertyAccess
                 del addr_o.addrgroup
 
@@ -180,7 +180,7 @@ class Test(Helpers):
             self._test_attrs(obj=addr_o, req_d=req_d, msg=f"setter ipnet {platform=}")
 
             # deleter
-            with self.assertRaises(AttributeError, msg=f"deleter ipnet"):
+            with self.assertRaises(AttributeError, msg="deleter ipnet"):
                 # noinspection PyPropertyAccess
                 del addr_o.ipnet
 
@@ -208,7 +208,7 @@ class Test(Helpers):
             self._test_attrs(obj=addr_o, req_d=req_d, msg=f"setter prefix {platform=}")
 
             # deleter
-            with self.assertRaises(AttributeError, msg=f"deleter prefix"):
+            with self.assertRaises(AttributeError, msg="deleter prefix"):
                 # noinspection PyPropertyAccess
                 del addr_o.prefix
 
@@ -235,7 +235,7 @@ class Test(Helpers):
             self._test_attrs(obj=addr_o, req_d=req_d, msg=f"setter subnet {platform=}")
 
             # deleter
-            with self.assertRaises(AttributeError, msg=f"deleter subnet"):
+            with self.assertRaises(AttributeError, msg="deleter subnet"):
                 # noinspection PyPropertyAccess
                 del addr_o.subnet
 
@@ -263,7 +263,7 @@ class Test(Helpers):
             self._test_attrs(obj=addr_o, req_d=req_d, msg=f"setter wildcard {platform=}")
 
             # deleter
-            with self.assertRaises(AttributeError, msg=f"deleter wildcard"):
+            with self.assertRaises(AttributeError, msg="deleter wildcard"):
                 # noinspection PyPropertyAccess
                 del addr_o.wildcard
 

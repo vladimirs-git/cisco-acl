@@ -6,6 +6,7 @@ from cisco_acl import Ace, AceGroup, Remark
 from tests_.helpers_test import (
     DENY_IP,
     DENY_IP_2,
+    Helpers,
     PERMIT_ADDR_GR,
     PERMIT_IP,
     PERMIT_IP_1,
@@ -17,7 +18,7 @@ from tests_.helpers_test import (
 
 
 # noinspection DuplicatedCode
-class Test(unittest.TestCase):
+class Test(Helpers):
     """AceGroup"""
 
     # ========================== redefined ===========================
@@ -100,41 +101,40 @@ class Test(unittest.TestCase):
 
     def test_valid__convert_any_to_aces(self):
         """AceGroup._convert_any_to_aces()"""
-        seq_0_d = dict(sequence=0, ssequence="")
-        seq_1_d = dict(sequence=1, ssequence="1")
-        seq_2_d = dict(sequence=2, ssequence="2")
         aceg_o_ = AceGroup()
-        for items, req, req_d in [
+        for items, req, req_seq_i, req_seq_s in [
             # str
-            (REMARK, [REMARK], seq_0_d),
-            (REMARK_1, [REMARK_1], seq_1_d),
-            (PERMIT_IP, [PERMIT_IP], seq_0_d),
-            (PERMIT_IP_1, [PERMIT_IP_1], seq_1_d),
+            (REMARK, [REMARK], 0, ""),
+            (REMARK_1, [REMARK_1], 1, "1"),
+            (PERMIT_IP, [PERMIT_IP], 0, ""),
+            (PERMIT_IP_1, [PERMIT_IP_1], 1, "1"),
 
             # List[str]
-            ([], [], seq_0_d),
-            ([REMARK, PERMIT_IP], [REMARK, PERMIT_IP], seq_0_d),
-            ([REMARK_1, PERMIT_IP_2], [REMARK_1, PERMIT_IP_2], seq_1_d),
-            ([PERMIT_IP_2, REMARK_1], [PERMIT_IP_2, REMARK_1], seq_2_d),
+            ([], [], 0, ""),
+            ([REMARK, PERMIT_IP], [REMARK, PERMIT_IP], 0, ""),
+            ([REMARK_1, PERMIT_IP_2], [REMARK_1, PERMIT_IP_2], 1, "1"),
+            ([PERMIT_IP_2, REMARK_1], [PERMIT_IP_2, REMARK_1], 2, "2"),
 
             # object
-            (Remark(REMARK), [REMARK], seq_0_d),
-            (Ace(PERMIT_IP), [PERMIT_IP], seq_0_d),
-            (Ace(PERMIT_ADDR_GR, platform="ios"), [PERMIT_OBJ_GR], seq_0_d),
+            (Remark(REMARK), [REMARK], 0, ""),
+            (Ace(PERMIT_IP), [PERMIT_IP], 0, ""),
+            (Ace(PERMIT_ADDR_GR, platform="ios"), [PERMIT_OBJ_GR], 0, ""),
 
             # List[object]
-            ([Remark(REMARK_1), Ace(PERMIT_IP_1)], [REMARK_1, PERMIT_IP_1], seq_1_d),
-            ([Ace(PERMIT_IP_1), Ace(DENY_IP_2)], [PERMIT_IP_1, DENY_IP_2], seq_1_d),
-            ([Ace(DENY_IP_2), Ace(PERMIT_IP_1)], [DENY_IP_2, PERMIT_IP_1], seq_2_d),
+            ([Remark(REMARK_1), Ace(PERMIT_IP_1)], [REMARK_1, PERMIT_IP_1], 1, "1"),
+            ([Ace(PERMIT_IP_1), Ace(DENY_IP_2)], [PERMIT_IP_1, DENY_IP_2], 1, "1"),
+            ([Ace(DENY_IP_2), Ace(PERMIT_IP_1)], [DENY_IP_2, PERMIT_IP_1], 2, "2"),
         ]:
             result_items = aceg_o_._convert_any_to_aces(items)
             result = [str(o) for o in result_items]
             self.assertEqual(result, req, msg=f"{items=}")
 
+            # sequence
             aceg_o = AceGroup(items=items)
-            for attr, req_ in req_d.items():
-                result_ = getattr(aceg_o, attr)
-                self.assertEqual(result_, req_, msg=f"{aceg_o=} {attr=}")
+            result = int(aceg_o.sequence)
+            self.assertEqual(result, req_seq_i, msg="sequence int")
+            result_ = str(aceg_o.sequence)
+            self.assertEqual(result_, req_seq_s, msg="sequence str")
 
         # input ios, output cnx
         aceg_o = AceGroup(items=[PERMIT_OBJ_GR], platform="cnx")

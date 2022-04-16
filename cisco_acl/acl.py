@@ -326,13 +326,13 @@ class Acl(AceGroup):
         if step < 1:
             raise ValueError(f"{step=} expected >= 1")
         items: LUAcl = kwargs.get("items") or self.items
-        sequence = start
+        sequence: int = int(start)
         count = len(items)
 
         for id_, item in enumerate(items, start=1):
             if isinstance(item, AceGroup):
                 sequence = self.resequence(start=sequence, step=step, items=item)
-            item.sequence = sequence
+            item.sequence.number = sequence
             if id_ < count:
                 sequence += step
         if sequence > SEQUENCE_MAX:

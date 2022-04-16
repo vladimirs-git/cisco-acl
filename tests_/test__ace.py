@@ -3,10 +3,10 @@
 import unittest
 
 from cisco_acl import Ace, Remark
-from helpers_test import Helpers
 from tests_.helpers_test import (
     DENY_IP,
     DENY_IP_1,
+    Helpers,
     PERMIT_IP,
     PERMIT_IP_1,
     PERMIT_IP_2,
@@ -30,18 +30,18 @@ class Test(Helpers):
 
     def test_valid__eq__(self):
         """Ace.__eq__() __ne__()"""
-        for ace_o, other_o, req, in [
-            (Ace(PERMIT_IP_1), Ace(PERMIT_IP_1), True),
-            (Ace(PERMIT_IP_1), Ace(PERMIT_IP_2), False),
-            (Ace(PERMIT_IP_1), Ace(DENY_IP_1), False),
-            (Ace(PERMIT_IP_1), Remark(REMARK), False),
-            (Ace(PERMIT_IP_1), PERMIT_IP_1, False),
+        ace_o = Ace(PERMIT_IP_1)
+        for other_o, req, in [
+            (Ace(PERMIT_IP_1), True),
+            (Ace(PERMIT_IP_2), False),
+            (Ace(DENY_IP_1), False),
+            (Remark(REMARK), False),
+            (PERMIT_IP_1, False),
         ]:
-            msg = f"{ace_o=} {other_o=}"
             result = ace_o.__eq__(other_o)
-            self.assertEqual(result, req, msg=msg)
+            self.assertEqual(result, req, msg=f"{ace_o=} {other_o=}")
             result = ace_o.__ne__(other_o)
-            self.assertEqual(result, not req, msg=msg)
+            self.assertEqual(result, not req, msg=f"{ace_o=} {other_o=}")
 
     def test_valid__lt__(self):
         """Ace.__lt__() __le__() __gt__() __ge__()"""
@@ -52,13 +52,13 @@ class Test(Helpers):
             (Ace(PERMIT_IP_2), Ace(DENY_IP_1), False, False, True, True),
         ]:
             result = ace_o.__lt__(other_o)
-            self.assertEqual(result, req_lt, msg=f"{ace_o=}")
+            self.assertEqual(result, req_lt, msg=f"{ace_o=} {other_o=}")
             result = ace_o.__le__(other_o)
-            self.assertEqual(result, req_le, msg=f"{ace_o=}")
+            self.assertEqual(result, req_le, msg=f"{ace_o=} {other_o=}")
             result = ace_o.__gt__(other_o)
-            self.assertEqual(result, req_gt, msg=f"{ace_o=}")
+            self.assertEqual(result, req_gt, msg=f"{ace_o=} {other_o=}")
             result = ace_o.__ge__(other_o)
-            self.assertEqual(result, req_ge, msg=f"{ace_o=}")
+            self.assertEqual(result, req_ge, msg=f"{ace_o=} {other_o=}")
 
     def test_valid__lt__sort(self):
         """Ace.__lt__(), Ace.__le__()"""
@@ -141,7 +141,7 @@ class Test(Helpers):
         permit_0b = " permit\ttcp any eq www 443 object-group NAME neq 22 ack log\n"
         permit_10 = f"10 {permit_0}"
         permit_0_d = dict(line=permit_0,
-                          sequence=0,
+                          sequence="",
                           action="permit",
                           protocol="tcp",
                           srcaddr="any",
@@ -149,13 +149,13 @@ class Test(Helpers):
                           dstaddr="object-group NAME",
                           dstport="neq 22",
                           option="ack log")
-        permit_10_d = {**permit_0_d, **{"line": permit_10, "sequence": 10}}
+        permit_10_d = {**permit_0_d, **{"line": permit_10, "sequence": "10"}}
 
         deny_0 = "deny udp host 1.1.1.1 lt 3 2.2.2.0 0.0.0.3 range www bgp"
         deny_0b = " deny\tudp host 1.1.1.1 lt 3 2.2.2.0 0.0.0.3 range www bgp\n"
         deny_10 = f"10 {deny_0}"
         deny_0_d = dict(line=deny_0,
-                        sequence=0,
+                        sequence="",
                         action="deny",
                         protocol="udp",
                         srcaddr="host 1.1.1.1",
@@ -163,7 +163,7 @@ class Test(Helpers):
                         dstaddr="2.2.2.0 0.0.0.3",
                         dstport="range www bgp",
                         option="")
-        deny_10_d = {**deny_0_d, **{"line": deny_10, "sequence": 10}}
+        deny_10_d = {**deny_0_d, **{"line": deny_10, "sequence": "10"}}
 
         for line, req_d in [
             (permit_0, permit_0_d),
@@ -182,7 +182,7 @@ class Test(Helpers):
             self._test_attrs(obj=ace_o, req_d=req_d, msg=f"setter {line=}")
 
         # deleter
-        with self.assertRaises(AttributeError, msg=f"deleter line"):
+        with self.assertRaises(AttributeError, msg="deleter line"):
             # noinspection PyPropertyAccess
             del ace_o.line
 
@@ -255,7 +255,7 @@ class Test(Helpers):
 
         # deleter
         ace_o = Ace(PERMIT_IP)
-        with self.assertRaises(AttributeError, msg=f"deleter line"):
+        with self.assertRaises(AttributeError, msg="deleter line"):
             # noinspection PyPropertyAccess
             del ace_o.line
 
@@ -280,9 +280,9 @@ class Test(Helpers):
             ("note", "a", "b"),
         ]:
             result = getattr(ace_o1, attr)
-            self.assertEqual(result, req, msg=f"copy")
+            self.assertEqual(result, req, msg="copy")
             result2 = getattr(ace_o2, attr)
-            self.assertEqual(result2, req2, msg=f"copy")
+            self.assertEqual(result2, req2, msg="copy")
 
     def test_valid__rule(self):
         """Ace.rule()"""

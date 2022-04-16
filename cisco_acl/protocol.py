@@ -69,7 +69,7 @@ class Protocol(Base):
             name = NR_TO_PROTOCOL[self.platform].get(number_) or str(number_)
             number = int(number_)
 
-        self._line = name or str(number)
+        self._line: str = name or str(number)
         self._name = name
         self._number = number
 

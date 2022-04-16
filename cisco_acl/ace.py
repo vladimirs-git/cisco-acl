@@ -9,6 +9,7 @@ from cisco_acl.address import Address
 from cisco_acl.base_ace import BaseAce
 from cisco_acl.port import Port
 from cisco_acl.protocol import Protocol
+from cisco_acl.sequence import Sequence
 from cisco_acl.static import DEFAULT_PLATFORM
 from cisco_acl.types_ import LStr, LInt
 
@@ -36,7 +37,7 @@ class Ace(BaseAce):
         result:
             self.line = "10 permit tcp host 10.0.0.1 10.0.0.0 0.0.0.3 eq www 443 log"
             self.platform = "ios"
-            self.sequence = 10
+            self.sequence = Sequence("10")
             self.action = "permit"
             self.protocol = Protocol("tcp")
             self.srcaddr = Address("host 10.0.0.1")
@@ -46,6 +47,7 @@ class Ace(BaseAce):
             self.option = "log"
             self.note = "allow web"
         """
+        self._sequence = Sequence()
         self._action = ""
         self._protocol = Protocol()
         self._srcaddr = Address()
@@ -61,16 +63,15 @@ class Ace(BaseAce):
     def __eq__(self, other) -> bool:
         """== equality"""
         if self.__class__ == other.__class__:
-            if self.__hash__() == other.__hash__():
-                return True
+            return self.__hash__() == other.__hash__()
         return False
 
     def __lt__(self, other) -> bool:
         """< less than"""
         if hasattr(other, "sequence"):
             # sequence
-            if self.sequence != other.sequence:
-                return self.sequence < other.sequence
+            if self.sequence.number != other.sequence.number:
+                return self.sequence.number < other.sequence.number
             # object
             if other.__class__.__name__ == "Remark":
                 return False
@@ -177,7 +178,7 @@ class Ace(BaseAce):
             :return: "10 permit ip any any"
         """
         items = [
-            self.ssequence,
+            self.sequence.line,
             self.action,
             self.protocol.line,
             self.srcaddr.line,
@@ -193,15 +194,14 @@ class Ace(BaseAce):
         line = self._init_line(line)
         h.check_line_length(line)
         ace_d = h.parse_ace(line)
-        # TODO object Sequence(), delete self.ssequence
-        self.sequence = int(ace_d["sequence"]) if ace_d["sequence"] else 0
-        self.action: str = ace_d["action"]
-        self.protocol: Protocol = Protocol(ace_d["protocol"], platform=self.platform)
-        self.srcaddr: Address = Address(ace_d["srcaddr"], platform=self.platform)
-        self.srcport: Port = Port(ace_d["srcport"], platform=self.platform)
-        self.dstaddr: Address = Address(ace_d["dstaddr"], platform=self.platform)
-        self.dstport: Port = Port(ace_d["dstport"], platform=self.platform)
-        self.option: str = ace_d["option"]
+        self.sequence.line = ace_d["sequence"]
+        self.action = ace_d["action"]
+        self.protocol = Protocol(ace_d["protocol"], platform=self.platform)
+        self.srcaddr = Address(ace_d["srcaddr"], platform=self.platform)
+        self.srcport = Port(ace_d["srcport"], platform=self.platform)
+        self.dstaddr = Address(ace_d["dstaddr"], platform=self.platform)
+        self.dstport = Port(ace_d["dstport"], platform=self.platform)
+        self.option = ace_d["option"]
 
     @property
     def platform(self) -> str:
@@ -221,7 +221,7 @@ class Ace(BaseAce):
         self.dstaddr.platform = platform
         self.dstport.platform = platform
         items = [
-            self.ssequence,
+            self.sequence.line,
             self.action,
             self.protocol.line,
             self.srcaddr.line,

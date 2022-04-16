@@ -42,8 +42,7 @@ class Remark(BaseAce):
     def __eq__(self, other) -> bool:
         """== equality"""
         if self.__class__ == other.__class__:
-            if self.__hash__() == other.__hash__():
-                return True
+            return self.__hash__() == other.__hash__()
         return False
 
     def __lt__(self, other) -> bool:
@@ -66,7 +65,7 @@ class Remark(BaseAce):
         Example:
             Remark("10 remark text")
             :return: "10 remark text" """
-        items = [self.ssequence, self.action, self.text]
+        items = [self.sequence.line, self.action, self.text]
         return " ".join([s for s in items if s])
 
     @line.setter
@@ -75,10 +74,10 @@ class Remark(BaseAce):
         h.check_line_length(line)
         ace_d = h.parse_action(line)
         action = ace_d["action"]
-        expected = "remark"
-        if action != expected:
+        if action != "remark":
+            expected = "remark"
             raise ValueError(f"invalid {action=}, {expected=}")
-        self.sequence = int(ace_d["sequence"]) if ace_d["sequence"] else 0
+        self.sequence.line = ace_d["sequence"]
         self._action = action
         self._text = ace_d["text"]
 
@@ -105,6 +104,12 @@ class Remark(BaseAce):
         if not text:
             raise ValueError(f"{text=} value required")
         self._text = text
+
+    # =========================== methods ============================
+
+    def copy(self) -> Remark:
+        """Return a shallow copy of self."""
+        return Remark(self.line, platform=self.platform, note=self.note)
 
 
 LRemark = List[Remark]

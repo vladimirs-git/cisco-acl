@@ -2,59 +2,57 @@
 
 import unittest
 
-from cisco_acl import Ace, Remark
-from tests_.helpers_test import PERMIT_IP, REMARK
+from cisco_acl import Ace, AceGroup, Remark
+from tests_.helpers_test import Helpers, PERMIT_IP, REMARK
 
 
 # noinspection DuplicatedCode
-class Test(unittest.TestCase):
+class Test(Helpers):
     """BaseAce"""
 
     # =========================== property ===========================
 
     def test_valid__sequence(self):
-        """Ace.sequence ssequence"""
-        id_0_d = dict(sequence=0, ssequence="")
-        id_10_d = dict(sequence=10, ssequence="10")
-        for sequence, req_d in [
-            ("", id_0_d),
-            ("0", id_0_d),
-            ("10", id_10_d),
-            (0, id_0_d),
-            (10, id_10_d),
+        """Ace.sequence"""
+        for sequence, req, req_ in [
+            ("", "", 0),
+            ("0", "", 0),
+            ("1", "1", 1),
+            (0, "", 0),
+            (1, "1", 1),
         ]:
             for ace_o in [
-                Ace(f"{sequence} {PERMIT_IP}"),
                 Remark(f"{sequence} {REMARK}"),
+                Ace(f"{sequence} {PERMIT_IP}"),
+                AceGroup([f"{sequence} {REMARK}", PERMIT_IP]),
             ]:
                 # getter
-                for attr, req_ in req_d.items():
-                    # noinspection PyUnboundLocalVariable
-                    msg = f"{sequence=} {ace_o.__class__.__name__} {attr=}"
-                    result_ = getattr(ace_o, attr)
-                    self.assertEqual(result_, req_, msg=msg)
+                result = str(ace_o.sequence)
+                # noinspection PyUnboundLocalVariable
+                self.assertEqual(result, req, msg=f"{sequence=} str")
+                result_ = int(ace_o.sequence)
+                self.assertEqual(result_, req_, msg=f"{sequence=} str")
 
                 # setter
                 ace_o.sequence = sequence
-                for attr, req_ in req_d.items():
-                    # noinspection PyUnboundLocalVariable
-                    msg = f"{sequence=} {ace_o.__class__.__name__} {attr=}"
-                    result_ = getattr(ace_o, attr)
-                    self.assertEqual(result_, req_, msg=msg)
+                result = str(ace_o.sequence)
+                self.assertEqual(result, req, msg=f"{sequence=} str")
+                result_ = int(ace_o.sequence)
+                self.assertEqual(result_, req_, msg=f"{sequence=} str")
 
                 # deleter
                 del ace_o.sequence
-                result = ace_o.sequence
-                self.assertEqual(result, 0, msg="deleter sequence")
-                with self.assertRaises(AttributeError, msg="deleter ssequence"):
-                    # noinspection PyPropertyAccess
-                    del ace_o.ssequence
+                result = str(ace_o.sequence)
+                # noinspection PyUnboundLocalVariable
+                self.assertEqual(result, "", msg=f"{sequence=} str")
+                result_ = int(ace_o.sequence)
+                self.assertEqual(result_, 0, msg=f"{sequence=} str")
 
     def test_invalid__sequence(self):
         """Ace.sequence"""
         base_o = Ace(PERMIT_IP)
         for sequence, error in [
-            ({}, TypeError),
+            ({}, ValueError),
             (-1, ValueError),
             ("a", ValueError),
             ("-1", ValueError),
