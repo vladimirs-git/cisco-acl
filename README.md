@@ -268,12 +268,12 @@ ace.option = ""
 print(ace.line)
 # 20 permit udp 10.0.0.0 0.0.0.255 eq 179 object-group NAME eq 80
 
-del ace.sequence
+ace.sequence = 0
 ace.protocol.number = 1
 ace.srcaddr.prefix = "0.0.0.0/0"
 ace.dstaddr.line = "any"
 ace.srcport.line = ""
-del ace.dstport.line
+ace.dstport.line = ""
 
 print(ace.line)
 # 10 permit tcp any any
