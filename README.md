@@ -1,69 +1,194 @@
 # cisco-acl
 
-Python package to parse and manage Cisco ACL (Access Control List). Supported platforms: IOS, NX-OS.
+Python package to parse and manage Cisco extended ACL (Access Control List). Supported platforms:
+Cisco IOS, Cisco Nexus NX-OS.
 
 Main features:
 
-- Parse ACL from text of Cisco config.
-- Grouping and sorting ACEs. The order of the lines within the AceGroup does not change.
-- Sequencing ACEs in ACL.
-- Change syntax from Cisco IOS platform to Cisco Nexus NX-OS and vice vera.
+- Parse ACL from part of Cisco config.
+- Sequencing ACEs.
+- Change the Cisco IOS syntax to Nexus NX-OS and vice vera.
+- Grouping and sorting ACEs (Access Control Entries). The order of lines within a group does not
+  change.
 
-### Installation
+Contents
+
+- [Acronyms](#acronyms)
+- [Installation](#installation)
+- [Code Documentation](#code-documentation)
+    - [class Acl](#class-acl)
+    - [class Ace](#class-ace)
+    - [class AceGroup](#class-acegroup)
+    - [class Remark](#class-remark)
+    - [class Address](#class-address)
+    - [class Port](#class-port)
+    - [class Protocol](#class-protocol)
+- [Examples1](#examples1)
+- [Examples2](#examples2)
+- [Examples3](#examples3)
+
+# Acronyms
+
+    Acronym     Defenition
+    ==========  =======================================
+    ACL         Access Control List.
+    ACE         Access Control Entry.
+    ACEs        Multiple Access Control Entries.
+    Acl.items   List of objjects: Ace, AceGroup, Remark.
+
+# Installation
 
 ```bash
 pip install cisco-acl
 ```
 
+# Code Documentation
+
 ## class Acl
 
-ACL - Access Control List. List of Ace (Access Control Entry), Remark, AceGroup. Items in ACL list
-can be edited, sorted, indexed by sequence numbers.
+ACL - Access Control List. Class has methods to manipulate with Acl.items: Ace, Remark, AceGroup.
+This class implements most of the Python list methods: append(), extend(), pop(), sort(), etc.
+Acl.items can be edited, sorted, indexed by sequence numbers or notes.
 
-### Params
+### Parameters
 
-    Param       Default     Description
-    ==========  ==========  ========================================================================
-    line                    ACL config (name and following remarks and access entries).
-    platform    "ios"       Supported platforms: "ios", "cnx". By default: "ios".
-    name                    By default parsed from line.
-    items                   List of ACE (strings or Ace, AceGroup, Remark objects).
-                            By default parsed from line.
-    input                   Interfaces, where Acl is used on input.
-    output                  Interfaces, where Acl is used on output.
-    indent      2           ACE lines indentation. By default 2 spaces.
-    note                    Object description (used only in object).
+    Param       Description
+    ==========  ====================================================================================
+    line        ACL config (name and following remarks and access entries).
+    platform    Supported platforms: "ios", "cnx". By default: "ios".
+    name        By default parsed from line.
+    items       List of ACE (strings or Ace, AceGroup, Remark objects). By default parsed from line.
+    input       Interfaces, where Acl is used on input.
+    output      Interfaces, where Acl is used on output.
+    indent      ACE lines indentation. By default 2 spaces.
+    note        Object description (can be used for ACEs sorting).
+
+In the following example create Acl with default parameters. 
+All data is parsed from the configuration string.
 
 ```python
 from cisco_acl import Acl, Remark, Ace
 
 line = """
-ip access-list extended NAME
+ip access-list extended ACL1
   remark TEXT
-  permit icmp any any
+  permit icmp host 10.0.0.1 object-group NAME
 """
-acl = Acl(line=line, platform="ios", indent=1, note="allow icmp")
-
-# result
-assert acl.line == "ip access-list extended NAME\n remark TEXT\n permit icmp any any"
+acl = Acl(line)
+assert acl.line == "ip access-list extended ACL1\n  remark TEXT\n  permit icmp host 10.0.0.1 object-group NAME"
 assert acl.platform == "ios"
-assert acl.name == "NAME"
-assert acl.items == [Remark("remark TEXT"), Ace("permit icmp any any")]
-assert acl.ip_acl_name == "ip access-list extended NAME"
+assert acl.name == "ACL1"
+assert acl.items == [Remark("remark TEXT"), Ace("permit icmp host 10.0.0.1 object-group NAME")]
+assert acl.indent == "  "
+assert acl.note == ""
+print(acl)
+# ip access-list extended ACL1
+#   remark TEXT
+#   permit icmp host 10.0.0.1 object-group NAME
+```
+
+In the following example create Acl with optional parameters. 
+The data is taken from params. Note, line is empty.
+
+```python
+from cisco_acl import Acl, Remark, Ace
+
+acl = Acl(line="",
+          platform="ios",
+          name="ACL1",
+          items=[Remark("remark TEXT"), Ace("permit icmp host 10.0.0.1 object-group NAME")],
+          input=["interface FastEthernet1"],
+          output=[],
+          indent=1,
+          note="allow icmp")
+assert acl.line == "ip access-list extended ACL1\n remark TEXT\n permit icmp host 10.0.0.1 object-group NAME"
+assert acl.platform == "ios"
+assert acl.name == "ACL1"
+assert acl.ip_acl_name == "ip access-list extended ACL1"
+assert acl.items == [Remark("remark TEXT"), Ace("permit icmp host 10.0.0.1 object-group NAME")]
 assert acl.indent == " "
 assert acl.note == "allow icmp"
+print(acl)
+# ip access-list extended ACL1
+#  remark TEXT
+#  permit icmp host 10.0.0.1 object-group NAME
 ```
 
 ### Methods
 
+    Method      Description
+    ==========  ====================================================================================
+    resequence  Resequence all Acl.items. Change sequence numbers.
+
+    add         Add new Ace to Acl.items, if it is not in list (append without duplicates).
+    append      Append Ace to the end of the Acl.items.
+    clear       Remove all items from the Acl.items.
+    copy        Return a copy of the Acl object with the Ace items copied.
+    count       Return number of occurrences of items.
+    delete      Remove Ace from Acl.items.
+    extend      Extend Acl.items by appending items.
+    index       Return first index of Ace.
+    insert      Insert Ace before index.
+    pop         Remove and return Ace at index (default last).
+    remove      Remove first occurrence of Acl.items.
+    reverse     Reverse order of items in Acl.items.
+    sort        Sort Acl.items in ascending order.
+    update      Extend Acl.items by adding items, if it is not in list (extend without duplicates).
+
+#### resequence(start=10, step=10)
+
+Resequence all Acl.items. Change sequence numbers.
+
+    Parameter	Description
+    ==============================
+    start       Starting sequence number. start=0 - delete all sequence numbers.
+    step        Step to increment the sequence number.
+
+In the following example create Acl with not ordered groups, then sorting and resequence by notes.
+```python
+from cisco_acl import Acl, Ace, AceGroup
+acl = Acl("ip access-list extended ACL1")
+ace = "permit ip any any"
+group1 = """
+permit udp any any eq 53
+deny udp any any
+"""
+group2 = """
+permit tcp any any eq 80
+deny tcp any any
+"""
+acl.extend(items=[Ace(ace, note="3rd"), AceGroup(group2, note="2nd"), AceGroup(group1, note="1st")])
+acl.resequence()
+print(str(acl))
+print()
+# ip access-list extended ACL1
+#   10 permit ip any any
+#   20 permit tcp any any eq 80
+#   30 deny tcp any any
+#   40 permit udp any any eq 53
+#   50 deny udp any any
+
+acl.sort(key=lambda o: o.note)
+acl.resequence()
+print(str(acl))
+print()
+# ip access-list extended ACL1
+#   10 permit udp any any eq 53
+#   20 deny udp any any
+#   30 permit tcp any any eq 80
+#   40 deny tcp any any
+#   50 permit ip any any
+```
+
 #### copy()
 
-Returns a copy of the Acl object with the Ace items copied.
+Return a copy of the Acl object with the Ace items copied.
 
+In the following example create an Ace object `ace`. 
+Add it to 2 Acl objects and then change source address in `ace`.
+The print shows that in `acl1` the source address will be changed, 
+but in copied `acl2` the source address will remain unchanged.
 ```python
-# Create an Ace object `ace`. Add it to 2 Acl objects and then change source address in `ace`.
-# The print shows that in `acl1` the source address will be changed, 
-# but in copied `acl2` the source address will remain unchanged.
 from cisco_acl import Acl, Ace
 
 ace = Ace("permit ip any any")
@@ -79,71 +204,19 @@ print()
 #   permit ip any any
 ```
 
-#### resequence(start, step)
-
-Resequence all entries in an ACL.
-
-    Parameter	Description
-    ==============================
-    start       Starting sequence number. start=0 - delete all sequence numbers.
-    step        Step to increment the sequence number.
-
-```python
-from cisco_acl import Ace, Protocol, Address, Port
-from netaddr import IPNetwork
-from cisco_acl import Acl
-
-lines = """
-ip access-list extended ACL1
-  permit icmp any any
-  permit tcp host 10.0.0.1 any
-  deny ip any any
-"""
-acl1 = Acl(lines)
-print(acl1)
-print()
-# ip access-list extended ACL1
-#   permit icmp any any
-#   permit tcp host 10.0.0.1 any
-#   deny ip any any
-
-acl1.resequence()
-print(acl1)
-print()
-# ip access-list extended ACL1
-#   10 permit icmp any any
-#   20 permit tcp host 10.0.0.1 any
-#   30 deny ip any any
-
-acl1.resequence(start=2, step=3)
-print(acl1)
-print()
-# ip access-list extended ACL1
-#   2 permit icmp any any
-#   5 permit tcp host 10.0.0.1 any
-#   8 deny ip any any
-
-acl1.resequence(start=0)
-print(acl1)
-print()
-# ip access-list extended ACL1
-#   permit icmp any any
-#   permit tcp host 10.0.0.1 any
-#   deny ip any any
-```
-
 ## class Ace
 
 ACE (Access Control Entry). Each entry statement permit or deny in the ACL (Access Control List).
 
-### Params
+### Parameters
 
-    Param          Default  Description
-    =============  =======  ========================================================================
-    line            ""      ACE line.
-    platform        "ios"   Supported platforms: Cisco IOS - "ios", Cisco NX-OS - "cnx".
-    note            ""      Object description (used only in object).
+    Param          Description
+    =============  =================================================================================
+    line           ACE line.
+    platform       Supported platforms: Cisco IOS - "ios", Cisco NX-OS - "cnx".
+    note           Object description (can be used for ACEs sorting).
 
+In the following example, create an Ace object and demonstrate various manipulation approaches.
 ```python
 from cisco_acl import Ace
 from netaddr import IPNetwork
@@ -151,7 +224,7 @@ from netaddr import IPNetwork
 ace = Ace(line="10 permit tcp host 10.0.0.1 range 1 3 10.0.0.0 0.0.0.3 eq www 443 log",
           platform="ios",
           note="allow web")
-# result
+
 assert ace.note == "allow web"
 assert ace.line == "10 permit tcp host 10.0.0.1 range 1 3 10.0.0.0 0.0.0.3 eq www 443 log"
 assert ace.platform == "ios"
@@ -181,6 +254,29 @@ assert ace.dstport.operator == "eq"
 assert ace.dstport.ports == [80, 443]
 assert ace.dstport.sport == "80,443"
 assert ace.option == "log"
+
+print(ace.line)
+# 10 permit tcp host 10.0.0.1 range 1 3 10.0.0.0 0.0.0.3 eq www 443 log
+
+ace.sequence = 20
+ace.protocol.name = "udp"
+ace.srcaddr.prefix = "10.0.0.0/24"
+ace.dstaddr.addrgroup = "NAME"
+ace.srcport.line = "eq 179"
+ace.dstport.ports = [80]
+ace.option = ""
+print(ace.line)
+# 20 permit udp 10.0.0.0 0.0.0.255 eq 179 object-group NAME eq 80
+
+del ace.sequence
+ace.protocol.number = 1
+ace.srcaddr.prefix = "0.0.0.0/0"
+ace.dstaddr.line = "any"
+ace.srcport.line = ""
+del ace.dstport.line
+
+print(ace.line)
+# 10 permit tcp any any
 ```
 
 ### Methods
@@ -189,6 +285,9 @@ assert ace.option == "log"
 
 Returns a copy of the Ace object.
 
+In the following example create Ace object and copy them, then change prefix in `ace1`.
+The print shows that in `ace1` the prefix will be changed, 
+but in copied `ace2` the prefix will remain unchanged.
 ```python
 from cisco_acl import Ace
 
@@ -204,16 +303,16 @@ print()
 
 ## class AceGroup
 
-Group of ACE (Access Control Entry). Useful for sorting ACL entries with frozen sections within
-which the sequence does not change.
+Group of ACEs. Useful for sorting ACL entries with frozen sections within which the sequence does 
+not change.
 
-### Params
+### Parameters
 
     Param          Default  Description
     =============  =======  ========================================================================
     items                   List of ACE (strings or Ace objects).
     platform        "ios"   Supported platforms: Cisco IOS - "ios", Cisco NX-OS - "cnx".
-    note                    Object description (used only in object).
+    note                    Object description (can be used for ACEs sorting).
     items                   List of ACE (strings or Ace objects). By default parsed from line.
 
 ```python
@@ -245,12 +344,12 @@ Returns a copy of the AceGroup object.
 
 Remark (comment) about entries in access list.
 
-### Params
+### Parameters
 
     Param          Default  Description
     =============  =======  ========================================================================
     line                    Remark line.
-    note                    Object description (used only in object).
+    note                    Object description (can be used for ACEs sorting).
 
 ### Example
 
@@ -274,7 +373,7 @@ Returns a copy of the Remark object.
 
 ## class Address
 
-### Params
+### Parameters
 
     Param          Default  Description
     =============  =======  ========================================================================
@@ -290,7 +389,7 @@ Returns a copy of the Remark object.
             addrgroup NAME      cnx         Network object group
 
     platform       "ios"    Supported platforms: "ios", "cnx". By default: "ios".
-    note                    Object description (used only in object).
+    note                    Object description (can be used for ACEs sorting).
 
 ### Example
 
@@ -328,13 +427,13 @@ assert addr.line == "addrgroup NAME"
 
 ## class Port
 
-### Params
+### Parameters
 
     Param          Default  Description
     =============  =======  ========================================================================
     line                    TCP/UDP ports line.
     platform       "ios"    Supported platforms: "ios", "cnx". By default: "ios".
-    note                    Object description (used only in object).
+    note                    Object description (can be used for ACEs sorting).
 
 ### Example
 
@@ -362,13 +461,13 @@ assert port.sport == "1-5"
 
 ## class Protocol
 
-### Params
+### Parameters
 
     Param          Default  Description
     =============  =======  ========================================================================
     line                    Protocol line.
     platform       "ios"    Supported platforms: "ios", "cnx". By default: "ios".
-    note                    Object description (used only in object).
+    note                    Object description (can be used for ACEs sorting).
 
 ### Example
 
@@ -635,7 +734,6 @@ print()
 #   105 permit ip object-group A object-group B log
 #   106 remark ===== web =====
 #   107 permit tcp any any eq 80
-
 ```
 
 [examples/examples_acl_group.py](examples/examples_acl_group.py)

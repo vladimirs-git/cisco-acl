@@ -28,7 +28,7 @@ class AceGroup(Group, BaseAce):
         :param line: string of ACEs.
         :param kwargs:
             platform: Supported platforms: "ios", "cnx". By default: "ios".
-            note: Object description (used only in object).
+            note: Object description (can be used for ACEs sorting).
             items: List of ACE (strings or Ace objects). By default parsed from line.
 
         Example:
@@ -147,7 +147,7 @@ class AceGroup(Group, BaseAce):
         :param line: string of ACEs.
         :param kwargs:
             platform: Supported platforms: "ios", "cnx". By default: "ios".
-            note: Object description (used only in object).
+            note: Object description (can be used for ACEs sorting).
             items: List of ACE (strings or Ace objects).
 
         Example:

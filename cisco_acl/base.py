@@ -3,6 +3,7 @@ BaseAce - Parent of: Ace, Remark."""
 
 import uuid
 from abc import ABC, abstractmethod
+from typing import Any
 
 from cisco_acl import helpers as h
 from cisco_acl.static import PLATFORMS, DEFAULT_PLATFORM
@@ -16,17 +17,17 @@ class Base(ABC):
         """Base - Parent of: AceBase, Address, Port, Protocol.
         :param kwargs: Params.
             platform: Supported platforms: "ios", "cnx". By default: "ios".
-            note: Object description (used only in object).
+            note: Object description (can be used for ACEs sorting).
         """
         self._uuid = str(uuid.uuid1())
         self._platform = self._init_platform(**kwargs)
-        self.note: str = self._init_note(**kwargs)
+        self.note: Any = kwargs.get("note")
 
     def __repr__(self):
         params = [f"{self.line!r}"]
         if self.platform != DEFAULT_PLATFORM:
             params.append(f"platform={self.platform!r}")
-        if self.note:
+        if self.note is not None:
             params.append(f"note={self.note!r}")
         kwargs = ", ".join(params)
         return f"{self.__class__.__name__}({kwargs})"
@@ -43,14 +44,6 @@ class Base(ABC):
         if platform not in PLATFORMS:
             raise ValueError(f"invalid {platform=}, expected={PLATFORMS}")
         return platform
-
-    @staticmethod
-    def _init_note(**kwargs) -> str:
-        """Init note"""
-        note = kwargs.get("note")
-        if note is None:
-            note = ""
-        return str(note)
 
     @staticmethod
     def _init_line(line: str) -> str:
@@ -109,16 +102,3 @@ class Base(ABC):
     @platform.setter
     def platform(self, platform: str) -> None:
         self._platform = self._init_platform(platform=platform)
-
-    @property
-    def note(self) -> str:
-        """Object description (not part of ACE)"""
-        return self._note
-
-    @note.setter
-    def note(self, note: str) -> None:
-        self._note = str(note).strip()
-
-    @note.deleter
-    def note(self) -> None:
-        self._note = ""

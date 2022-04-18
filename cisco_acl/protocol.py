@@ -21,7 +21,7 @@ class Protocol(Base):
         :param line: Protocol line.
         :param kwargs: Params.
             platform: Supported platforms: "ios", "cnx". By default: "ios".
-            note: Object description (used only in object).
+            note: Object description (can be used for ACEs sorting).
 
         Example1:
             line: ["tcp"]

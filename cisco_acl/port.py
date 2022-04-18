@@ -20,7 +20,7 @@ class Port(Base):
         :param line: TCP/UDP ports line.
         :param kwargs: Params.
             platform: Supported platforms: "ios", "cnx". By default: "ios".
-            note: Object description (used only in object).
+            note: Object description (can be used for ACEs sorting).
 
         Example1: ios, "eq" (can match multiple ports in single line)
             line: "eq www 443"

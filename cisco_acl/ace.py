@@ -27,7 +27,7 @@ class Ace(BaseAce):
         :param line: ACE line.
         :param kwargs: Params.
             platform: Supported platforms: "ios", "cnx". By default: "ios".
-            note: Object description (used only in object).
+            note: Object description (can be used for ACEs sorting).
 
         Example:
         line: "10 permit tcp host 10.0.0.1 eq 179 10.0.0.0 0.0.0.3 eq 80 443 log"

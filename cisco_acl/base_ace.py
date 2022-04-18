@@ -16,7 +16,7 @@ class BaseAce(Base):
         :param line: ACE line, can contain index.
         :param kwargs: Params.
             platform: Supported platforms: "ios", "cnx". By default: "ios".
-            note: Object description (used only in object).
+            note: Object description (can be used for ACEs sorting).
         """
         super().__init__(**kwargs)
         self.sequence = 0

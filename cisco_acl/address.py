@@ -34,7 +34,7 @@ class Address(Base):
 
         :param kwargs: Params.
             platform: Supported platforms: "ios", "cnx". By default: "ios".
-            note: Object description (used only in object).
+            note: Object description (can be used for ACEs sorting).
 
         Example1:
             line: "10.0.0.0 0.0.0.3"
@@ -109,7 +109,7 @@ class Address(Base):
         line = self._init_line(line)
 
         # "any"
-        if line == "any":
+        if line in ["any", "0.0.0.0/0", "0.0.0.0 255.255.255.255"]:
             self._line__any()
             return
 

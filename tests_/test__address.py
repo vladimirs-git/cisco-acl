@@ -55,7 +55,7 @@ IOS_HOST_D = dict(
     prefix="10.0.0.1/32",
     wildcard="10.0.0.1 0.0.0.0",
 )
-CNX__HOST_D = dict(
+CNX_HOST_D = dict(
     line="10.0.0.1/32",
     addrgroup="",
     subnet="10.0.0.1 255.255.255.255",
@@ -161,8 +161,8 @@ class Test(Helpers):
             ("cnx", "10.0.0.0 0.0.0.3", CNX_PREFIX_D),
             ("cnx", "10.0.0.0 0.0.3.3", WILD2_D),
             ("cnx", "10.0.0.0/30", CNX_PREFIX_D),
-            ("cnx", "10.0.0.1/32", CNX__HOST_D),
-            ("cnx", "host 10.0.0.1", CNX__HOST_D),
+            ("cnx", "10.0.0.1/32", CNX_HOST_D),
+            ("cnx", "host 10.0.0.1", CNX_HOST_D),
             ("cnx", "object-group NAME", CNX_ADDRGROUP_D),
             ("cnx", "addrgroup NAME", CNX_ADDRGROUP_D),
         ]:
@@ -256,9 +256,19 @@ class Test(Helpers):
 
     def test_valid__prefix(self):
         """Address.prefix()"""
-        for platform, prefix, req_d in [
-            ("ios", PREFIX30, WILD_D),
-            ("cnx", PREFIX30, CNX_PREFIX_D),
+        for prefix, platform, req_d in [
+            ("any", "ios", ANY_D),
+            ("any", "cnx", ANY_D),
+            ("0.0.0.0 255.255.255.255", "ios", ANY_D),
+            ("0.0.0.0 255.255.255.255", "cnx", ANY_D),
+            ("10.0.0.0 0.0.3.3", "ios", WILD2_D),
+            ("10.0.0.0 0.0.3.3", "cnx", WILD2_D),
+            (PREFIX0, "ios", ANY_D),
+            (PREFIX0, "cnx", ANY_D),
+            (PREFIX30, "ios", WILD_D),
+            (PREFIX30, "cnx", CNX_PREFIX_D),
+            (PREFIX32, "ios", IOS_HOST_D),
+            (PREFIX32, "cnx", CNX_HOST_D),
         ]:
             # getter
             addr_o = Address(prefix, platform=platform)

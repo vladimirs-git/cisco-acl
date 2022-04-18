@@ -33,7 +33,7 @@ class Acl(AceGroup):
             input: Interfaces, where Acl is used on input.
             output: Interfaces, where Acl is used on output.
             indent: ACE lines indentation. By default 2 spaces.
-            note: Object description (used only in object).
+            note: Object description (can be used for ACEs sorting).
 
         Example:
         line: "ip access-list extended NAME
@@ -285,7 +285,7 @@ class Acl(AceGroup):
         return acl
 
     def resequence(self, start: int = 10, step: int = 10, **kwargs) -> int:
-        """Resequence all entries in an ACL.
+        """Resequence all Acl.items. Change sequence numbers.
         :param start: Starting sequence number. start=0 - delete all sequence numbers.
         :param step: Step to increment the sequence number.
         :param kwargs:

@@ -20,7 +20,7 @@ class Remark(BaseAce):
         """ACL Remark.
         :param line: ACE line.
         :param kwargs: Params.
-            note: Object description (used only in object).
+            note: Object description (can be used for ACEs sorting).
 
         Example:
         line: "10 remark text"

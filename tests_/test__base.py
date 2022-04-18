@@ -81,15 +81,16 @@ class Test(unittest.TestCase):
     def test_valid__repr__(self):
         """Base.__repr__() __str__()"""
         for class_, line, platform, note, req_repr in [
-            (Remark, REMARK, "", "", f"Remark('{REMARK}')"),
-            (Remark, REMARK, "ios", "", f"Remark('{REMARK}')"),
+            (Remark, REMARK, "", None, f"Remark('{REMARK}')"),
+            (Remark, REMARK, "", "", f"Remark('{REMARK}', note='')"),
+            (Remark, REMARK, "ios", None, f"Remark('{REMARK}')"),
             (Remark, REMARK, "ios", "a", f"Remark('{REMARK}', note='a')"),
-            (Remark, REMARK, "cnx", "", f"Remark('{REMARK}', platform='cnx')"),
+            (Remark, REMARK, "cnx", None, f"Remark('{REMARK}', platform='cnx')"),
             (Remark, REMARK, "cnx", "a", f"Remark('{REMARK}', platform='cnx', note='a')"),
-            (Ace, PERMIT_IP, "", "", f"Ace('{PERMIT_IP}')"),
-            (Ace, PERMIT_IP, "ios", "", f"Ace('{PERMIT_IP}')"),
+            (Ace, PERMIT_IP, "", None, f"Ace('{PERMIT_IP}')"),
+            (Ace, PERMIT_IP, "ios", None, f"Ace('{PERMIT_IP}')"),
             (Ace, PERMIT_IP, "ios", "a", f"Ace('{PERMIT_IP}', note='a')"),
-            (Ace, PERMIT_IP, "cnx", "", f"Ace('{PERMIT_IP}', platform='cnx')"),
+            (Ace, PERMIT_IP, "cnx", None, f"Ace('{PERMIT_IP}', platform='cnx')"),
             (Ace, PERMIT_IP, "cnx", "a", f"Ace('{PERMIT_IP}', platform='cnx', note='a')"),
         ]:
             obj = class_(line, platform=platform, note=note)
@@ -171,32 +172,23 @@ class Test(unittest.TestCase):
         """Base.note"""
         for note, req in [
             ("", ""),
-            ("text", "text"),
-            ("\ttext1  text2\n", "text1  text2"),
-            (1, "1"),
+            ("\ttext1\n", "\ttext1\n"),
+            (0, 0),
+            (1, 1),
         ]:
-            for class_, line, attrs in [
-                (Remark, REMARK, []),
-                (Ace, PERMIT_IP, ["protocol", "srcaddr", "srcport", "dstaddr", "dstport"]),
+            for class_, line in [
+                (Remark, REMARK),
+                (Ace, PERMIT_IP),
             ]:
                 # getter
-                # noinspection PyUnboundLocalVariable
                 obj = class_(line, note=note)
                 result = obj.note
                 self.assertEqual(result, req, msg=f"getter {note=}")
-                for attr in attrs:
-                    result = getattr(getattr(obj, attr), "note")
-                    self.assertEqual(result, "", msg=f"getter {note=}")
 
                 # setter
                 obj.note = note
                 result = obj.note
                 self.assertEqual(result, req, msg=f"setter {note=}")
-
-                # deleter
-                del obj.note
-                result = obj.note
-                self.assertEqual(result, "", msg="deleter")
 
 
 if __name__ == "__main__":

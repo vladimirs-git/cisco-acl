@@ -66,10 +66,10 @@ class Group:
         """Return number of occurrences of items."""
         return self.items.count(item)
 
-    def delete(self, items) -> None:
+    def delete(self, item) -> None:
         """Remove item from group."""
-        if items in self.items:
-            self.items.remove(items)
+        if item in self.items:
+            self.items.remove(item)
 
     def extend(self, items: Iterable) -> None:
         """Extend list by appending items."""
@@ -96,7 +96,7 @@ class Group:
         self.items.remove(*args)
 
     def reverse(self) -> None:
-        """ Reverse order of items in list."""
+        """Reverse order of items in list."""
         self.items.reverse()
 
     def sort(self, *args, **kwargs) -> None:
