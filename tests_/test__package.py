@@ -7,7 +7,7 @@ from datetime import datetime
 
 # noinspection PyProtectedMember
 from cisco_acl import __title__
-from setup import PACKAGE, PACKAGE_, ROOT
+from setup import PACKAGE, ROOT
 
 IMPORTS = [
     "from cisco_acl.ace import Ace",
@@ -40,17 +40,6 @@ class Test(unittest.TestCase):
 
     # ============================ tests =============================
 
-    def test_valid__package(self):
-        """package"""
-        name, var = f"{__title__=!s}".split("=")
-        path = os.path.join(ROOT, PACKAGE, "__init__.py")
-        self.assertEqual(var, PACKAGE, msg=f"invalid variable {name} in {path=}")
-
-        name, var = f"{ROOT=!s}".split("=")
-        var = os.path.split(var)[1]
-        path = os.path.join(ROOT, "static.py")
-        self.assertEqual(var, PACKAGE, msg=f"invalid variable {name} in {path=}")
-
     @unittest.skip("solve pylint conflict")
     def test_valid__init__(self):
         """__init__.py"""
@@ -76,7 +65,7 @@ class Test(unittest.TestCase):
             "__url__ = .+",
             "__download_url__ = .+",
         ])
-        path = os.path.join(ROOT, PACKAGE_, "__init__.py")
+        path = os.path.join(ROOT, PACKAGE, "__init__.py")
         with open(path) as fh:
             text = fh.read()
             lines = {s.strip() for s in text.split("\n")}
@@ -91,7 +80,7 @@ class Test(unittest.TestCase):
 
     def test_valid__version(self):
         """version"""
-        path = os.path.join(ROOT, PACKAGE_, "__init__.py")
+        path = os.path.join(ROOT, PACKAGE, "__init__.py")
         with open(path) as fh:
             text = fh.read()
             version_init = (re.findall("^__version__ = \"(.+)\"", text, re.M) or [""])[0]
@@ -111,7 +100,7 @@ class Test(unittest.TestCase):
         path = os.path.join(ROOT, "README.md")
         with open(path) as fh:
             text = fh.read()
-            regex = PACKAGE + r"-(.+)\.tar\.gz"
+            regex = __title__ + r"-(.+)\.tar\.gz"
             versions_readme = re.findall(regex, text, re.M)
             for version_readme in versions_readme:
                 self.assertEqual(version_readme, version, msg=f"package name in {path=}")

@@ -1,4 +1,17 @@
-0.0.4 (2022-04-14)
+0.1.0 (2022-04-25)
+------------------
+New
+~~~
+convert dict to object and vice versa
+	acl = Acl(data=dict(...))
+	data = acl.data
+
+Fix
+~~~
+setup.py package_data={PACKAGE: ["py.typed"]}
+
+
+0.0.5 (2022-04-19)
 ------------------
 
 New

@@ -147,37 +147,44 @@ Resequence all Acl.items. Change sequence numbers.
 In the following example create Acl with not ordered groups, then sorting and resequence by notes.
 ```python
 from cisco_acl import Acl, Ace, AceGroup
-acl = Acl("ip access-list extended ACL1")
-ace = "permit ip any any"
 group1 = """
+remark ====== dns ======
 permit udp any any eq 53
 deny udp any any
 """
 group2 = """
+remark ====== web ======
 permit tcp any any eq 80
 deny tcp any any
 """
-acl.extend(items=[Ace(ace, note="3rd"), AceGroup(group2, note="2nd"), AceGroup(group1, note="1st")])
+acl = Acl("ip access-list extended ACL1")
+acl.extend(items=[Ace("permit ip any any", note="3rd"),
+                  AceGroup(group2, note="2nd"),
+                  AceGroup(group1, note="1st")])
 acl.resequence()
 print(str(acl))
 print()
 # ip access-list extended ACL1
 #   10 permit ip any any
-#   20 permit tcp any any eq 80
-#   30 deny tcp any any
-#   40 permit udp any any eq 53
-#   50 deny udp any any
+#   20 remark ====== web ======
+#   30 permit tcp any any eq 80
+#   40 deny tcp any any
+#   50 remark ====== dns ======
+#   60 permit udp any any eq 53
+#   70 deny udp any any
 
 acl.sort(key=lambda o: o.note)
 acl.resequence()
 print(str(acl))
 print()
 # ip access-list extended ACL1
-#   10 permit udp any any eq 53
-#   20 deny udp any any
-#   30 permit tcp any any eq 80
-#   40 deny tcp any any
-#   50 permit ip any any
+#   10 remark ====== dns ======
+#   20 permit udp any any eq 53
+#   30 deny udp any any
+#   40 remark ====== web ======
+#   50 permit tcp any any eq 80
+#   60 deny tcp any any
+#   70 permit ip any any
 ```
 
 #### copy()

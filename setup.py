@@ -6,15 +6,15 @@ from setuptools import setup, find_packages  # type: ignore
 
 import cisco_acl as packet
 
-VERSION = "0.0.4"
-PACKAGE = packet.__title__
-PACKAGE_ = packet.__title__.lower().replace("-", "_")  # PEP 503 normalization
+VERSION = "0.1.0"
+PACKAGE = packet.__title__.lower().replace("-", "_")  # PEP 503 normalization
 ROOT = pathlib.Path(__file__).parent.resolve()
 
 if __name__ == "__main__":
     setup(
-        name=PACKAGE_,
-        packages=[PACKAGE_],
+        name=PACKAGE,
+        packages=[PACKAGE],
+        package_data={PACKAGE: ["py.typed"]},
         version=VERSION,
         license=packet.__license__,
         description=packet.__summary__,

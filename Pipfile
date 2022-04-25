@@ -7,7 +7,7 @@ verify_ssl = true
 netaddr = "==0.8.0"
 
 [dev-packages]
-coverage = "*"  # 6.3.2
+#coverage = "*"  # 6.3.2
 mypy = "*"  # 0.942
 pylint = "*"  # 2.13.5
 twine = "==4.0.0"
