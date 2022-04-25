@@ -10,7 +10,7 @@ from cisco_acl.base_ace import BaseAce
 from cisco_acl.group import Group
 from cisco_acl.remark import Remark, LRemark
 from cisco_acl.sequence import Sequence
-from cisco_acl.types_ import StrInt
+from cisco_acl.types_ import DAny, StrInt
 
 UAce = Union[Ace, Remark]
 OUAce = Optional[UAce]
@@ -29,12 +29,15 @@ class AceGroup(Group, BaseAce):
         :param kwargs:
             platform: Supported platforms: "ios", "cnx". By default: "ios".
             note: Object description (can be used for ACEs sorting).
-            items: List of ACE (strings or Ace objects). By default parsed from line.
+            items: An alternate way to create AceGroup object from a list of Ace objects.
+                By default, an object is created from a line.
+            data: An alternate way to create AceGroup object from a <dict>.
+                By default, an object is created from a line.
 
         Example:
-        line: "10 permit icmp any any\n  20 deny ip any any"
-        platform: "ios"
-        note: "description"
+            line: "10 permit icmp any any\n  20 deny ip any any"
+            platform: "ios"
+            note: "description"
 
         result:
             self.line = "10 permit icmp any any\n20 deny ip any any"
@@ -45,9 +48,14 @@ class AceGroup(Group, BaseAce):
         """
         BaseAce.__init__(self, "", **kwargs)
         Group.__init__(self)
-        self.line = line
-        if not line:
-            self._init_items(**kwargs)
+        if line:
+            self.line = line
+            return
+        if items := kwargs.get("items") or []:
+            self._init_items(items)
+            return
+        if data := kwargs.get("data") or {}:
+            self._init_data(**data)
 
     def __hash__(self) -> int:
         return self.line.__hash__()
@@ -75,16 +83,43 @@ class AceGroup(Group, BaseAce):
 
     # ============================= init =============================
 
-    def _init_items(self, **kwargs) -> None:
-        """Init items"""
-        items = kwargs.get("items") or []
+    def _init_items(self, items: LUAcl) -> None:
+        """Init self object from list or Ace objects"""
         if not isinstance(items, list):
             raise TypeError(f"{items=} {list} expected")
         self.items = items
         sequence = int(self.items[0].sequence) if self.items else 0
         self.sequence.number = sequence
 
+    def _init_data(self, **kwargs) -> None:
+        """Init self object from <dict>"""
+        items = kwargs.get("items") or []
+        line = "\n".join(items)
+        sequence = str(kwargs.get("sequence") or "")
+        kwargs = {k: v for k, v in kwargs.items() if k not in ["items", "sequence"]}
+        self.__init__(line, **kwargs)
+        self.sequence.line = sequence
+
     # =========================== property ===========================
+
+    @property
+    def items(self) -> LUAcl:
+        """List of Ace, Remark objects"""
+        return self._items
+
+    @items.setter
+    def items(self, items: LUAce) -> None:
+        items_: LUAcl = []
+        for item in items:
+            if isinstance(item, (Ace, Remark)):
+                items_.append(item)
+            else:
+                raise TypeError(f"{item=} {Ace} {Remark} expected")
+        self._items = items_
+
+    @items.deleter
+    def items(self) -> None:
+        self._items = []
 
     @property
     def line(self) -> str:
@@ -105,25 +140,6 @@ class AceGroup(Group, BaseAce):
     def line(self) -> None:
         self.items = []
         self.sequence.number = 0
-
-    @property
-    def items(self) -> LUAcl:
-        """List of Ace, Remark objects"""
-        return self._items
-
-    @items.setter
-    def items(self, items: LUAce) -> None:
-        items_: LUAcl = []
-        for item in items:
-            if isinstance(item, (Ace, Remark)):
-                items_.append(item)
-            else:
-                raise TypeError(f"{item=} {Ace} {Remark} expected")
-        self._items = items_
-
-    @items.deleter
-    def items(self) -> None:
-        self._items = []
 
     @property
     def sequence(self) -> Sequence:
@@ -169,6 +185,24 @@ class AceGroup(Group, BaseAce):
             note=self.note,
         )
         return aceg
+
+    # =========================== methods ============================
+
+    def data(self) -> DAny:
+        """Return data in <dict> format.
+        Example: AceGroup("10 permit icmp any any\n  20 deny ip any any")
+        :return: dict("line": "10 permit icmp any any\n20 deny ip any any",
+                      "platform": "ios"
+                      "note": "description"
+                      "sequence": 10
+                      "items": ["10 permit icmp any any", "20 deny ip any any"])
+        """
+        return dict(
+            platform=self.platform,
+            note=self.note,
+            sequence=self.sequence.number,
+            items=self.line.split("\n"),
+        )
 
     # =========================== helpers ============================
 

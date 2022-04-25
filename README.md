@@ -63,7 +63,7 @@ Acl.items can be edited, sorted, indexed by sequence numbers or notes.
     indent      ACE lines indentation. By default 2 spaces.
     note        Object description (can be used for ACEs sorting).
 
-In the following example create Acl with default parameters. 
+In the following example create Acl with default parameters.
 All data is parsed from the configuration string.
 
 ```python
@@ -87,7 +87,7 @@ print(acl)
 #   permit icmp host 10.0.0.1 object-group NAME
 ```
 
-In the following example create Acl with optional parameters. 
+In the following example create Acl with optional parameters.
 The data is taken from params. Note, line is empty.
 
 ```python
@@ -191,9 +191,9 @@ print()
 
 Return a copy of the Acl object with the Ace items copied.
 
-In the following example create an Ace object `ace`. 
+In the following example create an Ace object `ace`.
 Add it to 2 Acl objects and then change source address in `ace`.
-The print shows that in `acl1` the source address will be changed, 
+The print shows that in `acl1` the source address will be changed,
 but in copied `acl2` the source address will remain unchanged.
 ```python
 from cisco_acl import Acl, Ace
@@ -293,7 +293,7 @@ print(ace.line)
 Returns a copy of the Ace object.
 
 In the following example create Ace object and copy them, then change prefix in `ace1`.
-The print shows that in `ace1` the prefix will be changed, 
+The print shows that in `ace1` the prefix will be changed,
 but in copied `ace2` the prefix will remain unchanged.
 ```python
 from cisco_acl import Ace
@@ -310,7 +310,7 @@ print()
 
 ## class AceGroup
 
-Group of ACEs. Useful for sorting ACL entries with frozen sections within which the sequence does 
+Group of ACEs. Useful for sorting ACL entries with frozen sections within which the sequence does
 not change.
 
 ### Parameters
@@ -320,7 +320,10 @@ not change.
     items                   List of ACE (strings or Ace objects).
     platform        "ios"   Supported platforms: Cisco IOS - "ios", Cisco NX-OS - "cnx".
     note                    Object description (can be used for ACEs sorting).
-    items                   List of ACE (strings or Ace objects). By default parsed from line.
+    items                   An alternate way to create AceGroup object from a list of Ace objects. 
+                            By default, an object is created from a line.
+    data                    An alternate way to create AceGroup object from a <dict>. 
+                            By default, an object is created from a line.
 
 ```python
 from cisco_acl import AceGroup, Remark, Ace

@@ -1,5 +1,6 @@
 """Typing"""
 from typing import (
+    Any,
     Dict,
     Iterable,
     List,
@@ -10,6 +11,7 @@ from typing import (
 
 from netaddr import IPNetwork  # type: ignore
 
+DAny = Dict[str, Any]
 DStr = Dict[str, str]
 IInt = Iterable[int]
 IStr = Iterable[str]

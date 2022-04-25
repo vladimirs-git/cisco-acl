@@ -21,13 +21,13 @@ class Base(ABC):
         """
         self._uuid = str(uuid.uuid1())
         self._platform = self._init_platform(**kwargs)
-        self.note: Any = kwargs.get("note")
+        self.note: Any = kwargs.get("note") or ""
 
     def __repr__(self):
         params = [f"{self.line!r}"]
         if self.platform != DEFAULT_PLATFORM:
             params.append(f"platform={self.platform!r}")
-        if self.note is not None:
+        if self.note:
             params.append(f"note={self.note!r}")
         kwargs = ", ".join(params)
         return f"{self.__class__.__name__}({kwargs})"

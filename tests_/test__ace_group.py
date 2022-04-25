@@ -2,6 +2,8 @@
 
 import unittest
 
+import dictdiffer
+
 from cisco_acl import Ace, AceGroup, Remark
 from tests_.helpers_test import (
     DENY_IP,
@@ -9,6 +11,7 @@ from tests_.helpers_test import (
     Helpers,
     PERMIT_IP,
     PERMIT_IP_1,
+    PERMIT_IP_2,
     REMARK,
 )
 
@@ -117,6 +120,35 @@ class Test(Helpers):
         aceg_o = AceGroup(PERMIT_IP)
         del aceg_o.line
         self._test_attrs(obj=aceg_o, req_d=dict(line="", sequence=""), msg="deleter line")
+
+    # =========================== methods ============================
+
+    def test_valid__data(self):
+        """AceGroup.data()"""
+        acl1 = f"{PERMIT_IP}\n \n{DENY_IP}\n \n{REMARK}"
+        acl2 = f"2 {acl1}"
+        items1 = [PERMIT_IP, DENY_IP, REMARK]
+        items2 = [PERMIT_IP_2, DENY_IP, REMARK]
+        data0 = dict(platform="ios", note="", sequence=0, items=[""])
+        data1 = dict(platform="ios", note="", sequence=0, items=[PERMIT_IP])
+        data_ip1 = dict(platform="ios", note="", sequence=1, items=[PERMIT_IP_1])
+        data_gr1 = dict(platform="ios", note="", sequence=0, items=items1)
+        data_gr2 = dict(platform="ios", note="", sequence=2, items=items2)
+
+        for line, req_d, in [
+            ("", data0),
+            (PERMIT_IP, data1),
+            (PERMIT_IP_1, data_ip1),
+            (acl1, data_gr1),
+            (acl2, data_gr2),
+        ]:
+            for aceg_o in [
+                AceGroup(line),
+                AceGroup(data=req_d),
+            ]:
+                result = aceg_o.data()
+                diff = list(dictdiffer.diff(first=result, second=req_d))
+                self.assertEqual(diff, [], msg=f"{line=}")
 
     # =========================== helpers ============================
 

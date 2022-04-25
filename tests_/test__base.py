@@ -82,7 +82,8 @@ class Test(unittest.TestCase):
         """Base.__repr__() __str__()"""
         for class_, line, platform, note, req_repr in [
             (Remark, REMARK, "", None, f"Remark('{REMARK}')"),
-            (Remark, REMARK, "", "", f"Remark('{REMARK}', note='')"),
+            (Remark, REMARK, "", "", f"Remark('{REMARK}')"),
+            (Remark, REMARK, "", 0, f"Remark('{REMARK}')"),
             (Remark, REMARK, "ios", None, f"Remark('{REMARK}')"),
             (Remark, REMARK, "ios", "a", f"Remark('{REMARK}', note='a')"),
             (Remark, REMARK, "cnx", None, f"Remark('{REMARK}', platform='cnx')"),
@@ -173,7 +174,7 @@ class Test(unittest.TestCase):
         for note, req in [
             ("", ""),
             ("\ttext1\n", "\ttext1\n"),
-            (0, 0),
+            (0, ""),
             (1, 1),
         ]:
             for class_, line in [
@@ -184,11 +185,6 @@ class Test(unittest.TestCase):
                 obj = class_(line, note=note)
                 result = obj.note
                 self.assertEqual(result, req, msg=f"getter {note=}")
-
-                # setter
-                obj.note = note
-                result = obj.note
-                self.assertEqual(result, req, msg=f"setter {note=}")
 
 
 if __name__ == "__main__":
