@@ -135,7 +135,31 @@ print(acl)
     sort        Sort Acl.items in ascending order.
     update      Extend Acl.items by adding items, if it is not in list (extend without duplicates).
 
-#### resequence(start=10, step=10)
+#### Acl.copy()
+
+Return a copy of the Acl object with the Ace items copied.
+
+In the following example create an Ace object `ace`. Add it to 2 Acl objects and then change source
+address in `ace`. The print shows that in `acl1` the source address will be changed, but in
+copied `acl2` the source address will remain unchanged.
+
+```python
+from cisco_acl import Acl, Ace
+
+ace = Ace("permit ip any any")
+acl1 = Acl(name="ACL1", items=[ace])
+acl2 = acl1.copy()
+ace.srcaddr.prefix = "10.0.0.0/24"
+print(acl1)
+print(acl2)
+print()
+# ip access-list extended ACL1
+#   permit ip 10.0.0.0 0.0.0.255 any
+# ip access-list extended ACL1
+#   permit ip any any
+```
+
+#### Acl.resequence(start=10, step=10)
 
 Resequence all Acl.items. Change sequence numbers.
 
@@ -187,30 +211,6 @@ print()
 #   50 permit tcp any any eq 80
 #   60 deny tcp any any
 #   70 permit ip any any
-```
-
-#### copy()
-
-Return a copy of the Acl object with the Ace items copied.
-
-In the following example create an Ace object `ace`. Add it to 2 Acl objects and then change source
-address in `ace`. The print shows that in `acl1` the source address will be changed, but in
-copied `acl2` the source address will remain unchanged.
-
-```python
-from cisco_acl import Acl, Ace
-
-ace = Ace("permit ip any any")
-acl1 = Acl(name="ACL1", items=[ace])
-acl2 = acl1.copy()
-ace.srcaddr.prefix = "10.0.0.0/24"
-print(acl1)
-print(acl2)
-print()
-# ip access-list extended ACL1
-#   permit ip 10.0.0.0 0.0.0.255 any
-# ip access-list extended ACL1
-#   permit ip any any
 ```
 
 ## class Ace
@@ -291,7 +291,7 @@ print(ace.line)
 
 ### Methods
 
-#### copy()
+#### Ace.copy()
 
 Returns a copy of the Ace object.
 
@@ -350,7 +350,7 @@ print()
 
 ### Methods
 
-#### copy()
+#### AceGroup.copy()
 
 Returns a copy of the AceGroup object.
 
@@ -374,9 +374,9 @@ print()
 # permit ip any any
 ```
 
-#### data()
+#### AceGroup.data()
 
-Returns a data of objects in dict format
+Returns a data of objects in dict format.
 
 ```python
 from cisco_acl import AceGroup
@@ -417,7 +417,7 @@ assert remark.note == "description"
 
 ### Methods
 
-#### copy()
+#### Remark.copy()
 
 Returns a copy of the Remark object.
 

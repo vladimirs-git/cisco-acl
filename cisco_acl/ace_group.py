@@ -97,7 +97,10 @@ class AceGroup(Group, BaseAce):
         line = "\n".join(items)
         sequence = str(kwargs.get("sequence") or "")
         kwargs = {k: v for k, v in kwargs.items() if k not in ["items", "sequence"]}
-        self.__init__(line, **kwargs)
+        aceg = AceGroup(line, **kwargs)
+        self.platform = aceg.platform
+        self.note = aceg.note
+        self.line = aceg.line
         self.sequence.line = sequence
 
     # =========================== property ===========================
