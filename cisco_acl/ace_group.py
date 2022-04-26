@@ -154,7 +154,7 @@ class AceGroup(Group, BaseAce):
     def sequence(self) -> None:
         del self.sequence.number
 
-    # methods
+    # =========================== methods ============================
 
     def copy(self) -> AceGroup:
         """Return a shallow copy of self."""
@@ -185,8 +185,6 @@ class AceGroup(Group, BaseAce):
             note=self.note,
         )
         return aceg
-
-    # =========================== methods ============================
 
     def data(self) -> DAny:
         """Return data in <dict> format.

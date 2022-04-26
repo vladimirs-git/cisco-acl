@@ -63,8 +63,8 @@ Acl.items can be edited, sorted, indexed by sequence numbers or notes.
     indent      ACE lines indentation. By default 2 spaces.
     note        Object description (can be used for ACEs sorting).
 
-In the following example create Acl with default parameters.
-All data is parsed from the configuration string.
+In the following example create Acl with default parameters. All data is parsed from the
+configuration string.
 
 ```python
 from cisco_acl import Acl, Remark, Ace
@@ -87,8 +87,8 @@ print(acl)
 #   permit icmp host 10.0.0.1 object-group NAME
 ```
 
-In the following example create Acl with optional parameters.
-The data is taken from params. Note, line is empty.
+In the following example create Acl with optional parameters. The data is taken from params. Note,
+line is empty.
 
 ```python
 from cisco_acl import Acl, Remark, Ace
@@ -145,8 +145,10 @@ Resequence all Acl.items. Change sequence numbers.
     step        Step to increment the sequence number.
 
 In the following example create Acl with not ordered groups, then sorting and resequence by notes.
+
 ```python
 from cisco_acl import Acl, Ace, AceGroup
+
 group1 = """
 remark ====== dns ======
 permit udp any any eq 53
@@ -191,10 +193,10 @@ print()
 
 Return a copy of the Acl object with the Ace items copied.
 
-In the following example create an Ace object `ace`.
-Add it to 2 Acl objects and then change source address in `ace`.
-The print shows that in `acl1` the source address will be changed,
-but in copied `acl2` the source address will remain unchanged.
+In the following example create an Ace object `ace`. Add it to 2 Acl objects and then change source
+address in `ace`. The print shows that in `acl1` the source address will be changed, but in
+copied `acl2` the source address will remain unchanged.
+
 ```python
 from cisco_acl import Acl, Ace
 
@@ -224,6 +226,7 @@ ACE (Access Control Entry). Each entry statement permit or deny in the ACL (Acce
     note           Object description (can be used for ACEs sorting).
 
 In the following example, create an Ace object and demonstrate various manipulation approaches.
+
 ```python
 from cisco_acl import Ace
 from netaddr import IPNetwork
@@ -292,9 +295,10 @@ print(ace.line)
 
 Returns a copy of the Ace object.
 
-In the following example create Ace object and copy them, then change prefix in `ace1`.
-The print shows that in `ace1` the prefix will be changed,
-but in copied `ace2` the prefix will remain unchanged.
+In the following example create Ace object and copy them, then change prefix in `ace1`. The print
+shows that in `ace1` the prefix will be changed, but in copied `ace2` the prefix will remain
+unchanged.
+
 ```python
 from cisco_acl import Ace
 
@@ -349,6 +353,42 @@ print()
 #### copy()
 
 Returns a copy of the AceGroup object.
+
+In the following example create AceGroup object and copy them, then change prefix in `aceg1`. The
+print shows that in `aceg1` the prefix will be changed, but in copied `aceg2` the prefix will remain
+unchanged.
+
+```python
+from cisco_acl import AceGroup
+
+aceg1 = AceGroup("permit icmp any any\npermit ip any any")
+aceg2 = aceg1.copy()
+aceg1.items[0].srcaddr.prefix = "10.0.0.0/24"
+aceg1.items[1].srcaddr.prefix = "10.0.0.0/24"
+print(aceg1)
+print(aceg2)
+print()
+# permit icmp 10.0.0.0 0.0.0.255 any
+# permit ip 10.0.0.0 0.0.0.255 any
+# permit icmp any any
+# permit ip any any
+```
+
+#### data()
+
+Returns a data of objects in dict format
+
+```python
+from cisco_acl import AceGroup
+
+aceg = AceGroup("permit icmp any any\npermit ip any any")
+print(aceg.data())
+print()
+# {'platform': 'ios', 
+#  'note': '', 
+#  'sequence': 0, 
+#  'items': ['permit icmp any any', 'permit ip any any']}
+```
 
 ## class Remark
 
