@@ -26,7 +26,7 @@ class Test(unittest.TestCase):
     # =========================== helpers ============================
 
     @staticmethod
-    def paths_dates():
+    def _paths_dates():
         """path to .py files with last modified dates"""
         paths = []
         for root_i, _, files_i in os.walk(ROOT):
@@ -110,6 +110,27 @@ class Test(unittest.TestCase):
             text = fh.readline().strip()
             version_changelog = (re.findall(r"(.+)\s\(\d\d\d\d-\d\d-\d\d\)$", text) or [""])[0]
             self.assertEqual(version_changelog, version, msg=f"version in {path=}")
+
+    def test_valid__date(self):
+        """__date__"""
+        path = os.path.join(ROOT, PACKAGE, "__init__.py")
+        with open(path) as fh:
+            # date format convention
+            text = fh.read()
+            date_ = (re.findall("^__date__ = \"(.+)\"", text, re.M) or [""])[0]
+            msg = f"invalid __date__ in {path=}"
+            self.assertRegex(date_, r"\d\d\d\d-\d\d-\d\d", msg=msg)
+
+            # last modified file
+            date_version = datetime.strptime(date_, "%Y-%m-%d").date()
+            date_max = max([t[1] for t in self._paths_dates()])
+            self.assertEqual(date_version, date_max, msg=msg)
+
+            path = os.path.join(ROOT, "CHANGELOG.txt")
+            with open(path) as fh_:
+                line = fh_.readline().strip()
+                date_changelog = (re.findall(r".+\s\((\d\d\d\d-\d\d-\d\d)\)$", line) or [""])[0]
+                self.assertEqual(date_changelog, date_, msg=f"date in {path=}")
 
 
 if __name__ == "__main__":
