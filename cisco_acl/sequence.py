@@ -14,14 +14,14 @@ class Sequence:
     __slots__ = ("_line", "_number")
 
     def __init__(self, line: StrInt = ""):
-        """ACE Sequence number.
-        :param line: ACE sequence number.
+        """ACE Sequence number
+        :param line: ACE sequence number
 
-        Example:
+        :example:
             line: "10"
-        result:
-            self.line = "10"
-            self.number = 10
+            result:
+                self.line = "10"
+                self.number = 10
         """
         self.line = str(line)
 
@@ -67,13 +67,15 @@ class Sequence:
 
     @property
     def line(self) -> str:
-        """ACE sequence number <str>.
-        Example1:
+        """ACE sequence number *str*
+
+        :example:
             Sequence("10")
-            :return: "10"
-        Example1:
+            return: "10"
+
+        :example:
             Sequence("0")
-            :return: ""
+            return: ""
         """
         if not self._number:
             return ""
@@ -89,10 +91,11 @@ class Sequence:
 
     @property
     def number(self) -> int:
-        """ACE sequence number <int>.
-        Example:
+        """ACE sequence number *int*
+
+        :example:
             Sequence("10")
-            :return: 10
+            return: 10
         """
         return self._number
 

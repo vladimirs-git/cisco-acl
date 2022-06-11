@@ -1,4 +1,4 @@
-"""unittest helpers.py"""
+"""Unittest helpers.py"""
 
 import unittest
 
@@ -9,7 +9,7 @@ from tests_.helpers_test import PERMIT_IP, DENY_IP
 
 # noinspection DuplicatedCode
 class Test(unittest.TestCase):
-    """helpers"""
+    """Helpers"""
 
     # =========================== helpers ============================
 

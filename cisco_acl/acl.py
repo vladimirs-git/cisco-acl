@@ -23,37 +23,35 @@ class Acl(AceGroup):
     """ACL (Access Control List)"""
 
     def __init__(self, line: str = "", **kwargs):
-        """ACL (Access Control List).
-        :param line: ACL config (name and following remarks and access entries).
-        :param kwargs:
-            platform: Supported platforms: "ios", "cnx". By default: "ios".
-            name: ACL name. By default parsed from line.
-            items: List of ACE (strings or Ace, AceGroup, Remark objects).
-                    By default parsed from line.
-            input: Interfaces, where Acl is used on input.
-            output: Interfaces, where Acl is used on output.
-            indent: ACE lines indentation. By default 2 spaces.
-            note: Object description (can be used for ACEs sorting).
+        """ACL (Access Control List)
+        :param line: ACL config (name and following remarks and access entries)
+        :param platform: Supported platforms: "ios", "cnx". By default: "ios"
+        :param name: ACL name. By default, parsed from line
+        :param items: List of ACE (strings or Ace, AceGroup, Remark objects)
+                By default, parsed from line
+        :param input: Interfaces, where Acl is used on input
+        :param output: Interfaces, where Acl is used on output
+        :param indent: ACE lines indentation. By default, 2 spaces
+        :param note: Object description (can be used for ACEs sorting)
 
-        Example:
-        line: "ip access-list extended NAME
-                 remark TEXT
-                 permit icmp any any"
-        platform: "ios"
-        input: "interface FastEthernet1"
-        indent: 4
-        note: "allow icmp"
-
-        result:
-            self.line = "ip access-list extended NAME\n  remark TEXT\n  permit icmp any any"
-            self.platform = "ios"
-            self.name = "NAME"
-            self.items = [Remark("remark TEXT"), Ace("permit icmp any any")]
-            self.ip_acl_name = "ip access-list NAME"
-            self.interface.input = ["interface FastEthernet1"]
-            self.interface.output = []
-            self.indent = "    "
-            self.note = "allow icmp"
+        :example:
+            line: "ip access-list extended NAME
+                     remark TEXT
+                     permit icmp any any"
+            platform: "ios"
+            input: "interface FastEthernet1"
+            indent: 4
+            note: "allow icmp"
+            result:
+                self.line = "ip access-list extended NAME\n  remark TEXT\n  permit icmp any any"
+                self.platform = "ios"
+                self.name = "NAME"
+                self.items = [Remark("remark TEXT"), Ace("permit icmp any any")]
+                self.ip_acl_name = "ip access-list NAME"
+                self.interface.input = ["interface FastEthernet1"]
+                self.interface.output = []
+                self.indent = "    "
+                self.note = "allow icmp"
         """
         super().__init__(**kwargs)
         self.line = line
@@ -147,7 +145,7 @@ class Acl(AceGroup):
 
     @indent.setter
     def indent(self, indent: int) -> None:
-        """ACE lines indentation, Be default 2 spaces"""
+        """ACE lines indentation, By default 2 spaces"""
         if indent is None:
             indent = INDENTATION
         if not isinstance(indent, int):
@@ -162,13 +160,16 @@ class Acl(AceGroup):
 
     @property
     def ip_acl_name(self) -> str:
-        """Return platform depended ip access-list name line.
-        Example1:
+        """Returns platform dependent ip access-list name line
+        :return: Acl line with name
+
+        :example:
             self.platform: "ios"
-            :return: "ip access-list extended NAME"
-        Example2:
+            return: "ip access-list extended NAME"
+
+        :example:
             self.platform: "cnx"
-            :return: "ip access-list NAME"
+            return: "ip access-list NAME"
         """
         items = ["ip access-list"]
         if self.platform == "ios":
@@ -206,7 +207,7 @@ class Acl(AceGroup):
 
     @name.setter
     def name(self, name: str) -> None:
-        """ACL name.
+        """ACL name
         - length <= 100 chars,
         - first char is ascii_letters,
         - other chars are ascii_letters and punctuation,
@@ -229,7 +230,7 @@ class Acl(AceGroup):
 
     @property
     def platform(self) -> str:
-        """Platforms: "ios", "cnx"."""
+        """Platforms: "ios", "cnx" """
         return self._platform
 
     @platform.setter
@@ -246,15 +247,16 @@ class Acl(AceGroup):
             item.platform = platform
 
     def _split_aces_by_ports(self, attr: str) -> None:
-        """CNX. Split Aces with multiple ports in single line to multiple lines.
+        """CNX. Split Aces with multiple ports in single line to multiple lines
         :param attr: "srcport", "dstport"
-        Example:
+
+        :example:
             self.items = [Ace("permit tcp any eq 1 2 any eq 3 4")]
-        result:
-            self.items = [Ace("permit tcp any eq 1 any eq 3"),
-                          Ace("permit tcp any eq 1 any eq 3"),
-                          Ace("permit tcp any eq 2 any eq 4"),
-                          Ace("permit tcp any eq 2 any eq 4")]
+            result:
+                self.items = [Ace("permit tcp any eq 1 any eq 3"),
+                              Ace("permit tcp any eq 1 any eq 3"),
+                              Ace("permit tcp any eq 2 any eq 4"),
+                              Ace("permit tcp any eq 2 any eq 4")]
         """
         items_: LUAcl = []  # return
         for ace_o in self.items:
@@ -273,7 +275,7 @@ class Acl(AceGroup):
     # =========================== methods ============================
 
     def copy(self) -> Acl:
-        """Returns a copy of the Acl object with the Ace elements copied."""
+        """Returns a copy of the Acl object with the Ace elements copied"""
         acl = Acl(
             name=self.name,
             items=[o.copy() for o in self.items],
@@ -284,12 +286,12 @@ class Acl(AceGroup):
         )
         return acl
 
+    # noinspection PyIncorrectDocstring
     def resequence(self, start: int = 10, step: int = 10, **kwargs) -> int:
-        """Resequence all Acl.items. Change sequence numbers.
-        :param start: Starting sequence number. start=0 - delete all sequence numbers.
-        :param step: Step to increment the sequence number.
-        :param kwargs:
-            items: List of Ace objects. By default self.items.
+        """Resequences all Acl.items. Change sequence numbers
+        :param start: Starting sequence number. start=0 - delete all sequence numbers
+        :param step: Step to increment the sequence number
+        :param items: List of Ace objects. By default, self.items
         :return: Last sequence number.
         """
         if not 0 <= start <= SEQUENCE_MAX:

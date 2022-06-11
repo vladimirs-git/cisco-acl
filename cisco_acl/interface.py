@@ -8,10 +8,9 @@ class Interface:
     """Interfaces with applied ACL"""
 
     def __init__(self, **kwargs):
-        """Interfaces with applied ACL.
-        :param kwargs: Params
-            input: Interfaces, where Acl is used on input.
-            output: Interfaces, where Acl is used on output.
+        """Interfaces with applied ACL
+        :param input: Interfaces, where Acl is used on input
+        :param output: Interfaces, where Acl is used on output
         """
         self.input = kwargs.get("input") or []
         self.output = kwargs.get("output") or []

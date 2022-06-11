@@ -1,4 +1,4 @@
-"""unittest helpers"""
+"""Unittest helpers"""
 
 import unittest
 
@@ -34,13 +34,13 @@ ETH2 = "interface Ethernet2"
 
 
 class Helpers(unittest.TestCase):
-    """Address"""
+    """Unittest Helpers"""
 
     def _test_attrs(self, obj, req_d, msg: str):
-        """Test obj.line and attributes in req_d.
-        :param obj: Tested object.
-        :param req_d: Valid attributes and values.
-        :param msg: Message.
+        """Test obj.line and attributes in req_d
+        :param obj: Tested object
+        :param req_d: Valid attributes and values
+        :param msg: Message
         """
         result = obj.line
         req = req_d["line"]

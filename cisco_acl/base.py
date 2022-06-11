@@ -1,5 +1,5 @@
-"""Base - Parent of: AceBase, Address, Port, Protocol.
-BaseAce - Parent of: Ace, Remark."""
+"""Base - Parent of: AceBase, Address, Port, Protocol
+BaseAce - Parent of: Ace, Remark"""
 
 import uuid
 from abc import ABC, abstractmethod
@@ -14,10 +14,9 @@ class Base(ABC):
     """Base - Parent of: AceBase, Address, Port, Protocol"""
 
     def __init__(self, **kwargs):
-        """Base - Parent of: AceBase, Address, Port, Protocol.
-        :param kwargs: Params.
-            platform: Supported platforms: "ios", "cnx". By default: "ios".
-            note: Object description (can be used for ACEs sorting).
+        """Base - Parent of: AceBase, Address, Port, Protocol
+        :param platform: Supported platforms: "ios", "cnx". By default: "ios"
+        :param note: Object description (can be used for ACEs sorting)
         """
         self._uuid = str(uuid.uuid1())
         self._platform = self._init_platform(**kwargs)
@@ -47,17 +46,17 @@ class Base(ABC):
 
     @staticmethod
     def _init_line(line: str) -> str:
-        """Init line, replace spaces."""
+        """Init line, replace spaces"""
         return h.line_wo_spaces(line)
 
     @staticmethod
     def _init_lines(line: str) -> LStr:
-        """Init multiple lines, replace spaces."""
+        """Init multiple lines, replace spaces"""
         return h.lines_wo_spaces(line)
 
     @staticmethod
     def _init_line_int(line: StrInt) -> str:
-        """Init line, int convert to str, replace spaces."""
+        """Init line, int convert to str, replace spaces"""
         if isinstance(line, int):
             if line < 0:
                 raise ValueError(f"{line=} positive expected")
@@ -81,7 +80,7 @@ class Base(ABC):
 
     @property
     def uuid(self) -> str:
-        """Universally Unique Identifier."""
+        """Universally Unique Identifier"""
         return self._uuid
 
     @uuid.setter

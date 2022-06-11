@@ -16,36 +16,34 @@ from cisco_acl.types_ import LStr, LInt
 
 @total_ordering
 class Ace(BaseAce):
-    """ACE (Access Control Entry)"""
+    """ACE - Access Control Entry"""
 
     __slots__ = ("_platform", "_note", "_line",
                  "_sequence", "_action", "_protocol", "_srcaddr", "_srcport",
                  "_dstaddr", "_dstport", "_option")
 
     def __init__(self, line: str, **kwargs):
-        """ACE (Access Control Entry).
-        :param line: ACE line.
-        :param kwargs: Params.
-            platform: Supported platforms: "ios", "cnx". By default: "ios".
-            note: Object description (can be used for ACEs sorting).
+        """ACE - Access Control Entry
+        :param line: ACE line
+        :param platform: Supported platforms: "ios", "cnx". By default: "ios"
+        :param note: Object description (can be used for ACEs sorting)
 
-        Example:
-        line: "10 permit tcp host 10.0.0.1 eq 179 10.0.0.0 0.0.0.3 eq 80 443 log"
-        platform: "ios"
-        note: "allow web"
-
-        result:
-            self.line = "10 permit tcp host 10.0.0.1 10.0.0.0 0.0.0.3 eq www 443 log"
-            self.platform = "ios"
-            self.sequence = Sequence("10")
-            self.action = "permit"
-            self.protocol = Protocol("tcp")
-            self.srcaddr = Address("host 10.0.0.1")
-            self.srcport = Port("eq bgp")
-            self.dstaddr = Address("10.0.0.0 0.0.0.3")
-            self.dstport = Port("eq www 443")
-            self.option = "log"
-            self.note = "allow web"
+        :example:
+            line: "10 permit tcp host 10.0.0.1 eq 179 10.0.0.0 0.0.0.3 eq 80 443 log"
+            platform: "ios"
+            note: "allow web"
+            result:
+                self.line = "10 permit tcp host 10.0.0.1 10.0.0.0 0.0.0.3 eq www 443 log"
+                self.platform = "ios"
+                self.sequence = Sequence("10")
+                self.action = "permit"
+                self.protocol = Protocol("tcp")
+                self.srcaddr = Address("host 10.0.0.1")
+                self.srcport = Port("eq bgp")
+                self.dstaddr = Address("10.0.0.0 0.0.0.3")
+                self.dstport = Port("eq www 443")
+                self.option = "log"
+                self.note = "allow web"
         """
         self._sequence = Sequence()
         self._action = ""
@@ -119,11 +117,12 @@ class Ace(BaseAce):
     # =========================== property ===========================
 
     @property
-    def action(self):
-        """ACE action: "permit", "deny".
-        Example:
+    def action(self) -> str:
+        """ACE action: "permit", "deny"
+        :return: ACE action
+        :example:
             Ace("10 permit ip any any")
-            :return: "permit"
+            return: "permit"
         """
         return self._action
 
@@ -137,13 +136,14 @@ class Ace(BaseAce):
     @property
     def dstaddr(self) -> Address:
         """ACE source address: "any", "host A.B.C.D", "A.B.C.D A.B.C.D", "A.B.C.D/24",
-            "object-group NAME".
+            "object-group NAME"
+        :return: ACE Address object
 
-        Example1:
+        :example: ios
             Ace("permit ip host 1.1.1.1 any")
             return: Address("host 1.1.1.1")
 
-        Example2:
+        :example: cnx
             Ace("10 permit ip host 1.1.1.1 any", platform="cnx")
             return: Address("1.1.1.1/32")
         """
@@ -157,8 +157,10 @@ class Ace(BaseAce):
 
     @property
     def dstport(self) -> Port:
-        """ACE destination ports: "eq www 443", ""neq 1 2", "lt 2", "gt 2", "range 1 3".
-        Example:
+        """ACE destination ports: "eq www 443", ""neq 1 2", "lt 2", "gt 2", "range 1 3"
+        :return: ACE Port object
+
+        :example:
             Ace("permit tcp host 1.1.1.1 eq www 443 any eq 1025 log")
             return: Port("eq 1025")
         """
@@ -171,11 +173,13 @@ class Ace(BaseAce):
         self._dstport = dstport
 
     @property
-    def line(self):
-        """ACE line.
-        Example:
+    def line(self) -> str:
+        """ACE line
+        :return: ACE line
+
+        :example:
             Ace("10 permit ip any any")
-            :return: "10 permit ip any any"
+            return: "10 permit ip any any"
         """
         items = [
             self.sequence.line,
@@ -205,7 +209,9 @@ class Ace(BaseAce):
 
     @property
     def platform(self) -> str:
-        """Platforms: "ios", "cnx"."""
+        """Platforms: "ios", "cnx"
+        :return: Platform of Cisco-IOS or Cisco-Nexus
+        """
         return self._platform
 
     @platform.setter
@@ -236,9 +242,11 @@ class Ace(BaseAce):
     @property
     def protocol(self) -> Protocol:
         """ACE protocol: "ip", "icmp", "tcp", etc.
-        Example:
+        :return: ACE Protocol object
+
+        :example:
             Ace("10 permit ip any any")
-            :return: Protocol("ip")
+            return: Protocol("ip")
         """
         return self._protocol
 
@@ -252,11 +260,14 @@ class Ace(BaseAce):
     def srcaddr(self) -> Address:
         """ACE source address: "any", "host A.B.C.D", "A.B.C.D A.B.C.D", "A.B.C.D/24",
             "object-group NAME".
+        :return: ACE Address object
 
-        Example1: Ace("permit ip host 1.1.1.1 any")
+        :example: ios
+            Ace("permit ip host 1.1.1.1 any")
             return: Address("host 1.1.1.1")
 
-        Example2: Ace("10 permit ip host 1.1.1.1 any", platform="cnx")
+        :example: cnx
+            Ace("10 permit ip host 1.1.1.1 any", platform="cnx")
             return: Address("1.1.1.1/32")
         """
         return self._srcaddr
@@ -270,8 +281,10 @@ class Ace(BaseAce):
 
     @property
     def srcport(self) -> Port:
-        """ACE source ports: "eq www 443", ""neq 2", "lt 2", "gt 2", "range 1 3".
-        Example:
+        """ACE source ports: "eq www 443", ""neq 2", "lt 2", "gt 2", "range 1 3"
+        :return: ACE Port object
+
+        :example:
             Ace("permit tcp host 1.1.1.1 eq www 443 any eq 1025 log")
             return: Port("eq www 443")
         """
@@ -286,14 +299,17 @@ class Ace(BaseAce):
     # =========================== methods ============================
 
     def copy(self) -> Ace:
-        """Return a shallow copy of self."""
+        """Copies self object
+        :return: A shallow copy of self
+        """
         return Ace(self.line, platform=self.platform, note=self.note)
 
     @classmethod
     def rule(cls, **kwargs) -> LAce:
-        """Convert data of Rule to Ace object.
-        Example:
-        :param kwargs: Params.
+        """Converts data of Rule to Ace object
+        :return: Ace object
+
+        :example:
             platform: "ios"
             action: "permit"
             srcaddrs: ["10.0.0.1/32"]
@@ -304,7 +320,7 @@ class Ace(BaseAce):
             udp_srcports: []
             udp_dstports: []
             options: ["log"]
-        :return: Ace("permit tcp host 10.0.0.1 10.0.0.0 0.0.0.3 eq www 443 log")
+            return: [Ace("permit tcp host 10.0.0.1 10.0.0.0 0.0.0.3 eq www 443 log")]
         """
         platform: str = kwargs.get("platform") or DEFAULT_PLATFORM
         action: str = kwargs["action"]
@@ -356,26 +372,30 @@ class Ace(BaseAce):
 
 
 def split_by_ports(aces: LStr, ports: LInt, platform: str) -> LStr:
-    """If platform="ios", join ports to string and append to aces lines.
-    If platform="cnx", make multiple ACE lines, each port in separate ace line.
+    """If platform="ios", join ports to string and append to aces lines
+    If platform="cnx", make multiple ACE lines, each port in separate ace line
+    :param aces: List of ACE lines, ready for split
+    :param ports: List of ports
+    :param platform: Platform: "ios", "cnx"
+    :return: Split list of ACE lines
 
-    Example1 source ports for cnx:
-        :param aces: "permit tcp any"
-        :param ports: [1, 2]
-        :param platform: "cnx"
-        :return: ["permit tcp any eq 1", "permit tcp any  eq 2"]
+    :example: source ports for cnx
+        aces: "permit tcp any"
+        ports: [1, 2]
+        platform: "cnx"
+        return: ["permit tcp any eq 1", "permit tcp any  eq 2"]
 
-    Example2 destination ports fo cnx:
-        :param aces: "permit tcp any eq 1 any"
-        :param ports: [3, 4]
-        :param platform: "cnx"
-        :return: ["permit tcp any eq 1 any eq 3", "permit tcp any eq 1 any eq 4"]
+    :example: destination ports fo cnx
+        aces: "permit tcp any eq 1 any"
+        ports: [3, 4]
+        platform: "cnx"
+        return: ["permit tcp any eq 1 any eq 3", "permit tcp any eq 1 any eq 4"]
 
-    Example3 source ports for ios:
-        :param aces: "permit tcp any"
-        :param ports: [1, 2, 3]
-        :param platform: "ios"
-        :return: ["permit tcp any eq 1 2 3"]
+    :example: source ports for ios
+        aces: "permit tcp any"
+        ports: [1, 2, 3]
+        platform: "ios"
+        return: ["permit tcp any eq 1 2 3"]
     """
     aces_: LStr = []
     for ace in aces:
@@ -387,13 +407,13 @@ def split_by_ports(aces: LStr, ports: LInt, platform: str) -> LStr:
 
 
 def join_ports(ace: str, ports: list) -> str:
-    """Add ports to ace line"""
+    """Adds ports to ace line"""
     ports_ = " ".join([str(i) for i in ports])
     return f"{ace} eq {ports_}"
 
 
 def join_option(ace: str, options: LStr) -> str:
-    """Add options to ace line"""
+    """Adds options to ace line"""
     option = " ".join(options)
     return f"{ace} {option}"
 

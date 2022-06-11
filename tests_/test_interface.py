@@ -1,4 +1,4 @@
-"""unittest interface.py"""
+"""Unittest interface.py"""
 
 import unittest
 

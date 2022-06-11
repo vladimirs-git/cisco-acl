@@ -17,21 +17,19 @@ class Remark(BaseAce):
     __slots__ = ("_platform", "_note", "_line", "_sequence", "_action", "_text")
 
     def __init__(self, line: str, **kwargs):
-        """ACL Remark.
-        :param line: ACE line.
-        :param kwargs: Params.
-            note: Object description (can be used for ACEs sorting).
+        """ACL Remark
+        :param line: ACE line
+        :param note: Object description (can be used for ACEs sorting)
 
-        Example:
-        line: "10 remark text"
-        note: "description"
-
-        result:
-            self.line = "10 remark text"
-            self.sequence = 10
-            self.action = "remark"
-            self.text = "text"
-            self.note = "description"
+        :example:
+            line: "10 remark text"
+            note: "description"
+            result:
+                self.line = "10 remark text"
+                self.sequence = 10
+                self.action = "remark"
+                self.text = "text"
+                self.note = "description"
         """
         super().__init__(line, **kwargs)
         self._uuid = self._uuid  # hold docstring and suppress pylint W0235
@@ -61,10 +59,11 @@ class Remark(BaseAce):
 
     @property
     def line(self) -> str:
-        """ACE remark line.
-        Example:
+        """ACE remark line
+
+        :example:
             Remark("10 remark text")
-            :return: "10 remark text" """
+            return: "10 remark text" """
         items = [self.sequence.line, self.action, self.text]
         return " ".join([s for s in items if s])
 
@@ -83,17 +82,22 @@ class Remark(BaseAce):
 
     @property
     def action(self) -> str:
-        """ACE remark action.
-        Example: Remark("10 remark text")
-            :return: "remark" """
+        """ACE remark action
+
+        :example:
+            Remark("10 remark text")
+            return: "remark"
+        """
         return self._action
 
     @property
     def text(self) -> str:
-        """ACE remark text.
-        Example:
+        """ACE remark text
+
+        :example:
             Remark("10 remark text")
-            :return: "text" """
+            return: "text"
+        """
         return self._text
 
     @text.setter
@@ -108,7 +112,7 @@ class Remark(BaseAce):
     # =========================== methods ============================
 
     def copy(self) -> Remark:
-        """Return a shallow copy of self."""
+        """Returns a shallow copy of self"""
         return Remark(self.line, platform=self.platform, note=self.note)
 
 

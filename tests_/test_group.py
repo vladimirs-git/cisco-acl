@@ -1,4 +1,4 @@
-"""unittest cisco_acl/group.py"""
+"""Unittest cisco_acl/group.py"""
 
 import unittest
 
@@ -185,6 +185,15 @@ class Test(unittest.TestCase):
             result = group.index(item)
             self.assertEqual(result, req, msg=f"{item=}")
 
+    def test_invalid__index(self):
+        """Group.index()"""
+        group = Group(["a", "b", "c"])
+        for item, error in [
+            ("d", ValueError),
+        ]:
+            with self.assertRaises(error, msg=f"{item=}"):
+                group.index(item)
+
     def test_valid__insert(self):
         """Group.insert()"""
         group = Group(["a", "b", "c"])
@@ -210,6 +219,15 @@ class Test(unittest.TestCase):
         result = group.items
         self.assertEqual(result, ["a"], msg=f"{item=}")
 
+    def test_invalid__pop(self):
+        """Group.pop()"""
+        group = Group(["a", "b"])
+        for item, error in [
+            (2, IndexError),
+        ]:
+            with self.assertRaises(error, msg="pop"):
+                group.pop(item)
+
     def test_valid__remove(self):
         """Group.remove()"""
         group = Group(["a", "b", "c", "b"])
@@ -220,6 +238,15 @@ class Test(unittest.TestCase):
             group.remove(item)
             result = group.items
             self.assertEqual(result, req, msg=f"{item=}")
+
+    def test_invalid__remove(self):
+        """Group.remove()"""
+        group = Group(["a", "b"])
+        for item, error in [
+            ("c", ValueError),
+        ]:
+            with self.assertRaises(error, msg=f"{item=}"):
+                group.remove(item)
 
     def test_valid__reverse(self):
         """Group.reverse()"""

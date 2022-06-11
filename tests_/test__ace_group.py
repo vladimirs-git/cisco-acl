@@ -1,8 +1,8 @@
-"""unittest ace_group.py"""
+"""Unittest ace_group.py"""
 
 import unittest
 
-import dictdiffer  # type: ignore
+import dictdiffer
 
 from cisco_acl import Ace, AceGroup, Remark
 from tests_.helpers_test import (

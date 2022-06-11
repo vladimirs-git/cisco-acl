@@ -1,4 +1,4 @@
-"""ACE. Protocol."""
+"""ACE. Protocol"""
 
 from functools import total_ordering
 from typing import List
@@ -10,26 +10,27 @@ from cisco_acl.types_ import StrInt
 
 @total_ordering
 class Protocol(Base):
-    """ACE. Protocol."""
+    """ACE. Protocol"""
 
     _default: int = 0  # ip="0"
 
     __slots__ = ("_platform", "_note", "_line", "_name", "_number")
 
     def __init__(self, line: str = "", **kwargs):
-        """ACE. Protocol.
-        :param line: Protocol line.
-        :param kwargs: Params.
-            platform: Supported platforms: "ios", "cnx". By default: "ios".
-            note: Object description (can be used for ACEs sorting).
+        """ACE. Protocol
+        :param line: Protocol line
+        :param platform: Supported platforms: "ios", "cnx". By default: "ios"
+        :param note: Object description (can be used for ACEs sorting)
 
-        Example1:
+        :example:
             line: ["tcp"]
+            result:
                 self.line = "tcp"
                 self.name = "tcp"
                 self.number = 6
-        Example2:
+        :example:
             line: ["255"]
+            result:
                 self.line = "255"
                 self.name = ""
                 self.number = 255
@@ -108,7 +109,7 @@ class Protocol(Base):
 
     @property
     def number(self) -> int:
-        """ACE protocol number: 0..255, where 0="ip", 1="icmp", etc. """
+        """ACE protocol number: 0..255, where 0="ip", 1="icmp", etc."""
         return self._number
 
     @number.setter
@@ -121,7 +122,7 @@ class Protocol(Base):
 
     @property
     def platform(self) -> str:
-        """Platforms: "ios", "cnx"."""
+        """Platforms: "ios", "cnx" """
         return self._platform
 
     @platform.setter
@@ -132,7 +133,7 @@ class Protocol(Base):
     # =========================== helpers ============================
 
     def _set_default(self) -> None:
-        """set protocol="ip" (default value)"""
+        """Sets protocol="ip" (default value)"""
         number: int = self._default
         name: str = NR_TO_PROTOCOL[self.platform][number]
         self._line = name

@@ -6,9 +6,10 @@ from setuptools import setup, find_packages  # type: ignore
 
 import cisco_acl as packet
 
-VERSION = "0.1.0"
+VERSION = "0.1.1"
 PACKAGE = packet.__title__.lower().replace("-", "_")  # PEP 503 normalization
 ROOT = pathlib.Path(__file__).parent.resolve()
+README = "README.md"
 
 if __name__ == "__main__":
     setup(
@@ -18,7 +19,7 @@ if __name__ == "__main__":
         version=VERSION,
         license=packet.__license__,
         description=packet.__summary__,
-        long_description=(ROOT / "README.md").read_text(encoding="utf-8"),
+        long_description=(ROOT / README).read_text(encoding="utf-8"),
         long_description_content_type="text/markdown",
         author=packet.__author__,
         author_email=packet.__email__,
@@ -26,11 +27,11 @@ if __name__ == "__main__":
         download_url=packet.__download_url__,
         keywords="cisco, nexus, acl, ios, nx-os, networking, telecommunication",
         python_requires=">=3.8",
-        install_requires=["netaddr==0.8.0"],
+        install_requires=["netaddr"],
         classifiers=[
-            "Development Status :: 3 - Alpha",
+            # "Development Status :: 3 - Alpha",
             # "Development Status :: 4 - Beta",
-            # "Development Status :: 5 - Production/Stable",
+            "Development Status :: 5 - Production/Stable",
             "Intended Audience :: Developers",
             "Intended Audience :: System Administrators",
             "Intended Audience :: Telecommunications Industry",

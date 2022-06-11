@@ -229,7 +229,7 @@ In the following example, create an Ace object and demonstrate various manipulat
 
 ```python
 from cisco_acl import Ace
-from netaddr import IPNetwork
+from netaddr import IPNetwork  # type: ignore
 
 ace = Ace(line="10 permit tcp host 10.0.0.1 range 1 3 10.0.0.0 0.0.0.3 eq www 443 log",
           platform="ios",
@@ -326,7 +326,7 @@ not change.
     note                    Object description (can be used for ACEs sorting).
     items                   An alternate way to create AceGroup object from a list of Ace objects. 
                             By default, an object is created from a line.
-    data                    An alternate way to create AceGroup object from a <dict>. 
+    data                    An alternate way to create AceGroup object from a *dict*. 
                             By default, an object is created from a line.
 
 ```python
@@ -445,7 +445,7 @@ Returns a copy of the Remark object.
 
 ```python
 from cisco_acl import Address
-from netaddr import IPNetwork
+from netaddr import IPNetwork  # type: ignore
 
 addr = Address("10.0.0.0 0.0.0.3", platform="ios")
 assert addr.line == "10.0.0.0 0.0.0.3"

@@ -1,4 +1,4 @@
-from netaddr import IPNetwork
+from netaddr import IPNetwork  # type: ignore
 
 from cisco_acl import Address
 

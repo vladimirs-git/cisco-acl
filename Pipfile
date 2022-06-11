@@ -4,14 +4,13 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [packages]
-netaddr = "==0.8.0"
+netaddr = "==0.8.*"
 
 [dev-packages]
-#coverage = "*"  # 6.3.2
-dictdiffer = "==0.9.0"
-mypy = "*"  # 0.942
-pylint = "*"  # 2.13.5
-twine = "==4.0.0"
+dictdiffer = "==0.9.*"
+mypy = "==0.*"
+pylint = "2.13.*"
+twine = "==4.0.*"
 
 [requires]
 python_version = "3.8"

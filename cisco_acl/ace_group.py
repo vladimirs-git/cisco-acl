@@ -24,27 +24,25 @@ class AceGroup(Group, BaseAce):
     """Group of ACE (Access Control Entry)"""
 
     def __init__(self, line: str = "", **kwargs):
-        """Group of ACE (Access Control Entry).
-        :param line: string of ACEs.
-        :param kwargs:
-            platform: Supported platforms: "ios", "cnx". By default: "ios".
-            note: Object description (can be used for ACEs sorting).
-            items: An alternate way to create AceGroup object from a list of Ace objects.
-                By default, an object is created from a line.
-            data: An alternate way to create AceGroup object from a <dict>.
-                By default, an object is created from a line.
+        """Group of ACE (Access Control Entry)
+        :param line: string of ACEs
+        :param platform: Supported platforms: "ios", "cnx". By default: "ios"
+        :param note: Object description (can be used for ACEs sorting)
+        :param items: An alternate way to create AceGroup object from a list of Ace objects
+            By default, an object is created from a line
+        :param data: An alternate way to create AceGroup object from a *dict*
+            By default, an object is created from a line
 
-        Example:
+        :example:
             line: "10 permit icmp any any\n  20 deny ip any any"
             platform: "ios"
             note: "description"
-
-        result:
-            self.line = "10 permit icmp any any\n20 deny ip any any"
-            self.platform = "ios"
-            self.note = "description"
-            self.sequence = 10  # Taking from the first ACE in items.
-            self.items = [Ace("10 permit icmp any any"), Ace("20 deny ip any any")]
+            result:
+                self.line = "10 permit icmp any any\n20 deny ip any any"
+                self.platform = "ios"
+                self.note = "description"
+                self.sequence = 10  # Taking from the first ACE in items.
+                self.items = [Ace("10 permit icmp any any"), Ace("20 deny ip any any")]
         """
         BaseAce.__init__(self, "", **kwargs)
         Group.__init__(self)
@@ -92,7 +90,7 @@ class AceGroup(Group, BaseAce):
         self.sequence.number = sequence
 
     def _init_data(self, **kwargs) -> None:
-        """Init self object from <dict>"""
+        """Init self object from *dict*"""
         items = kwargs.get("items") or []
         line = "\n".join(items)
         sequence = str(kwargs.get("sequence") or "")
@@ -146,7 +144,7 @@ class AceGroup(Group, BaseAce):
 
     @property
     def sequence(self) -> Sequence:
-        """ACE group sequence."""
+        """ACE group sequence"""
         return self._sequence
 
     @sequence.setter
@@ -160,28 +158,9 @@ class AceGroup(Group, BaseAce):
     # =========================== methods ============================
 
     def copy(self) -> AceGroup:
-        """Return a shallow copy of self."""
-
-        """Group of ACE (Access Control Entry).
-        :param line: string of ACEs.
-        :param kwargs:
-            platform: Supported platforms: "ios", "cnx". By default: "ios".
-            note: Object description (can be used for ACEs sorting).
-            items: List of ACE (strings or Ace objects).
-
-        Example:
-        line: "10 permit icmp any any\n  20 deny ip any any"
-        platform: "ios"
-        note: "description"
-
-        result:
-            self.line = "10 permit icmp any any\n20 deny ip any any"
-            self.platform = "ios"
-            self.note = "description"
-            self.sequence = 10  # Taking from the first ACE in items.
-            self.items = [Ace("10 permit icmp any any"), Ace("20 deny ip any any")]
+        """Copies self object
+        :return: A shallow copy of self
         """
-
         aceg = AceGroup(
             items=[o.copy() for o in self.items],
             platform=self.platform,
@@ -190,13 +169,16 @@ class AceGroup(Group, BaseAce):
         return aceg
 
     def data(self) -> DAny:
-        """Return data in <dict> format.
-        Example: AceGroup("10 permit icmp any any\n  20 deny ip any any")
-        :return: dict("line": "10 permit icmp any any\n20 deny ip any any",
-                      "platform": "ios"
-                      "note": "description"
-                      "sequence": 10
-                      "items": ["10 permit icmp any any", "20 deny ip any any"])
+        """Converts self to dictionary
+        :return: data in *dict* format
+
+        :example: 
+            AceGroup("10 permit icmp any any\n  20 deny ip any any")
+            return: dict("line": "10 permit icmp any any\n20 deny ip any any",
+                         "platform": "ios"
+                         "note": "description"
+                         "sequence": 10
+                         "items": ["10 permit icmp any any", "20 deny ip any any"])
         """
         return dict(
             platform=self.platform,
@@ -208,18 +190,21 @@ class AceGroup(Group, BaseAce):
     # =========================== helpers ============================
 
     def _line_to_ace(self, line: str) -> OUAce:
-        """Convert config line to Ace or Remark object.
-        Example1:
-            :param line: "permit ip any any"
-            :return: Ace("permit ip any any")
+        """Converts config line to Ace or Remark object
+        :param line: ACE line
+        :return: ACE object
 
-        Example2:
-            :param line: "remark text"
-            :return: Remark("text")
+        :example: ACE line
+            line: "permit ip any any"
+            return: Ace("permit ip any any")
 
-        Example3:
-            :param line: "text"
-            :return: None
+        :example: ACE remark
+            line: "remark text"
+            return: Remark("text")
+
+        :example: not ACE line
+            line: "text"
+            return: None
         """
         try:
             action = h.parse_action(line)["action"]
@@ -232,7 +217,9 @@ class AceGroup(Group, BaseAce):
         return None
 
     def _check_platform(self, ace: UAcl) -> bool:
-        """Check is Ace platform == AceGroup platform"""
+        """Checks Ace and AceGroup platform
+        :return: True if Ace platform == AceGroup platform
+        """
         acl_platform: str = self.platform
         ace_platform = ace.platform
         if ace_platform != acl_platform:

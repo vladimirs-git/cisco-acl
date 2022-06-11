@@ -1,4 +1,4 @@
-"""unittest sequence.py"""
+"""Unittest sequence.py"""
 
 import unittest
 

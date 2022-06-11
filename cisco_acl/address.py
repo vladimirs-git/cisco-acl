@@ -1,4 +1,4 @@
-"""ACE. Address."""
+"""ACE Address"""
 
 import re
 from functools import total_ordering
@@ -13,7 +13,7 @@ from cisco_acl.types_ import OIPNetwork
 
 @total_ordering
 class Address(Base):
-    """ACE. Address."""
+    """ACE Address"""
 
     _default: str = "any"
 
@@ -21,9 +21,9 @@ class Address(Base):
                  "_addrgroup", "_prefix", "_subnet", "_wildcard", "_ipnet")
 
     def __init__(self, line: str = "any", **kwargs):
-        """ACE. Address.
-        :param line: Address line.
-            line pattern        platform    description
+        """ACE Address
+        :param line: Address line
+            Line pattern        Platform    Description
             ==================  ==========  ===========================
             A.B.C.D A.B.C.D                 Address and wildcard bits
             A.B.C.D/LEN         cnx         Network prefix
@@ -31,32 +31,35 @@ class Address(Base):
             host A.B.C.D        ios         A single host
             object-group NAME   ios         Network object group
             addrgroup NAME      cnx         Network object group
+        :param platform: Supported platforms: "ios", "cnx". By default: "ios".
+        :param note: Object description (can be used for ACEs sorting)
 
-        :param kwargs: Params.
-            platform: Supported platforms: "ios", "cnx". By default: "ios".
-            note: Object description (can be used for ACEs sorting).
-
-        Example1:
+        :example: Wildcard
             line: "10.0.0.0 0.0.0.3"
             platform: "ios"
+            result:
                 self.line = "10.0.0.0 0.0.0.3"
                 self.addrgroup = ""
                 self.prefix = "10.0.0.0/30"
                 self.subnet = "10.0.0.0 255.255.255.252"
                 self.wildcard = "10.0.0.0 0.0.0.3"
                 self.ipnet: IPNetwork("10.0.0.0/30")
-        Example2:
+
+        :example: Host
             line: "host 10.0.0.1"
             platform: "cnx"
+            result:
                 self.line = "10.0.0.1/32"
                 self.addrgroup = ""
                 self.prefix = "10.0.0.1/32"
                 self.subnet = "10.0.0.1 255.255.255.255"
                 self.wildcard = "10.0.0.1 0.0.0.0"
                 self.ipnet: IPNetwork(10.0.0.1/32)
-        Example3:
+
+        :example: Object Group
             line: "object-group NAME"
             platform: "ios"
+            result:
                 self.line = "object-group NAME"
                 self.addrgroup = "NAME"
                 self.prefix = ""
@@ -92,7 +95,7 @@ class Address(Base):
 
     @property
     def line(self) -> str:
-        """ACE address line.
+        """ACE address line
         Line                    Platform    Description
         ======================  ==========  ====================
         "object-group NAME"     ios         Network object group
@@ -155,10 +158,13 @@ class Address(Base):
 
     @property
     def addrgroup(self) -> str:
-        """ACE address addrgroup.
-        Example:
+        """ACE address addrgroup
+        :return: Address group name
+
+        :example:
             Address("addrgroup NAME")
-            :return: "NAME" """
+            return: "NAME"
+        """
         return self._addrgroup
 
     @addrgroup.setter
@@ -171,10 +177,13 @@ class Address(Base):
 
     @property
     def ipnet(self) -> OIPNetwork:
-        """ACE address netaddr.IPNetwork object.
-        Example:
+        """ACE address netaddr, IPNetwork object
+        :return: IPNetwork or None
+
+        :example:
             Address("10.0.0.0 0.0.0.3")
-            :return: IPNetwork("10.0.0.0/30") """
+            return: IPNetwork("10.0.0.0/30")
+        """
         return self._ipnet
 
     @ipnet.setter
@@ -195,10 +204,13 @@ class Address(Base):
 
     @property
     def prefix(self) -> str:
-        """ACE address prefix.
-        Example:
+        """ACE address prefix
+        :return: Subnet with prefix length
+
+        :example:
             Address("10.0.0.0 0.0.0.3")
-            :return: "10.0.0.0/32" """
+            return: "10.0.0.0/32"
+        """
         return self._prefix
 
     @prefix.setter
@@ -207,10 +219,13 @@ class Address(Base):
 
     @property
     def subnet(self) -> str:
-        """ACE address subnet.
-        Example:
+        """ACE address subnet
+        :return: Subnet with mask
+
+        :example:
             Address("10.0.0.0 0.0.0.3")
-            :return: "10.0.0.0 255.255.255.252" """
+            return: "10.0.0.0 255.255.255.252"
+        """
         return self._subnet
 
     @subnet.setter
@@ -221,10 +236,13 @@ class Address(Base):
 
     @property
     def wildcard(self) -> str:
-        """ACE address wildcard.
-        Example:
+        """ACE address wildcard
+        :return: Subnet with wildcard
+
+        :example:
             Address("10.0.0.0 0.0.0.3")
-            :return: "10.0.0.0 0.0.0.3" """
+            return: "10.0.0.0 0.0.0.3"
+        """
         return self._wildcard
 
     @wildcard.setter
@@ -235,7 +253,7 @@ class Address(Base):
     # =========================== helpers ============================
 
     def _line__any(self) -> None:
-        """ACE address line, any."""
+        """ACE address line, any"""
         self._line = "any"
         self._addrgroup = ""
         self._subnet = "0.0.0.0 0.0.0.0"
@@ -244,23 +262,23 @@ class Address(Base):
         self._wildcard = "0.0.0.0 255.255.255.255"
 
     def _line__wildcard(self, line: str) -> None:
-        """ACE address line, wildcard: A.B.C.D A.B.C.D.
-        Result line is different for ios, cnx, host.
+        """ACE address line, wildcard: A.B.C.D A.B.C.D
+        Result line is different for ios, cnx, host
 
-        Example1 - ios:
+        :example: ios
             line: "10.0.0.0 0.0.0.3"
             self.platform: "ios"
-            return: self.line = "10.0.0.0 0.0.0.3", ...
+            result: self.line = "10.0.0.0 0.0.0.3", ...
 
-        Example2 - ios host:
+        :example: ios host
             line: "10.0.0.0 0.0.0.0"
             self.platform: "ios"
-            return: self.line = "host 10.0.0.1", ...
+            result: self.line = "host 10.0.0.1", ...
 
-        Example3 - cnx:
+        :example: cnx
             line: "10.0.0.0 0.0.0.3"
             self.platform: "cnx"
-            return: self.line = "10.0.0.0/30", ...
+            result: self.line = "10.0.0.0/30", ...
         """
         wildcard = line
         if not h.is_valid_wildcard(wildcard):
@@ -287,19 +305,19 @@ class Address(Base):
         self._wildcard = wildcard
         self._addrgroup = ""
 
-    def _line__prefix(self, line: str, type_: str = "prefix") -> None:
-        """ACE address line, prefix A.B.C.D/LEN.
-        Result line is different for ios, cnx, host.
+    def _line__prefix(self, line: str) -> None:
+        """ACE address line, prefix A.B.C.D/LEN
+        Result line is different for ios, cnx, host
 
-        Example1 - ios host:
+        :example: os host
             line: "10.0.0.1/32"
             self.platform: "ios"
-            return: self.line = "host 10.0.0.1", ...
+            result: self.line = "host 10.0.0.1", ...
 
-        Example2 - cnx:
+        :example: cnx
             line: "10.0.0.0/30"
             self.platform: "cnx"
-            return: self.line = "10.0.0.0/30", ...
+            result: self.line = "10.0.0.0/30", ...
         """
         ipnet = IPNetwork(line)
         subnet = f"{ipnet.ip} {ipnet.netmask}"
@@ -319,18 +337,18 @@ class Address(Base):
         self._wildcard = wildcard
 
     def _line__host(self, ip_: str) -> None:
-        """ACE address line, host.
-        Result line is different for ios, cnx, host.
+        """ACE address line, host
+        Result line is different for ios, cnx, host
 
-        Example1 - ios:
+        :example: ios
             host: "10.0.0.1"
             self.platform: "ios"
-            return: self.line = "host 10.0.0.1", ...
+            result: self.line = "host 10.0.0.1", ...
 
-        Example2 - cnx:
+        :example: cnx
             host: "10.0.0.1"
             self.platform: "cnx"
-            return: self.line = "10.0.0.1/32", ...
+            result: self.line = "10.0.0.1/32", ...
         """
         subnet = f"{ip_} 255.255.255.255"
         ipnet = IPNetwork(f"{ip_}/32")
