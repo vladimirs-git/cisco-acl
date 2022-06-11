@@ -1,4 +1,5 @@
 """Typing"""
+from ipaddress import IPv4Network
 from typing import (
     Any,
     Dict,
@@ -9,15 +10,13 @@ from typing import (
     Union,
 )
 
-from netaddr import IPNetwork  # type: ignore
-
 DAny = Dict[str, Any]
 DStr = Dict[str, str]
 IInt = Iterable[int]
 IStr = Iterable[str]
 LInt = List[int]
 LStr = List[str]
-OIPNetwork = Optional[IPNetwork]
+OIpNetwork = Optional[IPv4Network]
 OInt = Optional[int]
 SInt = Set[int]
 SStr = Set[str]

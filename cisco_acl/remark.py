@@ -4,8 +4,6 @@ from __future__ import annotations
 from functools import total_ordering
 from typing import List
 
-from netaddr import IPNetwork  # type: ignore
-
 from cisco_acl import helpers as h
 from cisco_acl.base_ace import BaseAce
 
@@ -64,7 +62,7 @@ class Remark(BaseAce):
         :example:
             Remark("10 remark text")
             return: "10 remark text" """
-        items = [self.sequence.line, self.action, self.text]
+        items = [self._sequence.line, self.action, self.text]
         return " ".join([s for s in items if s])
 
     @line.setter

@@ -1,3 +1,5 @@
+"""Examples Protocol"""
+
 from cisco_acl import Protocol
 
 proto = Protocol("tcp")

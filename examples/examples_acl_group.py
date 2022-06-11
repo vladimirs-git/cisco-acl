@@ -102,7 +102,7 @@ print()
 # AceGroup('60 remark ===== dns =====\n70 permit udp any any eq 53\n80 permit tcp any any eq 53', note='dns')
 
 # Sorting rules by notes.
-# Note that ACE have been moved up with the same sequence numbers.
+# Note that ACE has been moved up with the same sequence numbers.
 acl1.sort(key=lambda o: o.note)
 print(acl1)
 print()

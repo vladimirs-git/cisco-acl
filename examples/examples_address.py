@@ -1,4 +1,6 @@
-from netaddr import IPNetwork  # type: ignore
+"""Examples Address"""
+
+from ipaddress import ip_network
 
 from cisco_acl import Address
 
@@ -9,7 +11,7 @@ assert addr.addrgroup == ""
 assert addr.prefix == "10.0.0.0/30"
 assert addr.subnet == "10.0.0.0 255.255.255.252"
 assert addr.wildcard == "10.0.0.0 0.0.0.3"
-assert addr.ipnet == IPNetwork("10.0.0.0/30")
+assert addr.ipnet == ip_network("10.0.0.0/30")
 
 # Change syntax from Cisco IOS platform to Cisco Nexus NX-OS.
 addr = Address("10.0.0.0 0.0.0.3", platform="ios")

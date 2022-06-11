@@ -1,8 +1,7 @@
 """Unittest address.py"""
 
 import unittest
-
-from netaddr import IPNetwork  # type: ignore
+from ipaddress import ip_network
 
 from cisco_acl import Address
 from tests_.helpers_test import Helpers
@@ -12,9 +11,9 @@ ADDRGROUP = "addrgroup NAME"
 PREFIX0 = "0.0.0.0/0"
 PREFIX30 = "10.0.0.0/30"
 PREFIX32 = "10.0.0.1/32"
-IPNET0 = IPNetwork("0.0.0.0/0")
-IPNET30 = IPNetwork("10.0.0.0/30")
-IPNET32 = IPNetwork("10.0.0.1/32")
+IPNET0 = ip_network("0.0.0.0/0")
+IPNET30 = ip_network("10.0.0.0/30")
+IPNET32 = ip_network("10.0.0.1/32")
 ANY_D = dict(
     line="any",
     addrgroup="",

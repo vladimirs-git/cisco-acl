@@ -11,7 +11,7 @@ from cisco_acl.remark import Remark
 __all__ = ["Ace", "AceGroup", "Acl", "Address", "Port", "Protocol", "Remark"]
 
 __version__ = "0.1.1"
-__date__ = "2022-06-11"
+__date__ = "2022-06-12"
 __title__ = "cisco-acl"
 
 __summary__ = "Python package to parse and manage Cisco ACL (Access Control List)"

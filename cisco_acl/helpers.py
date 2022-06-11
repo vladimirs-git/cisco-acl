@@ -1,10 +1,9 @@
 """ACE helper functions"""
 
 import re
+from ipaddress import ip_network
 from string import ascii_letters, digits, punctuation
 from typing import Any, List, NamedTuple
-
-from netaddr import IPNetwork  # type: ignore
 
 from cisco_acl.static import ACTIONS, OPERATORS, PORTS, MAX_LINE_LENGTH
 from cisco_acl.types_ import DStr, LStr, StrInt, LInt, OInt, SInt
@@ -272,7 +271,7 @@ def check_subnet(subnet: str) -> bool:
     return True
 
 
-def invert_mask(subnet: str) -> str:
+def invert_mask(subnet: str) -> str:  # TODO delete if not used
     """Inverts mask to wildcard and vice versa
     :example:
         subnet: "10.0.0.0 0.0.0.3"
@@ -317,10 +316,10 @@ def make_wildcard(prefix: str) -> str:
 
     # "1.1.1.0 0.0.0.255"
     if re.match(r"\d+\.\d+\.\d+\.\d+/\d+$", prefix):
-        ipnet = IPNetwork(prefix)
+        ipnet = ip_network(prefix)
         if ipnet.prefixlen == 32:
-            return f"host {ipnet.ip}"
-        subnet = f"{ipnet.ip} {ipnet.netmask}"
+            return f"host {ipnet.network_address}"
+        subnet = f"{ipnet.network_address} {ipnet.netmask}"
         inverted = invert_mask(subnet=subnet)
         return inverted
 

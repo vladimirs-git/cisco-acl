@@ -2,13 +2,12 @@
 
 import re
 from functools import total_ordering
-from typing import List, Optional
-
-from netaddr import IPNetwork  # type: ignore
+from ipaddress import ip_network, IPv4Network
+from typing import List
 
 from cisco_acl import helpers as h
 from cisco_acl.base import Base
-from cisco_acl.types_ import OIPNetwork
+from cisco_acl.types_ import OIpNetwork
 
 
 @total_ordering
@@ -43,7 +42,7 @@ class Address(Base):
                 self.prefix = "10.0.0.0/30"
                 self.subnet = "10.0.0.0 255.255.255.252"
                 self.wildcard = "10.0.0.0 0.0.0.3"
-                self.ipnet: IPNetwork("10.0.0.0/30")
+                self.ipnet: ip_network("10.0.0.0/30")
 
         :example: Host
             line: "host 10.0.0.1"
@@ -54,7 +53,7 @@ class Address(Base):
                 self.prefix = "10.0.0.1/32"
                 self.subnet = "10.0.0.1 255.255.255.255"
                 self.wildcard = "10.0.0.1 0.0.0.0"
-                self.ipnet: IPNetwork(10.0.0.1/32)
+                self.ipnet: ip_network("10.0.0.1/32")
 
         :example: Object Group
             line: "object-group NAME"
@@ -145,7 +144,7 @@ class Address(Base):
             self._line: str = addr_line
             self._addrgroup: str = name
             self._subnet: str = ""
-            self._ipnet: Optional[IPNetwork] = None
+            self._ipnet: OIpNetwork = None
             self._prefix: str = ""
             self._wildcard: str = ""
             return
@@ -176,20 +175,20 @@ class Address(Base):
         self.line = line
 
     @property
-    def ipnet(self) -> OIPNetwork:
-        """ACE address netaddr, IPNetwork object
-        :return: IPNetwork or None
+    def ipnet(self) -> OIpNetwork:
+        """ACE address IPv4Network object
+        :return: ip_network or None
 
         :example:
             Address("10.0.0.0 0.0.0.3")
-            return: IPNetwork("10.0.0.0/30")
+            return: ip_network("10.0.0.0/30")
         """
         return self._ipnet
 
     @ipnet.setter
-    def ipnet(self, ipnet: IPNetwork) -> None:
-        if not isinstance(ipnet, IPNetwork):
-            raise TypeError(f"{ipnet=} {IPNetwork} expected")
+    def ipnet(self, ipnet: IPv4Network) -> None:
+        if not isinstance(ipnet, IPv4Network):
+            raise TypeError(f"{ipnet=} {IPv4Network} expected")
         self.line = str(ipnet)
 
     @property
@@ -257,7 +256,10 @@ class Address(Base):
         self._line = "any"
         self._addrgroup = ""
         self._subnet = "0.0.0.0 0.0.0.0"
-        self._ipnet = IPNetwork("0.0.0.0/0")
+        ipnet = ip_network("0.0.0.0/0")
+        if not isinstance(ipnet, IPv4Network):
+            raise TypeError(f"{ipnet} expected {IPv4Network}")
+        self._ipnet = ipnet
         self._prefix = "0.0.0.0/0"
         self._wildcard = "0.0.0.0 255.255.255.255"
 
@@ -291,14 +293,16 @@ class Address(Base):
             return
 
         subnet = h.invert_mask(wildcard)
-        ipnet = IPNetwork(subnet.replace(" ", "/"))
+        ipnet = ip_network(subnet.replace(" ", "/"))
+        if not isinstance(ipnet, IPv4Network):
+            raise TypeError(f"{ipnet} expected {IPv4Network}")
         prefix = str(ipnet)
         if self.platform == "cnx":
             self._line = prefix
         else:
             self._line = wildcard
             if ipnet.prefixlen == 32:
-                self._line = f"host {ipnet.ip}"
+                self._line = f"host {ipnet.network_address}"
         self._subnet = subnet
         self._ipnet = ipnet
         self._prefix = prefix
@@ -319,16 +323,18 @@ class Address(Base):
             self.platform: "cnx"
             result: self.line = "10.0.0.0/30", ...
         """
-        ipnet = IPNetwork(line)
-        subnet = f"{ipnet.ip} {ipnet.netmask}"
-        wildcard = h.invert_mask(subnet)
+        ipnet = ip_network(line)
+        if not isinstance(ipnet, IPv4Network):
+            raise TypeError(f"{ipnet} expected {IPv4Network}")
+        subnet = ipnet.with_netmask.replace("/", " ")
+        wildcard = ipnet.with_hostmask.replace("/", " ")
         prefix = str(ipnet)
         if self.platform == "cnx":
             self._line = prefix
         else:
             self._line = wildcard
             if ipnet.prefixlen == 32:
-                self._line = f"host {ipnet.ip}"
+                self._line = f"host {ipnet.network_address}"
 
         self._addrgroup = ""
         self._subnet = subnet
@@ -351,7 +357,9 @@ class Address(Base):
             result: self.line = "10.0.0.1/32", ...
         """
         subnet = f"{ip_} 255.255.255.255"
-        ipnet = IPNetwork(f"{ip_}/32")
+        ipnet = ip_network(f"{ip_}/32")
+        if not isinstance(ipnet, IPv4Network):
+            raise TypeError(f"{ipnet} expected {IPv4Network}")
         prefix = str(ipnet)
         self._line = prefix if self.platform == "cnx" else f"host {ip_}"
         self._addrgroup = ""

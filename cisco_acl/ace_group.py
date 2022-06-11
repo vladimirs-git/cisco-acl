@@ -41,7 +41,7 @@ class AceGroup(Group, BaseAce):
                 self.line = "10 permit icmp any any\n20 deny ip any any"
                 self.platform = "ios"
                 self.note = "description"
-                self.sequence = 10  # Taking from the first ACE in items.
+                self.sequence = Sequence(10)  # Taking from the first ACE in items.
                 self.items = [Ace("10 permit icmp any any"), Ace("20 deny ip any any")]
         """
         BaseAce.__init__(self, "", **kwargs)
@@ -153,7 +153,7 @@ class AceGroup(Group, BaseAce):
 
     @sequence.deleter
     def sequence(self) -> None:
-        del self.sequence.number
+        self._sequence = Sequence()
 
     # =========================== methods ============================
 
@@ -172,7 +172,7 @@ class AceGroup(Group, BaseAce):
         """Converts self to dictionary
         :return: data in *dict* format
 
-        :example: 
+        :example:
             AceGroup("10 permit icmp any any\n  20 deny ip any any")
             return: dict("line": "10 permit icmp any any\n20 deny ip any any",
                          "platform": "ios"
@@ -183,7 +183,7 @@ class AceGroup(Group, BaseAce):
         return dict(
             platform=self.platform,
             note=self.note,
-            sequence=self.sequence.number,
+            sequence=self._sequence.number,
             items=self.line.split("\n"),
         )
 

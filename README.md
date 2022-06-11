@@ -229,7 +229,7 @@ In the following example, create an Ace object and demonstrate various manipulat
 
 ```python
 from cisco_acl import Ace
-from netaddr import IPNetwork  # type: ignore
+from ipaddress import ip_network
 
 ace = Ace(line="10 permit tcp host 10.0.0.1 range 1 3 10.0.0.0 0.0.0.3 eq www 443 log",
           platform="ios",
@@ -245,7 +245,7 @@ assert ace.protocol.name == "tcp"
 assert ace.protocol.number == 6
 assert ace.srcaddr.line == "host 10.0.0.1"
 assert ace.srcaddr.addrgroup == ""
-assert ace.srcaddr.ipnet == IPNetwork("10.0.0.1/32")
+assert ace.srcaddr.ipnet == ip_network("10.0.0.1/32")
 assert ace.srcaddr.prefix == "10.0.0.1/32"
 assert ace.srcaddr.subnet == "10.0.0.1 255.255.255.255"
 assert ace.srcaddr.wildcard == "10.0.0.1 0.0.0.0"
@@ -255,7 +255,7 @@ assert ace.srcport.ports == [1, 2, 3]
 assert ace.srcport.sport == "1-3"
 assert ace.dstaddr.line == "10.0.0.0 0.0.0.3"
 assert ace.dstaddr.addrgroup == ""
-assert ace.dstaddr.ipnet == IPNetwork("10.0.0.0/30")
+assert ace.dstaddr.ipnet == ip_network("10.0.0.0/30")
 assert ace.dstaddr.prefix == "10.0.0.0/30"
 assert ace.dstaddr.subnet == "10.0.0.0 255.255.255.252"
 assert ace.dstaddr.wildcard == "10.0.0.0 0.0.0.3"
@@ -445,7 +445,7 @@ Returns a copy of the Remark object.
 
 ```python
 from cisco_acl import Address
-from netaddr import IPNetwork  # type: ignore
+from ipaddress import ip_network
 
 addr = Address("10.0.0.0 0.0.0.3", platform="ios")
 assert addr.line == "10.0.0.0 0.0.0.3"
@@ -454,7 +454,7 @@ assert addr.addrgroup == ""
 assert addr.prefix == "10.0.0.0/30"
 assert addr.subnet == "10.0.0.0 255.255.255.252"
 assert addr.wildcard == "10.0.0.0 0.0.0.3"
-assert addr.ipnet == IPNetwork("10.0.0.0/30")
+assert addr.ipnet == ip_network("10.0.0.0/30")
 
 # Change syntax from Cisco IOS platform to Cisco Nexus NX-OS.
 addr = Address("10.0.0.0 0.0.0.3", platform="ios")

@@ -20,7 +20,7 @@ class Ace(BaseAce):
 
     __slots__ = ("_platform", "_note", "_line",
                  "_sequence", "_action", "_protocol", "_srcaddr", "_srcport",
-                 "_dstaddr", "_dstport", "_option")
+                 "_dstaddr", "_dstport", "option")
 
     def __init__(self, line: str, **kwargs):
         """ACE - Access Control Entry
@@ -52,7 +52,7 @@ class Ace(BaseAce):
         self._srcport = Port()
         self._dstaddr = Address()
         self._dstport = Port()
-        self._option = ""
+        self.option = ""
         super().__init__(line, **kwargs)
 
     def __hash__(self) -> int:
@@ -68,8 +68,8 @@ class Ace(BaseAce):
         """< less than"""
         if hasattr(other, "sequence"):
             # sequence
-            if self.sequence.number != other.sequence.number:
-                return self.sequence.number < other.sequence.number
+            if self._sequence.number != other.sequence.number:
+                return self._sequence.number < other.sequence.number
             # object
             if other.__class__.__name__ == "Remark":
                 return False
@@ -182,7 +182,7 @@ class Ace(BaseAce):
             return: "10 permit ip any any"
         """
         items = [
-            self.sequence.line,
+            self._sequence.line,
             self.action,
             self.protocol.line,
             self.srcaddr.line,
@@ -227,7 +227,7 @@ class Ace(BaseAce):
         self.dstaddr.platform = platform
         self.dstport.platform = platform
         items = [
-            self.sequence.line,
+            self._sequence.line,
             self.action,
             self.protocol.line,
             self.srcaddr.line,
