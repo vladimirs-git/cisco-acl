@@ -36,13 +36,19 @@ Acl.items   List of objects: Ace, AceGroup, Remark.
 Installation
 ------------
 
-Install the package by running
+Install the package from pypi.org release
 
 .. code:: bash
 
     pip install cisco-acl
 
-or
+or install the package from github.com release
+
+.. code:: bash
+
+    pip install https://github.com/vladimirs-git/cisco-acl/archive/refs/tags/0.1.1.zip
+
+or install the package from github.com repository
 
 .. code:: bash
 
