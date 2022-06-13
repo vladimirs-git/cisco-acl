@@ -21,7 +21,7 @@ class Address(Base):
 
     def __init__(self, line: str = "any", **kwargs):
         """ACE Address
-        :param line: Address line
+        :param str line: Address line
             Line pattern        Platform    Description
             ==================  ==========  ===========================
             A.B.C.D A.B.C.D                 Address and wildcard bits
@@ -30,8 +30,9 @@ class Address(Base):
             host A.B.C.D        ios         A single host
             object-group NAME   ios         Network object group
             addrgroup NAME      cnx         Network object group
-        :param platform: Supported platforms: "ios", "cnx". By default: "ios".
-        :param note: Object description (can be used for ACEs sorting)
+        :param str platform: Supported platforms: "ios", "cnx". By default, "ios".
+        :param str note: Object description. Not part of the ACE configuration,
+            can be used for ACEs sorting
 
         :example: Wildcard
             line: "10.0.0.0 0.0.0.3"
@@ -94,7 +95,7 @@ class Address(Base):
 
     @property
     def line(self) -> str:
-        """ACE address line
+        """ACE source or destination address line
         Line                    Platform    Description
         ======================  ==========  ====================
         "object-group NAME"     ios         Network object group

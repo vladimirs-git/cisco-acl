@@ -24,15 +24,16 @@ class Acl(AceGroup):
 
     def __init__(self, line: str = "", **kwargs):
         """ACL (Access Control List)
-        :param line: ACL config (name and following remarks and access entries)
-        :param platform: Supported platforms: "ios", "cnx". By default: "ios"
-        :param name: ACL name. By default, parsed from line
+        :param str line: ACL config (name and following remarks and access entries)
+        :param str platform: Supported platforms: "ios", "cnx". By default, "ios"
+        :param str name: ACL name. By default, parsed from line
         :param items: List of ACE (strings or Ace, AceGroup, Remark objects)
                 By default, parsed from line
-        :param input: Interfaces, where Acl is used on input
-        :param output: Interfaces, where Acl is used on output
-        :param indent: ACE lines indentation. By default, 2 spaces
-        :param note: Object description (can be used for ACEs sorting)
+        :param str input: Interfaces, where Acl is used on input
+        :param str output: Interfaces, where Acl is used on output
+        :param str indent: ACE lines indentation. By default, 2 spaces
+        :param str note: Object description. Not part of the ACL configuration,
+            can be used for ACEs sorting
 
         :example:
             line: "ip access-list extended NAME
@@ -100,7 +101,7 @@ class Acl(AceGroup):
 
     @property
     def line(self) -> str:
-        """ACEs in string format"""
+        """ACE lines in string format"""
         items = []
         for item in self.items:
             if isinstance(item, AceGroup):
@@ -140,7 +141,7 @@ class Acl(AceGroup):
 
     @property
     def indent(self) -> str:
-        """ACL indent"""
+        """ACE lines indentation"""
         return self._indent
 
     @indent.setter
@@ -160,7 +161,7 @@ class Acl(AceGroup):
 
     @property
     def ip_acl_name(self) -> str:
-        """Returns platform dependent ip access-list name line
+        """Platform dependent Acl line with name
         :return: Acl line with name
 
         :example:
@@ -207,10 +208,10 @@ class Acl(AceGroup):
 
     @name.setter
     def name(self, name: str) -> None:
-        """ACL name
-        - length <= 100 chars,
-        - first char is ascii_letters,
-        - other chars are ascii_letters and punctuation,
+        """ACL name. Requirements:
+        - length <= 100 chars
+        - first char is ascii_letters
+        - other chars are ascii_letters and punctuation
         """
         if name is None:
             name = ""
@@ -230,7 +231,10 @@ class Acl(AceGroup):
 
     @property
     def platform(self) -> str:
-        """Platforms: "ios", "cnx" """
+        """Platform
+        - "ios" - Cisco IOS (extended ACL)
+        - "cnx" Cisco Nexus NX-OS
+        """
         return self._platform
 
     @platform.setter
@@ -275,7 +279,9 @@ class Acl(AceGroup):
     # =========================== methods ============================
 
     def copy(self) -> Acl:
-        """Returns a copy of the Acl object with the Ace elements copied"""
+        """Copies the self object with the Ace elements copied
+        :return: A shallow copy of self
+        """
         acl = Acl(
             name=self.name,
             items=[o.copy() for o in self.items],
@@ -288,11 +294,11 @@ class Acl(AceGroup):
 
     # noinspection PyIncorrectDocstring
     def resequence(self, start: int = 10, step: int = 10, **kwargs) -> int:
-        """Resequences all Acl.items. Change sequence numbers
+        """Resequences all Acl.items and change sequence numbers
         :param start: Starting sequence number. start=0 - delete all sequence numbers
         :param step: Step to increment the sequence number
         :param items: List of Ace objects. By default, self.items
-        :return: Last sequence number.
+        :return: Last sequence number
         """
         if not 0 <= start <= SEQUENCE_MAX:
             raise ValueError(f"{start=} expected=0..{SEQUENCE_MAX}")

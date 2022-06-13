@@ -7,7 +7,7 @@ from datetime import datetime
 
 # noinspection PyProtectedMember
 from cisco_acl import __title__
-from setup import PACKAGE, ROOT, README
+from setup import PACKAGE_, ROOT, README
 
 CHANGELOG = "CHANGELOG.rst"
 
@@ -57,7 +57,7 @@ class Test(unittest.TestCase):
             "__license__ = .+",
         ]
         path1 = os.path.join(ROOT, "__init__.py")
-        path2 = os.path.join(ROOT, PACKAGE, "__init__.py")
+        path2 = os.path.join(ROOT, PACKAGE_, "__init__.py")
         with open(path1) as fh1, open(path2) as fh2:
             lines1 = {s.strip() for s in fh1.read().split("\n")}
             lines2 = {s.strip() for s in fh2.read().split("\n")}
@@ -73,7 +73,7 @@ class Test(unittest.TestCase):
 
     def test_valid__version(self):
         """version"""
-        path = os.path.join(ROOT, PACKAGE, "__init__.py")
+        path = os.path.join(ROOT, PACKAGE_, "__init__.py")
         with open(path) as fh:
             text = fh.read()
             version = (re.findall("^__version__ = \"(.+)\"", text, re.M) or [""])[0]
@@ -103,7 +103,7 @@ class Test(unittest.TestCase):
 
     def test_valid__date(self):
         """__date__"""
-        path = os.path.join(ROOT, PACKAGE, "__init__.py")
+        path = os.path.join(ROOT, PACKAGE_, "__init__.py")
         with open(path) as fh:
             text = fh.read()
             date = (re.findall("^__date__ = \"(.+)\"", text, re.M) or [""])[0]

@@ -16,8 +16,10 @@ class Remark(BaseAce):
 
     def __init__(self, line: str, **kwargs):
         """ACL Remark
-        :param line: ACE line
-        :param note: Object description (can be used for ACEs sorting)
+        :param str line: string of ACEs
+        :param platform: Supported platforms: "ios", "cnx". By default, "ios"
+        :param str note: Object description. Not part of the ACE configuration,
+            can be used for ACEs sorting
 
         :example:
             line: "10 remark text"
@@ -56,6 +58,16 @@ class Remark(BaseAce):
     # =========================== property ===========================
 
     @property
+    def action(self) -> str:
+        """ACE remark action
+
+        :example:
+            Remark("10 remark text")
+            return: "remark"
+        """
+        return self._action
+
+    @property
     def line(self) -> str:
         """ACE remark line
 
@@ -77,16 +89,6 @@ class Remark(BaseAce):
         self.sequence.line = ace_d["sequence"]
         self._action = action
         self._text = ace_d["text"]
-
-    @property
-    def action(self) -> str:
-        """ACE remark action
-
-        :example:
-            Remark("10 remark text")
-            return: "remark"
-        """
-        return self._action
 
     @property
     def text(self) -> str:

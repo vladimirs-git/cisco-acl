@@ -4,15 +4,17 @@ CHANGELOG
 =========
 
 
-0.1.1 (2022-06-12)
+0.1.1 (2022-06-13)
 ------------------
 * [change] Pipfile packages versions
+* [change] README.md to README.rst
 * [change] address.py Address.ipnet, type IPNetwork changed to IPv4Network
 * [fix] __init__.py
-* [fix] address.py Address._line__prefix()
-* [fix] test__package.py
-* [fix] sequence, *int* changed to *object*
 * [fix] ace.py Ace.option *str*
+* [fix] address.py Address._line__prefix()
+* [fix] sequence, *int* changed to *object*
+* [fix] test__package.py
+* [new] unittest examples
 
 
 0.1.0 (2022-04-26)

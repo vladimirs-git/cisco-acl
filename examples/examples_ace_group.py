@@ -1,9 +1,11 @@
-"""============================= Example1 =============================
-- Create ACL with groups.
-- Generate sequence numbers.
-- Sort rules by comment.
-- Resequence numbers.
+"""**AceGroup sequence numbers and sorting**
+
+- Create ACL with groups
+- Generate sequence numbers
+- Sort rules by comment
+- Resequence numbers
 """
+
 from cisco_acl import Acl, AceGroup
 
 lines = """

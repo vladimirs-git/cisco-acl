@@ -1,4 +1,4 @@
-"""ACE. Protocol"""
+"""ACE. IP protocol object"""
 
 from functools import total_ordering
 from typing import List
@@ -10,16 +10,16 @@ from cisco_acl.types_ import StrInt
 
 @total_ordering
 class Protocol(Base):
-    """ACE. Protocol"""
+    """ACE. IP protocol object"""
 
     _default: int = 0  # ip="0"
 
     __slots__ = ("_platform", "_note", "_line", "_name", "_number")
 
     def __init__(self, line: str = "", **kwargs):
-        """ACE. Protocol
-        :param line: Protocol line
-        :param platform: Supported platforms: "ios", "cnx". By default: "ios"
+        """ACE. IP protocol object
+        :param line: IP protocol line
+        :param platform: Supported platforms: "ios", "cnx". By default, "ios"
         :param note: Object description (can be used for ACEs sorting)
 
         :example:

@@ -1,4 +1,6 @@
-"""Examples Protocol"""
+"""**Protocol(line)**
+The following example demonstrates Protocol object.
+"""
 
 from cisco_acl import Protocol
 

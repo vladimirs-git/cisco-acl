@@ -18,8 +18,9 @@ class Port(Base):
     def __init__(self, line: str = "", **kwargs):
         """ACE. TCP/UDP Port
         :param line: TCP/UDP ports line
-        :param platform: Supported platforms: "ios", "cnx". By default: "ios"
-        :param note: Object description (can be used for ACEs sorting)
+        :param platform: Supported platforms: "ios", "cnx". By default, "ios"
+        :param note: Object description. Not part of the ACE configuration,
+            can be used for ACEs sorting
 
         :example: ios, "eq" (can match multiple ports in single line)
             line: "eq www 443"
@@ -78,7 +79,7 @@ class Port(Base):
 
     @property
     def line(self) -> str:
-        """ACE TCP/UDP ports"""
+        """ACE source or destination TCP/UDP ports"""
         return self._line
 
     @line.setter
@@ -103,7 +104,7 @@ class Port(Base):
 
     @property
     def items(self) -> LInt:
-        """ACE TCP/UDP list of items as int
+        """ACE TCP/UDP list of *int* protocol numbers
         :return: List of ports
 
         :example:
@@ -148,7 +149,7 @@ class Port(Base):
 
     @property
     def ports(self) -> LInt:
-        """ACE TCP/UDP list of ports
+        """ACE list of *int* TCP/UDP port numbers
 
         :example:
             Port("eq www 443")
@@ -170,7 +171,7 @@ class Port(Base):
 
     @property
     def sport(self) -> str:
-        """ACE TCP/UDP string ports (range)
+        """ACE *str* of TCP/UDP ports range
 
         :example:
             Port("eq 1 3 4 5")

@@ -1,12 +1,14 @@
-"""============================= Example1 =============================
-- Create ACL.
-- Generate sequence numbers.
-- Moved up ACE "deny tcp any any eq 53".
-- Resequence numbers.
-- Delete sequences.
-- Change syntax from Cisco IOS platform to Cisco Nexus NX-OS.
-- Change syntax from Cisco Nexus NX-OS platform to Cisco IOS.
+"""**Acl change platform**
+
+- Create ACL
+- Generate sequence numbers
+- Moved up ACE "deny tcp any any eq 53"
+- Resequence numbers
+- Delete sequences
+- Change syntax from Cisco IOS platform to Cisco Nexus NX-OS
+- Change syntax from Cisco Nexus NX-OS platform to Cisco IOS
 """
+
 from cisco_acl import Acl
 
 lines1 = """
