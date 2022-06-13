@@ -3,7 +3,7 @@
 import unittest
 
 from cisco_acl import Ace, AceGroup, Acl, Remark
-from tests_.helpers_test import (
+from tests.helpers_test import (
     ACL_CNX,
     ACL_IOS,
     ACL_NAME_CNX,

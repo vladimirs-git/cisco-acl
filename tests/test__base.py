@@ -3,7 +3,7 @@
 import unittest
 
 from cisco_acl import Ace, Remark
-from tests_.helpers_test import ACL_NAME_IOS, PERMIT_IP, REMARK
+from tests.helpers_test import ACL_NAME_IOS, PERMIT_IP, REMARK
 
 REMARK_O = Remark(REMARK)
 ACE_O = Ace(PERMIT_IP)

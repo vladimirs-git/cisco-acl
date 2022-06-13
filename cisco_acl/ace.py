@@ -24,9 +24,10 @@ class Ace(BaseAce):
 
     def __init__(self, line: str, **kwargs):
         """ACE - Access Control Entry
-        :param line: ACE line
-        :param platform: Supported platforms: "ios", "cnx". By default: "ios"
-        :param note: Object description (can be used for ACEs sorting)
+        :param line: ACE config line
+        :param platform: Supported platforms: "ios", "cnx". By default, "ios"
+        :param note: Object description. Not part of the ACE configuration,
+            can be used for ACEs sorting
 
         :example:
             line: "10 permit tcp host 10.0.0.1 eq 179 10.0.0.0 0.0.0.3 eq 80 443 log"
@@ -137,7 +138,7 @@ class Ace(BaseAce):
     def dstaddr(self) -> Address:
         """ACE source address: "any", "host A.B.C.D", "A.B.C.D A.B.C.D", "A.B.C.D/24",
             "object-group NAME"
-        :return: ACE Address object
+        :return: ACE destination Address object
 
         :example: ios
             Ace("permit ip host 1.1.1.1 any")
@@ -158,7 +159,7 @@ class Ace(BaseAce):
     @property
     def dstport(self) -> Port:
         """ACE destination ports: "eq www 443", ""neq 1 2", "lt 2", "gt 2", "range 1 3"
-        :return: ACE Port object
+        :return: ACE destination Port object
 
         :example:
             Ace("permit tcp host 1.1.1.1 eq www 443 any eq 1025 log")
@@ -174,8 +175,8 @@ class Ace(BaseAce):
 
     @property
     def line(self) -> str:
-        """ACE line
-        :return: ACE line
+        """ACE config line
+        :return: ACE config line
 
         :example:
             Ace("10 permit ip any any")
@@ -209,8 +210,9 @@ class Ace(BaseAce):
 
     @property
     def platform(self) -> str:
-        """Platforms: "ios", "cnx"
-        :return: Platform of Cisco-IOS or Cisco-Nexus
+        """Platform
+        - "ios" - Cisco IOS (extended ACL)
+        - "cnx" Cisco Nexus NX-OS
         """
         return self._platform
 
@@ -260,7 +262,7 @@ class Ace(BaseAce):
     def srcaddr(self) -> Address:
         """ACE source address: "any", "host A.B.C.D", "A.B.C.D A.B.C.D", "A.B.C.D/24",
             "object-group NAME".
-        :return: ACE Address object
+        :return: ACE source Address object
 
         :example: ios
             Ace("permit ip host 1.1.1.1 any")
@@ -282,7 +284,7 @@ class Ace(BaseAce):
     @property
     def srcport(self) -> Port:
         """ACE source ports: "eq www 443", ""neq 2", "lt 2", "gt 2", "range 1 3"
-        :return: ACE Port object
+        :return: ACE source Port object
 
         :example:
             Ace("permit tcp host 1.1.1.1 eq www 443 any eq 1025 log")
@@ -299,15 +301,25 @@ class Ace(BaseAce):
     # =========================== methods ============================
 
     def copy(self) -> Ace:
-        """Copies self object
+        """Copies the self object
         :return: A shallow copy of self
         """
         return Ace(self.line, platform=self.platform, note=self.note)
 
+    # noinspection PyIncorrectDocstring
     @classmethod
     def rule(cls, **kwargs) -> LAce:
-        """Converts data of Rule to Ace object
-        :return: Ace object
+        """Converts data of Rule to Ace objects
+        :param str platform: Supported platforms: "ios", "cnx". By default, "ios"
+        :param str action: ACE action: "permit", "deny"
+        :param List[str] srcaddrs: Source addresses
+        :param List[str] dstaddrs: Destination addresses
+        :param List[str] protocols: Protocols
+        :param List[int] tcp_srcports: TCP source ports
+        :param List[int] tcp_dstports: TCP destination ports
+        :param List[int] udp_srcports: UDP source ports
+        :param List[int] udp_dstports: UDP destination ports
+        :return: List of Ace objects
 
         :example:
             platform: "ios"
@@ -354,16 +366,16 @@ class Ace(BaseAce):
                 for proto in protocols:
                     aces_: LStr = [f"{action} {proto} {srcaddr}"]
                     if proto == "tcp" and tcp_srcports:
-                        aces_ = split_by_ports(aces_, tcp_srcports, platform)
+                        aces_ = _split_by_ports(aces_, tcp_srcports, platform)
                     if proto == "udp" and udp_srcports:
-                        aces_ = split_by_ports(aces_, udp_srcports, platform)
+                        aces_ = _split_by_ports(aces_, udp_srcports, platform)
                     aces_ = [f"{s} {dstaddr}" for s in aces_]
                     if proto == "tcp" and tcp_dstports:
-                        aces_ = split_by_ports(aces_, tcp_dstports, platform)
+                        aces_ = _split_by_ports(aces_, tcp_dstports, platform)
                     if proto == "udp" and udp_dstports:
-                        aces_ = split_by_ports(aces_, udp_dstports, platform)
+                        aces_ = _split_by_ports(aces_, udp_dstports, platform)
                     if options:
-                        aces_ = [join_option(s, options) for s in aces_]
+                        aces_ = [_join_option(s, options) for s in aces_]
                     aces.extend(aces_)
         return sorted([Ace(s, platform=platform) for s in aces])
 
@@ -371,7 +383,7 @@ class Ace(BaseAce):
 # =========================== helpers ============================
 
 
-def split_by_ports(aces: LStr, ports: LInt, platform: str) -> LStr:
+def _split_by_ports(aces: LStr, ports: LInt, platform: str) -> LStr:
     """If platform="ios", join ports to string and append to aces lines
     If platform="cnx", make multiple ACE lines, each port in separate ace line
     :param aces: List of ACE lines, ready for split
@@ -400,19 +412,19 @@ def split_by_ports(aces: LStr, ports: LInt, platform: str) -> LStr:
     aces_: LStr = []
     for ace in aces:
         if platform == "cnx":
-            aces_.extend([join_ports(ace=ace, ports=[i]) for i in ports])
+            aces_.extend([_join_ports(ace=ace, ports=[i]) for i in ports])
         else:
-            aces_.append(join_ports(ace=ace, ports=ports))
+            aces_.append(_join_ports(ace=ace, ports=ports))
     return aces_
 
 
-def join_ports(ace: str, ports: list) -> str:
+def _join_ports(ace: str, ports: list) -> str:
     """Adds ports to ace line"""
     ports_ = " ".join([str(i) for i in ports])
     return f"{ace} eq {ports_}"
 
 
-def join_option(ace: str, options: LStr) -> str:
+def _join_option(ace: str, options: LStr) -> str:
     """Adds options to ace line"""
     option = " ".join(options)
     return f"{ace} {option}"

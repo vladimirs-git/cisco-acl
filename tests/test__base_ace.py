@@ -3,7 +3,7 @@
 import unittest
 
 from cisco_acl import Ace, AceGroup, Remark
-from tests_.helpers_test import Helpers, PERMIT_IP, REMARK
+from tests.helpers_test import Helpers, PERMIT_IP, REMARK
 
 
 # noinspection DuplicatedCode

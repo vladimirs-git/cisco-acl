@@ -4,7 +4,7 @@ import unittest
 
 from cisco_acl import helpers as h
 from cisco_acl.types_ import LDStr
-from tests_.helpers_test import PERMIT_IP, DENY_IP
+from tests.helpers_test import PERMIT_IP, DENY_IP
 
 
 # noinspection DuplicatedCode

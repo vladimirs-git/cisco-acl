@@ -25,12 +25,13 @@ class AceGroup(Group, BaseAce):
 
     def __init__(self, line: str = "", **kwargs):
         """Group of ACE (Access Control Entry)
-        :param line: string of ACEs
-        :param platform: Supported platforms: "ios", "cnx". By default: "ios"
-        :param note: Object description (can be used for ACEs sorting)
-        :param items: An alternate way to create AceGroup object from a list of Ace objects
+        :param str line: string of ACEs
+        :param str platform: Supported platforms: "ios", "cnx". By default, "ios"
+        :param str note: Object description. Not part of the ACE configuration,
+            can be used for ACEs sorting
+        :param List[Ace] items: An alternate way to create AceGroup object from a list of Ace objects
             By default, an object is created from a line
-        :param data: An alternate way to create AceGroup object from a *dict*
+        :param dict data: An alternate way to create AceGroup object from a *dict*
             By default, an object is created from a line
 
         :example:
@@ -144,7 +145,7 @@ class AceGroup(Group, BaseAce):
 
     @property
     def sequence(self) -> Sequence:
-        """ACE group sequence"""
+        """ACE sequence (sequence object of the first Ace in group)"""
         return self._sequence
 
     @sequence.setter
@@ -158,7 +159,7 @@ class AceGroup(Group, BaseAce):
     # =========================== methods ============================
 
     def copy(self) -> AceGroup:
-        """Copies self object
+        """Copies the self object with the Ace elements copied
         :return: A shallow copy of self
         """
         aceg = AceGroup(
@@ -169,7 +170,7 @@ class AceGroup(Group, BaseAce):
         return aceg
 
     def data(self) -> DAny:
-        """Converts self to dictionary
+        """Converts self object to dictionary
         :return: data in *dict* format
 
         :example:

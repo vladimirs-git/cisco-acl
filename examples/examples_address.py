@@ -1,4 +1,6 @@
-"""Examples Address"""
+"""**Address(line)**
+The following example demonstrates Address object.
+"""
 
 from ipaddress import ip_network
 

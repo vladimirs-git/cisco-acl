@@ -4,7 +4,7 @@ import unittest
 
 from cisco_acl import Ace, Remark
 from cisco_acl.sequence import Sequence
-from tests_.helpers_test import Helpers, PERMIT_IP, REMARK
+from tests.helpers_test import Helpers, PERMIT_IP, REMARK
 
 SEQ0_D = dict(line="", number=0)
 SEQ1_D = dict(line="1", number=1)

@@ -4,7 +4,7 @@ import unittest
 from ipaddress import ip_network
 
 from cisco_acl import Address
-from tests_.helpers_test import Helpers
+from tests.helpers_test import Helpers
 
 OBJGROUP = "object-group NAME"
 ADDRGROUP = "addrgroup NAME"

@@ -1,5 +1,5 @@
-"""============================= Example3 =============================
-- Create ACL from objects, with groups.
+"""**AceGroup.data()**
+The following example creates ACL from objects, with groups
 """
 
 from cisco_acl import Acl, Ace, AceGroup, Remark

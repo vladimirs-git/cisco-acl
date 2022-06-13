@@ -46,40 +46,41 @@ class Group:
     # =========================== methods ============================
 
     def add(self, item) -> None:
-        """Adds new item to list, if it is not in list"""
+        """Adds new item to self.items list, if it is not in self.items"""
         if item not in self.items:
             self.items.append(item)
 
     def append(self, item) -> None:
-        """Appends item to the end of the list"""
+        """Appends item to the end of the self.items list"""
         self.items.append(item)
 
     def clear(self) -> None:
-        """Removes all items from the list"""
+        """Removes all items from the self.items list"""
         self.items = []
 
     def copy(self):
-        """Returns a shallow copy of the list"""
+        """Returns a shallow copy of the self.items list"""
         return self.items.copy()
 
     def count(self, item):
-        """Returns number of occurrences of items"""
+        """Returns number of occurrences of the self.items"""
         return self.items.count(item)
 
     def delete(self, item) -> None:
-        """Removes item from group"""
+        """Removes item from the self.items list"""
         if item in self.items:
             self.items.remove(item)
 
     def extend(self, items: Iterable) -> None:
-        """Extends list by appending items"""
+        """Extends the self.items list by appending items"""
         if isinstance(items, (list, set, tuple)):
             self.items.extend(list(items))
             return
         raise TypeError(f"{items=} {list} expected")
 
     def index(self, *args) -> int:
-        """Returns first index of item. Raises ValueError if the value is not present"""
+        """Returns first index of item
+        Raises ValueError if the value is not present"""
         return self.items.index(*args)
 
     def insert(self, *args) -> None:
@@ -92,21 +93,22 @@ class Group:
         return self.items.pop(*args)
 
     def remove(self, *args) -> None:
-        """Removes first occurrence of items. Raises ValueError if the item is not present"""
+        """Removes first occurrence of items in the self.items
+        Raises ValueError if the item is not present"""
         self.items.remove(*args)
 
     def reverse(self) -> None:
-        """Reverses order of items in list"""
+        """Reverses order of items in the self.items list"""
         self.items.reverse()
 
     def sort(self, *args, **kwargs) -> None:
-        """Sorts the list in ascending order
+        """Sorts the self.items list in ascending order
         :example:
             self.items.sort(reverse=True|False, key=myFunc)
         """
         self.items.sort(*args, **kwargs)
 
     def update(self, items: list) -> None:
-        """Extends list by adding items, if it is not in list"""
+        """Extends list by adding items to self.items list, if it is not in the self.items"""
         for item in items:
             self.add(item)

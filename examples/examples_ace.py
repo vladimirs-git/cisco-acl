@@ -1,0 +1,75 @@
+"""**Ace(line)**
+The following example creates an Ace object and demonstrate various manipulation approaches.
+"""
+
+from cisco_acl import Ace
+from ipaddress import ip_network
+
+ace = Ace(line="10 permit tcp host 10.0.0.1 range 1 3 10.0.0.0 0.0.0.3 eq www 443 log",
+          platform="ios",
+          note="allow web")
+
+assert ace.note == "allow web"
+assert ace.line == "10 permit tcp host 10.0.0.1 range 1 3 10.0.0.0 0.0.0.3 eq www 443 log"
+assert ace.platform == "ios"
+assert ace.sequence == 10
+assert ace.action == "permit"
+assert ace.protocol.line == "tcp"
+assert ace.protocol.name == "tcp"
+assert ace.protocol.number == 6
+assert ace.srcaddr.line == "host 10.0.0.1"
+assert ace.srcaddr.addrgroup == ""
+assert ace.srcaddr.ipnet == ip_network("10.0.0.1/32")
+assert ace.srcaddr.prefix == "10.0.0.1/32"
+assert ace.srcaddr.subnet == "10.0.0.1 255.255.255.255"
+assert ace.srcaddr.wildcard == "10.0.0.1 0.0.0.0"
+assert ace.srcport.line == "range 1 3"
+assert ace.srcport.operator == "range"
+assert ace.srcport.ports == [1, 2, 3]
+assert ace.srcport.sport == "1-3"
+assert ace.dstaddr.line == "10.0.0.0 0.0.0.3"
+assert ace.dstaddr.addrgroup == ""
+assert ace.dstaddr.ipnet == ip_network("10.0.0.0/30")
+assert ace.dstaddr.prefix == "10.0.0.0/30"
+assert ace.dstaddr.subnet == "10.0.0.0 255.255.255.252"
+assert ace.dstaddr.wildcard == "10.0.0.0 0.0.0.3"
+assert ace.dstport.line == "eq www 443"
+assert ace.dstport.operator == "eq"
+assert ace.dstport.ports == [80, 443]
+assert ace.dstport.sport == "80,443"
+assert ace.option == "log"
+
+print(ace.line)
+# 10 permit tcp host 10.0.0.1 range 1 3 10.0.0.0 0.0.0.3 eq www 443 log
+
+ace.sequence = 20
+ace.protocol.name = "udp"
+ace.srcaddr.prefix = "10.0.0.0/24"
+ace.dstaddr.addrgroup = "NAME"
+ace.srcport.line = "eq 179"
+ace.dstport.ports = [80]
+ace.option = ""
+print(ace.line)
+# 20 permit udp 10.0.0.0 0.0.0.255 eq 179 object-group NAME eq 80
+
+ace.sequence = 0
+ace.protocol.number = 1
+ace.srcaddr.prefix = "0.0.0.0/0"
+ace.dstaddr.line = "any"
+ace.srcport.line = ""
+ace.dstport.line = ""
+
+print(ace.line)
+print()
+# 10 permit tcp any any
+
+
+# copy
+ace1 = Ace("permit ip any any")
+ace2 = ace1.copy()
+ace1.srcaddr.prefix = "10.0.0.0/24"
+print(ace1)
+print(ace2)
+print()
+# permit ip 10.0.0.0 0.0.0.255 any
+# permit ip any any

@@ -14,7 +14,7 @@ class BaseAce(Base):
     def __init__(self, line, **kwargs):
         """BaseAce - Parent of: Ace, Remark
         :param line: ACE line, can contain index
-        :param platform: Supported platforms: "ios", "cnx". By default: "ios"
+        :param platform: Supported platforms: "ios", "cnx". By default, "ios"
         :param note: Object description (can be used for ACEs sorting)
         """
         super().__init__(**kwargs)
@@ -35,7 +35,7 @@ class BaseAce(Base):
 
     @property
     def sequence(self) -> Sequence:
-        """ACE sequence
+        """Sequence object. ACE sequence number in ACL
         :return: Sequence number
 
         :example: Ace without sequence number

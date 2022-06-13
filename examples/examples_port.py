@@ -1,4 +1,6 @@
-"""Examples Port"""
+"""**Port(line)**
+The following example demonstrates Port object.
+"""
 
 from cisco_acl import Port
 

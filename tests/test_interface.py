@@ -3,7 +3,7 @@
 import unittest
 
 from cisco_acl.interface import Interface
-from tests_.helpers_test import ETH1, ETH2
+from tests.helpers_test import ETH1, ETH2
 
 
 # noinspection DuplicatedCode

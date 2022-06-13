@@ -3,7 +3,7 @@
 import unittest
 
 from cisco_acl import Protocol
-from tests_.helpers_test import Helpers
+from tests.helpers_test import Helpers
 
 
 # noinspection DuplicatedCode

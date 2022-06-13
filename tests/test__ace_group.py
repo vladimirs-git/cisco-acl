@@ -5,7 +5,7 @@ import unittest
 import dictdiffer  # type: ignore
 
 from cisco_acl import Ace, AceGroup, Remark
-from tests_.helpers_test import (
+from tests.helpers_test import (
     DENY_IP,
     DENY_IP_2,
     Helpers,

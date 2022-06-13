@@ -3,7 +3,7 @@
 import unittest
 
 from cisco_acl import Ace, Remark
-from tests_.helpers_test import (
+from tests.helpers_test import (
     DENY_IP,
     DENY_IP_1,
     Helpers,
