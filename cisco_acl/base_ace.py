@@ -9,15 +9,16 @@ from cisco_acl.types_ import StrInt
 class BaseAce(Base):
     """BaseAce - Parent of: Ace, Remark"""
 
-    __slots__ = ("_platform", "_note", "_line", "_sequence")
+    __slots__ = ("_platform", "_note", "_line", "_sequence", "_numerically")
 
     def __init__(self, line, **kwargs):
         """BaseAce - Parent of: Ace, Remark
         :param line: ACE line, can contain index
-        :param platform: Supported platforms: "ios", "cnx". By default, "ios"
+        :param platform: Supported platforms: "ios", "cnx" (default "ios")
         :param note: Object description (can be used for ACEs sorting)
         """
         super().__init__(**kwargs)
+        self._numerically = bool(kwargs.get("numerically"))
         self.sequence = 0
         self.line = line
 
@@ -32,6 +33,16 @@ class BaseAce(Base):
     def line(self, line: str):
         """Dummy"""
         return
+
+    @property
+    def numerically(self) -> bool:
+        """Cisco ACL outputs well-known tcp/udp ports as names"""
+        return self._numerically
+
+    @numerically.setter
+    def numerically(self, numerically: bool):
+        self._numerically = bool(numerically)
+        self.line = self.line
 
     @property
     def sequence(self) -> Sequence:

@@ -28,8 +28,18 @@ print()
 #   permit icmp any any
 #   permit ip object-group A object-group B log
 #   permit tcp host 1.1.1.1 eq 1 2 2.2.2.0 0.0.0.255 eq 3 4
-#   deny tcp any any eq 53
+#   deny tcp any any eq domain
 
+# TCP/UDP ports represented numerically.
+acl1.numerically = True
+print(acl1.line)
+acl1.numerically = False
+print()
+# ip access-list extended ACL1
+#   permit icmp any any
+#   permit ip object-group A object-group B log
+#   permit tcp host 1.1.1.1 eq 1 2 2.2.2.0 0.0.0.255 eq 3 4
+#   deny tcp any any eq 53
 
 # Generate sequence numbers.
 acl1.resequence()
@@ -39,7 +49,7 @@ print()
 #   10 permit icmp any any
 #   20 permit ip object-group A object-group B log
 #   30 permit tcp host 1.1.1.1 eq 1 2 2.2.2.0 0.0.0.255 eq 3 4
-#   40 deny tcp any any eq 53
+#   40 deny tcp any any eq domain
 
 # Moved up ACE "deny tcp any any eq 53".
 # Note that ACE have been moved up with the same sequence numbers.
@@ -49,7 +59,7 @@ acl1.insert(0, rule1)
 print(acl1)
 print()
 # ip access-list extended ACL1
-#   40 deny tcp any any eq 53
+#   40 deny tcp any any eq domain
 #   10 permit icmp any any
 #   20 permit ip object-group A object-group B log
 #   30 permit tcp host 1.1.1.1 eq 1 2 2.2.2.0 0.0.0.255 eq 3 4
@@ -59,7 +69,7 @@ acl1.resequence(start=100, step=1)
 print(acl1)
 print()
 # ip access-list extended ACL1
-#   100 deny tcp any any eq 53
+#   100 deny tcp any any eq domain
 #   101 permit icmp any any
 #   102 permit ip object-group A object-group B log
 #   103 permit tcp host 1.1.1.1 eq 1 2 2.2.2.0 0.0.0.255 eq 3 4
@@ -71,7 +81,7 @@ print(acl1)
 print()
 # acl1.platform='ios'
 # ip access-list extended ACL1
-#   deny tcp any any eq 53
+#   deny tcp any any eq domain
 #   permit icmp any any
 #   permit ip object-group A object-group B log
 #   permit tcp host 1.1.1.1 eq 1 2 2.2.2.0 0.0.0.255 eq 3 4
@@ -83,7 +93,7 @@ print(acl1)
 print()
 # acl1.platform='cnx'
 # ip access-list ACL1
-#   deny tcp any any eq 53
+#   deny tcp any any eq domain
 #   permit icmp any any
 #   permit ip addrgroup A addrgroup B log
 #   permit tcp 1.1.1.1/32 eq 1 2.2.2.0/24 eq 3
@@ -91,14 +101,14 @@ print()
 #   permit tcp 1.1.1.1/32 eq 2 2.2.2.0/24 eq 3
 #   permit tcp 1.1.1.1/32 eq 2 2.2.2.0/24 eq 4
 
-# Change syntax from Cisco Nexus NX-OS platform to Cisco IOS.
+# Change syntax from Cisco Nexus NX-OS platform to Cisco IOS
 acl1.platform = "ios"
 print(f"{acl1.platform=}")
 print(acl1)
 print()
 # acl1.platform='ios'
 # ip access-list extended ACL1
-#   deny tcp any any eq 53
+#   deny tcp any any eq domain
 #   permit icmp any any
 #   permit ip object-group A object-group B log
 #   permit tcp host 1.1.1.1 eq 1 2.2.2.0 0.0.0.255 eq 3

@@ -16,7 +16,7 @@ class Test(unittest.TestCase):
     @staticmethod
     def _generate_aces_req() -> LDStr:
         """Return all combinations of ACE, ready for parse_ace() test"""
-        sequencees = ["", "10"]
+        sequences = ["", "10"]
         actions = ["permit", "deny"]
         protocols = ["tcp"]
         srcaddrs = ["any", "host 1.1.1.1", "1.1.1.0 0.0.0.7", "1.1.0.0/16",
@@ -26,7 +26,7 @@ class Test(unittest.TestCase):
         dstports = ["", "eq www 443", "neq 1 www", "gt www", "lt 443", "range 1 3", "range www bgp"]
         options = ["", "log"]
 
-        lines = [f"sequence={s}" for s in sequencees]
+        lines = [f"sequence={s}" for s in sequences]
         lines = [f"{i},action={s}" for i in lines for s in actions]
         lines = [f"{i},protocol={s}" for i in lines for s in protocols]
         lines = [f"{i},srcaddr={s}" for i in lines for s in srcaddrs]
@@ -69,6 +69,65 @@ class Test(unittest.TestCase):
 
     # =============================== str ================================
 
+    def test_valid__acl_help_to_name_port(self):
+        """acl_help_to_name_port()"""
+        output_all = """
+        <0-65535>    Port number
+        cmd          Remote commands (rcmd, 514)
+        syslog       Syslog (514)
+        """
+        for output, req in [
+            ("", {}),
+            ("cmd          Remote commands (rcmd, 514)", {"cmd": 514}),
+            ("syslog       Syslog (514)", {"syslog": 514}),
+            (output_all, {"cmd": 514, "syslog": 514}),
+        ]:
+            result = h.acl_help_to_name_port(output=output)
+            self.assertEqual(result, req, msg=f"{output=}")
+
+    def test_valid__findall1(self):
+        """findall1()"""
+        for pattern, string, req in [
+            ("", "abcde", ""),
+            ("typo", "abcde", ""),
+            ("(typo)", "abcde", ""),
+            ("(b)", "abcde", "b"),
+            ("(bc)", "abcde", "bc"),
+            ("(b)(c)", "abcde", "b"),
+        ]:
+            result = h.findall1(pattern=pattern, string=string)
+            self.assertEqual(result, req, msg=f"{pattern=}")
+
+    def test_valid__findall2(self):
+        """findall2()"""
+        for pattern, string, req in [
+            ("", "abcde", ("", "")),
+            ("typo", "abcde", ("", "")),
+            ("(b)", "abcde", ("", "")),
+            ("(b)(typo)", "abcde", ("", "")),
+            ("(typo)(c)", "abcde", ("", "")),
+            ("(b)(c)", "abcde", ("b", "c")),
+            ("(b)(c)(d)", "abcde", ("b", "c")),
+        ]:
+            result = h.findall2(pattern=pattern, string=string)
+            self.assertEqual(result, req, msg=f"{pattern=}")
+
+    def test_valid__findall3(self):
+        """findall3()"""
+        for pattern, string, req in [
+            ("", "abcde", ("", "", "")),
+            ("typo", "abcde", ("", "", "")),
+            ("(b)", "abcde", ("", "", "")),
+            ("(b)(c)", "abcde", ("", "", "")),
+            ("(typo)(c)(d)", "abcde", ("", "", "")),
+            ("(b)(typo)(d)", "abcde", ("", "", "")),
+            ("(b)(c)(typo)", "abcde", ("", "", "")),
+            ("(b)(c)(d)", "abcde", ("b", "c", "d")),
+            ("(b)(c)(d)(e)", "abcde", ("b", "c", "d")),
+        ]:
+            result = h.findall3(pattern=pattern, string=string)
+            self.assertEqual(result, req, msg=f"{pattern=}")
+
     def test_valid__check_line_length(self):
         """check_line_length()"""
         for line, req in [
@@ -91,7 +150,7 @@ class Test(unittest.TestCase):
         """check_name()"""
         ascii_letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
         digits = "0123456789"
-        punctuation = r"""!"#$%&'()*+,-./:;<=>@[\]^_`{|}~"""
+        punctuation = r"""!"#$%&"()*+,-./:;<=>@[\]^_`{|}~"""
         valid_chars = f"{ascii_letters}{digits}{punctuation}"
         for line, req in [
             (valid_chars, True),
@@ -232,15 +291,6 @@ class Test(unittest.TestCase):
             for key, result in result_d.items():
                 req = req_d[key]
                 self.assertEqual(result, req, msg=f"{line=} {key=}")
-
-    def test_invalid__parse_dstport_option(self):
-        """parse_dstport_option()"""
-        for line, error in [
-            ("eq 1 log www", ValueError),
-            ("eq 1 log 443", ValueError),
-        ]:
-            with self.assertRaises(error, msg=f"{line=}"):
-                h._parse_dstport_option(line)
 
     def test_valid__parse_action(self):
         """parse_action()"""

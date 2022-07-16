@@ -6,7 +6,7 @@ from setuptools import setup  # type: ignore
 
 import cisco_acl as package
 
-VERSION = "0.1.1"
+VERSION = "1.0.0"
 PACKAGE = package.__title__
 PACKAGE_ = package.__title__.lower().replace("-", "_")  # PEP 503 normalization
 ROOT = pathlib.Path(__file__).parent.resolve()

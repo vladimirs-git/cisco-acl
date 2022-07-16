@@ -42,12 +42,6 @@ Install the package from pypi.org release
 
     pip install cisco-acl
 
-or install the package from github.com release
-
-.. code:: bash
-
-    pip install https://github.com/vladimirs-git/cisco-acl/archive/refs/tags/0.1.1.tar.gz
-
 or install the package from github.com repository
 
 .. code:: bash
@@ -65,7 +59,8 @@ Acl.items can be edited, sorted, indexed by sequence numbers or notes.
 Parameter       Type         Description
 =============== ============ =======================================================================
 line            *str*        ACL config (name and following remarks and access entries)
-platform        *str*        Supported platforms: "ios", "cnx". By default, "ios"
+platform        *str*        Supported platforms: "ios", "cnx" (default "ios")
+numerically     *bool*       Cisco ACL outputs well-known tcp/udp ports as names, True  - all tcp/udp ports as numbers, False - well-known tcp/udp ports as names (default)
 name            *str*        ACL name. By default, parsed from line
 items           *List[str]*  List of ACE (strings or Ace, AceGroup, Remark objects). By default, parsed from line
 input           *str*        Interfaces, where Acl is used on input
@@ -184,7 +179,7 @@ Parameter       Type         Description
 =============== ============ =======================================================================
 start           *int*        Starting sequence number. start=0 - delete all sequence numbers
 step            *int*        Step to increment the sequence number
-items           *List[Ace]*  List of Ace objects. By default, self.items
+items           *List[Ace]*  List of Ace objects.  (default self.items)
 =============== ============ =======================================================================
 
 Return
@@ -365,8 +360,18 @@ The following example creates Acl with not ordered groups and sorts and resequen
 	#   permit icmp any any
 	#   permit ip object-group A object-group B log
 	#   permit tcp host 1.1.1.1 eq 1 2 2.2.2.0 0.0.0.255 eq 3 4
-	#   deny tcp any any eq 53
+	#   deny tcp any any eq domain
 
+	# TCP/UDP ports represented numerically.
+	acl1.numerically = True
+	print(acl1.line)
+	acl1.numerically = False
+	print()
+	# ip access-list extended ACL1
+	#   permit icmp any any
+	#   permit ip object-group A object-group B log
+	#   permit tcp host 1.1.1.1 eq 1 2 2.2.2.0 0.0.0.255 eq 3 4
+	#   deny tcp any any eq 53
 
 	# Generate sequence numbers.
 	acl1.resequence()
@@ -376,7 +381,7 @@ The following example creates Acl with not ordered groups and sorts and resequen
 	#   10 permit icmp any any
 	#   20 permit ip object-group A object-group B log
 	#   30 permit tcp host 1.1.1.1 eq 1 2 2.2.2.0 0.0.0.255 eq 3 4
-	#   40 deny tcp any any eq 53
+	#   40 deny tcp any any eq domain
 
 	# Moved up ACE "deny tcp any any eq 53".
 	# Note that ACE have been moved up with the same sequence numbers.
@@ -386,7 +391,7 @@ The following example creates Acl with not ordered groups and sorts and resequen
 	print(acl1)
 	print()
 	# ip access-list extended ACL1
-	#   40 deny tcp any any eq 53
+	#   40 deny tcp any any eq domain
 	#   10 permit icmp any any
 	#   20 permit ip object-group A object-group B log
 	#   30 permit tcp host 1.1.1.1 eq 1 2 2.2.2.0 0.0.0.255 eq 3 4
@@ -396,7 +401,7 @@ The following example creates Acl with not ordered groups and sorts and resequen
 	print(acl1)
 	print()
 	# ip access-list extended ACL1
-	#   100 deny tcp any any eq 53
+	#   100 deny tcp any any eq domain
 	#   101 permit icmp any any
 	#   102 permit ip object-group A object-group B log
 	#   103 permit tcp host 1.1.1.1 eq 1 2 2.2.2.0 0.0.0.255 eq 3 4
@@ -408,7 +413,7 @@ The following example creates Acl with not ordered groups and sorts and resequen
 	print()
 	# acl1.platform='ios'
 	# ip access-list extended ACL1
-	#   deny tcp any any eq 53
+	#   deny tcp any any eq domain
 	#   permit icmp any any
 	#   permit ip object-group A object-group B log
 	#   permit tcp host 1.1.1.1 eq 1 2 2.2.2.0 0.0.0.255 eq 3 4
@@ -420,7 +425,7 @@ The following example creates Acl with not ordered groups and sorts and resequen
 	print()
 	# acl1.platform='cnx'
 	# ip access-list ACL1
-	#   deny tcp any any eq 53
+	#   deny tcp any any eq domain
 	#   permit icmp any any
 	#   permit ip addrgroup A addrgroup B log
 	#   permit tcp 1.1.1.1/32 eq 1 2.2.2.0/24 eq 3
@@ -428,20 +433,22 @@ The following example creates Acl with not ordered groups and sorts and resequen
 	#   permit tcp 1.1.1.1/32 eq 2 2.2.2.0/24 eq 3
 	#   permit tcp 1.1.1.1/32 eq 2 2.2.2.0/24 eq 4
 
-	# Change syntax from Cisco Nexus NX-OS platform to Cisco IOS.
+	# Change syntax from Cisco Nexus NX-OS platform to Cisco IOS
 	acl1.platform = "ios"
 	print(f"{acl1.platform=}")
 	print(acl1)
 	print()
 	# acl1.platform='ios'
 	# ip access-list extended ACL1
-	#   deny tcp any any eq 53
+	#   deny tcp any any eq domain
 	#   permit icmp any any
 	#   permit ip object-group A object-group B log
 	#   permit tcp host 1.1.1.1 eq 1 2.2.2.0 0.0.0.255 eq 3
 	#   permit tcp host 1.1.1.1 eq 1 2.2.2.0 0.0.0.255 eq 4
 	#   permit tcp host 1.1.1.1 eq 2 2.2.2.0 0.0.0.255 eq 3
 	#   permit tcp host 1.1.1.1 eq 2 2.2.2.0 0.0.0.255 eq 4
+
+
 
 
 Ace
@@ -452,7 +459,8 @@ ACE - Access Control Entry. Each entry statement permit or deny in the `Acl`_.
 Parameter       Type         Description
 =============== ============ =======================================================================
 line            *str*        ACE config line
-platform        *str*        Supported platforms: "ios", "cnx". By default, "ios"
+platform        *str*        Supported platforms: "ios", "cnx" (default "ios")
+numerically     *bool*       Cisco ACL outputs well-known tcp/udp ports as names, True  - all tcp/udp ports as numbers, False - well-known tcp/udp ports as names (default)
 note            *str*        Object description. Not part of the ACE configuration, can be used for ACEs sorting
 =============== ============ =======================================================================
 
@@ -530,7 +538,7 @@ rule(platform, action, srcaddrs, dstaddrs, protocols, tcp_srcports, tcp_dstports
 =============== ============ =======================================================================
 Parameter       Type         Description
 =============== ============ =======================================================================
-platform        *str*        Supported platforms: "ios", "cnx". By default, "ios"
+platform        *str*        Supported platforms: "ios", "cnx" (default "ios")
 action          *str*        ACE action: "permit", "deny"
 srcaddrs        *List[str]*  Source addresses
 dstaddrs        *List[str]*  Destination addresses
@@ -558,12 +566,12 @@ The following example creates an Ace object and demonstrate various manipulation
 	from cisco_acl import Ace
 	from ipaddress import ip_network
 
-	ace = Ace(line="10 permit tcp host 10.0.0.1 range 1 3 10.0.0.0 0.0.0.3 eq www 443 log",
+	ace = Ace(line="10 permit tcp host 10.0.0.1 range 21 23 10.0.0.0 0.0.0.3 eq 80 443 log",
 			  platform="ios",
 			  note="allow web")
 
 	assert ace.note == "allow web"
-	assert ace.line == "10 permit tcp host 10.0.0.1 range 1 3 10.0.0.0 0.0.0.3 eq www 443 log"
+	assert ace.line == "10 permit tcp host 10.0.0.1 range ftp telnet 10.0.0.0 0.0.0.3 eq www 443 log"
 	assert ace.platform == "ios"
 	assert ace.sequence == 10
 	assert ace.action == "permit"
@@ -576,10 +584,10 @@ The following example creates an Ace object and demonstrate various manipulation
 	assert ace.srcaddr.prefix == "10.0.0.1/32"
 	assert ace.srcaddr.subnet == "10.0.0.1 255.255.255.255"
 	assert ace.srcaddr.wildcard == "10.0.0.1 0.0.0.0"
-	assert ace.srcport.line == "range 1 3"
+	assert ace.srcport.line == "range ftp telnet"
 	assert ace.srcport.operator == "range"
-	assert ace.srcport.ports == [1, 2, 3]
-	assert ace.srcport.sport == "1-3"
+	assert ace.srcport.ports == [21, 22, 23]
+	assert ace.srcport.sport == "21-23"
 	assert ace.dstaddr.line == "10.0.0.0 0.0.0.3"
 	assert ace.dstaddr.addrgroup == ""
 	assert ace.dstaddr.ipnet == ip_network("10.0.0.0/30")
@@ -593,8 +601,12 @@ The following example creates an Ace object and demonstrate various manipulation
 	assert ace.option == "log"
 
 	print(ace.line)
-	# 10 permit tcp host 10.0.0.1 range 1 3 10.0.0.0 0.0.0.3 eq www 443 log
+	# 10 permit tcp host 10.0.0.1 range ftp telnet 10.0.0.0 0.0.0.3 eq www 443 log
+	ace.numerically = True
+	print(ace.line)
+	# 10 permit tcp host 10.0.0.1 range 21 23 10.0.0.0 0.0.0.3 eq 80 443 log
 
+	ace.numerically = False
 	ace.sequence = 20
 	ace.protocol.name = "udp"
 	ace.srcaddr.prefix = "10.0.0.0/24"
@@ -613,7 +625,18 @@ The following example creates an Ace object and demonstrate various manipulation
 	ace.dstport.line = ""
 
 	print(ace.line)
+	print()
 	# 10 permit tcp any any
+
+	# copy
+	ace1 = Ace("permit ip any any")
+	ace2 = ace1.copy()
+	ace1.srcaddr.prefix = "10.0.0.0/24"
+	print(ace1)
+	print(ace2)
+	print()
+	# permit ip 10.0.0.0 0.0.0.255 any
+	# permit ip any any
 
 
 **Ace.copy()**
@@ -644,7 +667,8 @@ Useful for sorting ACL entries with frozen sections within which the sequence do
 Parameter       Type         Description
 =============== ============ =======================================================================
 line            *str*        string of ACEs
-platform        *str*        Supported platforms: "ios", "cnx". By default, "ios"
+platform        *str*        Supported platforms: "ios", "cnx" (default "ios")
+numerically     *bool*       Cisco ACL outputs well-known tcp/udp ports as names, True  - all tcp/udp ports as numbers, False - well-known tcp/udp ports as names (default)
 note            *str*        Object description. Not part of the ACE configuration, can be used for ACEs sorting
 items           *List[Ace]*  An alternate way to create AceGroup object from a list of Ace objects. By default, an object is created from a line
 data            *dict*       An alternate way to create AceGroup object from a *dict*. By default, an object is created from a line
@@ -751,7 +775,7 @@ Parameter       Type         Description
 =============== ============ =======================================================================
 start           *int*        Starting sequence number. start=0 - delete all sequence numbers
 step            *int*        Step to increment the sequence number
-items           *List[Ace]*  List of Ace objects. By default, self.items
+items           *List[Ace]*  List of Ace objects.  (default self.items)
 =============== ============ =======================================================================
 
 Return
@@ -877,7 +901,7 @@ The following example returns a data of objects in dict format.
 	print(str(group1))
 	print()
 	# remark ===== web =====
-	# permit tcp any any eq 80
+	# permit tcp any any eq www
 
 	lines2 = """
 	ip access-list extended ACL2
@@ -890,16 +914,16 @@ The following example returns a data of objects in dict format.
 	print()
 	# ip access-list extended ACL2
 	#   remark ===== dns =====
-	#   permit udp any any eq 53
-	#   permit tcp any any eq 53
+	#   permit udp any any eq domain
+	#   permit tcp any any eq domain
 
-	# Convert Acl object to to AceGroup.
+	# Convert Acl object to AceGroup.
 	group2 = AceGroup(str(acl2))
 	print(str(group2))
 	print()
 	# remark ===== dns =====
-	# permit udp any any eq 53
-	# permit tcp any any eq 53
+	# permit udp any any eq domain
+	# permit tcp any any eq domain
 
 	# Add groups to acl1.
 	# Note, acl1.append() and acl1.items.append() make the same action.
@@ -914,10 +938,10 @@ The following example returns a data of objects in dict format.
 	#   permit ip object-group A object-group B log
 	#   permit tcp host 1.1.1.1 eq 1 2 2.2.2.0 0.0.0.255 eq 3 4
 	#   remark ===== web =====
-	#   permit tcp any any eq 80
+	#   permit tcp any any eq www
 	#   remark ===== dns =====
-	#   permit udp any any eq 53
-	#   permit tcp any any eq 53
+	#   permit udp any any eq domain
+	#   permit tcp any any eq domain
 
 	# Generate sequence numbers.
 	acl1.resequence()
@@ -928,10 +952,10 @@ The following example returns a data of objects in dict format.
 	#   20 permit ip object-group A object-group B log
 	#   30 permit tcp host 1.1.1.1 eq 1 2 2.2.2.0 0.0.0.255 eq 3 4
 	#   40 remark ===== web =====
-	#   50 permit tcp any any eq 80
+	#   50 permit tcp any any eq www
 	#   60 remark ===== dns =====
-	#   70 permit udp any any eq 53
-	#   80 permit tcp any any eq 53
+	#   70 permit udp any any eq domain
+	#   80 permit tcp any any eq domain
 
 	# Add note to Acl items
 	notes = ["icmp", "object-group", "host 1.1.1.1", "web", "dns"]
@@ -943,37 +967,39 @@ The following example returns a data of objects in dict format.
 	# Ace('10 permit icmp any any', note='icmp')
 	# Ace('20 permit ip object-group A object-group B log', note='object-group')
 	# Ace('30 permit tcp host 1.1.1.1 eq 1 2 2.2.2.0 0.0.0.255 eq 3 4', note='host 1.1.1.1')
-	# AceGroup('40 remark ===== web =====\n50 permit tcp any any eq 80', note='web')
-	# AceGroup('60 remark ===== dns =====\n70 permit udp any any eq 53\n80 permit tcp any any eq 53', note='dns')
+	# AceGroup('40 remark ===== web =====\n50 permit tcp any any eq www', note='web')
+	# AceGroup('60 remark ===== dns =====\n
+	#           70 permit udp any any eq domain\n
+	#           80 permit tcp any any eq domain', note='dns')
 
 	# Sorting rules by notes.
-	# Note that ACE have been moved up with the same sequence numbers.
+	# Note that ACE has been moved up with the same sequence numbers.
 	acl1.sort(key=lambda o: o.note)
 	print(acl1)
 	print()
 	# ip access-list extended ACL1
 	#   60 remark ===== dns =====
-	#   70 permit udp any any eq 53
-	#   80 permit tcp any any eq 53
+	#   70 permit udp any any eq domain
+	#   80 permit tcp any any eq domain
 	#   30 permit tcp host 1.1.1.1 eq 1 2 2.2.2.0 0.0.0.255 eq 3 4
 	#   10 permit icmp any any
 	#   20 permit ip object-group A object-group B log
 	#   40 remark ===== web =====
-	#   50 permit tcp any any eq 80
+	#   50 permit tcp any any eq www
 
-	# Resequence numbers with custom start and step.
+	# Re-sequence numbers with custom start and step.
 	acl1.resequence(start=100, step=1)
 	print(acl1)
 	print()
 	# ip access-list extended ACL1
 	#   100 remark ===== dns =====
-	#   101 permit udp any any eq 53
-	#   102 permit tcp any any eq 53
+	#   101 permit udp any any eq domain
+	#   102 permit tcp any any eq domain
 	#   103 permit tcp host 1.1.1.1 eq 1 2 2.2.2.0 0.0.0.255 eq 3 4
 	#   104 permit icmp any any
 	#   105 permit ip object-group A object-group B log
 	#   106 remark ===== web =====
-	#   107 permit tcp any any eq 80
+	#   107 permit tcp any any eq www
 
 
 **AceGroup.data()**
@@ -1006,10 +1032,10 @@ The following example creates ACL from objects, with groups
 	#   permit tcp host 1.1.1.1 eq 1 2 2.2.2.0 0.0.0.255 range 3 4
 	#   deny ip any any
 	#   remark ===== web =====
-	#   permit tcp any any eq 80
+	#   permit tcp any any eq www
 	#   remark ===== dns =====
-	#   permit udp any any eq 53
-	#   permit tcp any any eq 53
+	#   permit udp any any eq domain
+	#   permit tcp any any eq domain
 
 	for item in acl1:
 		print(repr(item))
@@ -1017,8 +1043,9 @@ The following example creates ACL from objects, with groups
 	# Remark('remark text')
 	# Ace('permit tcp host 1.1.1.1 eq 1 2 2.2.2.0 0.0.0.255 range 3 4')
 	# Ace('deny ip any any')
-	# AceGroup('remark ===== web =====\npermit tcp any any eq 80')
-	# AceGroup('remark ===== dns =====\npermit udp any any eq 53\npermit tcp any any eq 53')
+	# AceGroup('remark ===== web =====\npermit tcp any any eq www')
+	# AceGroup('remark ===== dns =====\npermit udp any any eq domain\npermit tcp any any eq domain')
+
 
 
 Remark
@@ -1029,7 +1056,7 @@ Remark - comments ACE in ACL.
 Parameter       Type         Description
 =============== ============ =======================================================================
 line            *str*        string of ACEs
-platform        *str*        Supported platforms: "ios", "cnx". By default, "ios"
+platform        *str*        Supported platforms: "ios", "cnx" (default "ios")
 note            *str*        Object description. Not part of the ACE configuration, can be used for ACEs sorting
 =============== ============ =======================================================================
 
@@ -1090,7 +1117,7 @@ Address - Source or destination address object
 Parameter       Type         Description
 =============== ============ =======================================================================
 line            *str*        Address line
-platform        *str*        Supported platforms: "ios", "cnx". By default, "ios"
+platform        *str*        Supported platforms: "ios", "cnx" (default "ios")
 note            *str*        Object description. Not part of the ACE configuration, can be used for ACEs sorting
 =============== ============ =======================================================================
 
@@ -1194,7 +1221,8 @@ Port - Source or destination port object
 Parameter       Type         Description
 =============== ============ =======================================================================
 line            *str*        TCP/UDP ports line
-platform        *str*        Supported platforms: "ios", "cnx". By default, "ios"
+platform        *str*        Supported platforms: "ios", "cnx" (default "ios")
+numerically     *bool*       Cisco ACL outputs well-known tcp/udp ports as names, True  - all tcp/udp ports as numbers, False - well-known tcp/udp ports as names (default)
 note            *str*        Object description. Not part of the ACE configuration, can be used for ACEs sorting
 =============== ============ =======================================================================
 
@@ -1246,21 +1274,29 @@ The following example demonstrates Port object.
 
 	from cisco_acl import Port
 
-	port = Port("eq www 443 444 445", platform="ios")
-	assert port.line == "eq www 443 444 445"
+	port = Port("eq 20 21 22 23", platform="ios", protocol="tcp", numerically=False)
+	assert port.line == "eq ftp-data ftp 22 telnet"
 	assert port.platform == "ios"
 	assert port.operator == "eq"
-	assert port.items == [80, 443, 444, 445]
-	assert port.ports == [80, 443, 444, 445]
-	assert port.sport == "80,443-445"
+	assert port.items == [20, 21, 22, 23]
+	assert port.ports == [20, 21, 22, 23]
+	assert port.sport == "20-23"
+	print(port.line)
+	# eq ftp-data ftp 22 telnet
+	port.numerically = True
+	print(port.line)
+	# eq 20 21 22 23
+	print()
 
-	port = Port("range 1 5", platform="ios")
+	port = Port("range 1 5", platform="ios", protocol="tcp")
 	assert port.line == "range 1 5"
 	assert port.platform == "ios"
 	assert port.operator == "range"
 	assert port.items == [1, 5]
 	assert port.ports == [1, 2, 3, 4, 5]
 	assert port.sport == "1-5"
+	print(port.line)
+	# range 1 5
 
 
 Protocol
@@ -1271,7 +1307,7 @@ Protocol - IP protocol object
 Parameter       Type         Description
 =============== ============ =======================================================================
 line            *str*        IP protocol line
-platform        *str*        Supported platforms: "ios", "cnx". By default, "ios"
+platform        *str*        Supported platforms: "ios", "cnx" (default "ios")
 note            *str*        Object description. Not part of the ACE configuration, can be used for ACEs sorting
 =============== ============ =======================================================================
 

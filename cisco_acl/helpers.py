@@ -4,12 +4,77 @@ import re
 from ipaddress import ip_network
 from string import ascii_letters, digits, punctuation
 from typing import Any, List, NamedTuple
+from cisco_acl.port_name import all_known_names
+from cisco_acl.static import ACTIONS, OPERATORS, OPTIONS, MAX_LINE_LENGTH
+from cisco_acl.types_ import DStr, LStr, StrInt, LInt, OInt, SInt, T2Str, T3Str, DInt
 
-from cisco_acl.static import ACTIONS, OPERATORS, PORTS, MAX_LINE_LENGTH
-from cisco_acl.types_ import DStr, LStr, StrInt, LInt, OInt, SInt
 
+ALL_KNOWN_TUDP_NAMES = all_known_names()
 
 # =============================== str ================================
+
+def acl_help_to_name_port(output: str) -> DInt:
+    """Transforms `output` of ACL help to *dict* where key is name, value is port
+    :param output: ACL help
+    :return: names and ports
+    :example:
+        output: "bgp          Border Gateway Protocol (179)"
+        return: {"bgp": 179}
+    """
+    data: DInt = {}
+    lines = [s.strip().replace("(", " ") for s in output.split("\n")]
+    for line in lines:
+        name, port = findall2(r"(\S+).+\s(\d+)\)$", line)
+        if name and port:
+            data[name] = int(port)
+    return data
+
+
+def findall1(pattern: str, string: str, flags=0) -> str:
+    """Parses 1st item of re.findall(). If nothing is found, returns an empty string.
+    Group with parentheses in pattern is required
+    :return: Interested substring
+    :example:
+        pattern = "a(b)cde"
+        string = "abcde"
+        return: "b"
+    """
+    result = (re.findall(pattern=pattern, string=string, flags=flags) or [""])[0]
+    if isinstance(result, str):
+        return result
+    if isinstance(result, tuple):
+        return result[0]
+    return ""
+
+
+def findall2(pattern: str, string: str, flags=0) -> T2Str:
+    """Parses 2 items of re.findall(). If nothing is found, returns 2 empty strings.
+    Group with parentheses in pattern is required
+    :return: Two interested substrings
+    :example:
+        pattern = "a(b)(c)de"
+        string = "abcde"
+        return: "b", "c"
+    """
+    result = (re.findall(pattern=pattern, string=string, flags=flags) or [("", "")])[0]
+    if isinstance(result, tuple) and len(result) >= 2:
+        return result[0], result[1]
+    return "", ""
+
+
+def findall3(pattern: str, string: str, flags=0) -> T3Str:
+    """Parses 3 items of re.findall(). If nothing is found, returns 3 empty strings.
+    Group with parentheses in pattern is required
+    :return: Three interested substrings
+    :example:
+        pattern = "a(b)(c)(d)e"
+        string = "abcde"
+        return: "b", "c", "d"
+    """
+    result = (re.findall(pattern=pattern, string=string, flags=flags) or [("", "", "")])[0]
+    if isinstance(result, tuple) and len(result) >= 3:
+        return result[0], result[1], result[2]
+    return "", "", ""
 
 
 def check_line_length(line: str) -> bool:
@@ -166,7 +231,7 @@ def parse_ace(line: str) -> DStr:
 
 
 def _parse_dstport_option(line: str) -> DStr:
-    """Parses destination-ports and options from last part of ACE line
+    """Splits destination-ports and options based on end of ACE line
     :param line: ACE *str*
     :return: ACE *dict*
     :example:
@@ -181,23 +246,14 @@ def _parse_dstport_option(line: str) -> DStr:
             dstports.append(operator)
             items = items[1:]
             for id_, item in enumerate(items):
-                if item in PORTS or item.isdigit():
+                if item.isdigit() or item in ALL_KNOWN_TUDP_NAMES:
                     dstports.append(item)
                     continue
                 options = items[id_:]
                 break
         else:
             options.extend(items)
-
-    invalid_options: LStr = []
-    for item in options:
-        if item in OPERATORS or item in PORTS or item.isdigit():
-            invalid_options.append(item)
-    if invalid_options:
-        raise ValueError(f"{invalid_options=} in {line=}")
-
-    result = dict(dstport=" ".join(dstports), option=" ".join(options))
-    return result
+    return dict(dstport=" ".join(dstports), option=" ".join(options))
 
 
 def parse_action(line: str) -> DStr:
@@ -396,3 +452,6 @@ def _port_range_min_max(ranges) -> List[PortRange]:
         ranges_tup.append(PortRange(range_string, range_int, port_min, port_max))
     ranges_tup = sorted(ranges_tup, key=lambda o: o.min)
     return ranges_tup
+
+
+

@@ -10,6 +10,7 @@ from tests.helpers_test import (
     ACL_NAME_IOS,
     ACL_NAME_RP_CNX,
     ACL_NAME_RP_IOS,
+    ACL_NUM_IOS,
     ACL_RP_CNX,
     ACL_RP_IOS,
     DENY_IP,
@@ -23,6 +24,7 @@ from tests.helpers_test import (
     PERMIT_IP_2,
     REMARK,
     REMARK_1,
+    ACL_NAM_IOS,
 )
 
 REMARK_10 = Remark(f"10 {REMARK}")
@@ -75,45 +77,49 @@ class Test(unittest.TestCase):
     # =========================== property ===========================
     def test_valid__line(self):
         """Acl.line"""
-        for platform, line, req_d, in [
-            ("ios", "\n", dict(line=f"{ACL_IOS}\n", name="")),
-            ("ios", ACL_IOS, dict(line=f"{ACL_IOS}\n", name="")),
-            ("ios", ACL_NAME_IOS, dict(line=f"{ACL_NAME_IOS}\n", name="A")),
-            ("ios", PERMIT_IP, dict(line=f"{ACL_IOS}\n  {PERMIT_IP}", name="")),
-            ("ios", ACL_RP_IOS, dict(line=ACL_RP_IOS, name="")),
-            ("ios", ACL_NAME_RP_IOS, dict(line=ACL_NAME_RP_IOS, name="A")),
-
-            ("cnx", "\n", dict(line=f"{ACL_CNX}\n", name="")),
-            ("cnx", ACL_CNX, dict(line=f"{ACL_CNX}\n", name="")),
-            ("cnx", ACL_NAME_CNX, dict(line=f"{ACL_NAME_CNX}\n", name="A")),
-            ("cnx", PERMIT_IP, dict(line=f"{ACL_CNX}\n  {PERMIT_IP}", name="")),
-            ("cnx", ACL_RP_CNX, dict(line=ACL_RP_CNX, name="")),
-            ("cnx", ACL_NAME_RP_CNX, dict(line=ACL_NAME_RP_CNX, name="A")),
+        for kwargs, req_d, in [
+            # ios
+            (dict(line="\n", platform="ios"), dict(line=f"{ACL_IOS}\n", name="")),
+            (dict(line=ACL_IOS, platform="ios"), dict(line=f"{ACL_IOS}\n", name="")),
+            (dict(line=ACL_NAME_IOS, platform="ios"), dict(line=f"{ACL_NAME_IOS}\n", name="A")),
+            (dict(line=PERMIT_IP, platform="ios"), dict(line=f"{ACL_IOS}\n  {PERMIT_IP}", name="")),
+            (dict(line=ACL_RP_IOS, platform="ios"), dict(line=ACL_RP_IOS, name="")),
+            (dict(line=ACL_NAME_RP_IOS, platform="ios"), dict(line=ACL_NAME_RP_IOS, name="A")),
+            # cnx
+            (dict(line="\n", platform="cnx"), dict(line=f"{ACL_CNX}\n", name="")),
+            (dict(line=ACL_CNX, platform="cnx"), dict(line=f"{ACL_CNX}\n", name="")),
+            (dict(line=ACL_NAME_CNX, platform="cnx"), dict(line=f"{ACL_NAME_CNX}\n", name="A")),
+            (dict(line=PERMIT_IP, platform="cnx"), dict(line=f"{ACL_CNX}\n  {PERMIT_IP}", name="")),
+            (dict(line=ACL_RP_CNX, platform="cnx"), dict(line=ACL_RP_CNX, name="")),
+            (dict(line=ACL_NAME_RP_CNX, platform="cnx"), dict(line=ACL_NAME_RP_CNX, name="A")),
+            # numerically
+            (dict(line=ACL_NUM_IOS, platform="ios", numerically=False), dict(line=ACL_NAM_IOS)),
+            (dict(line=ACL_NAM_IOS, platform="ios", numerically=True), dict(line=ACL_NUM_IOS)),
         ]:
             # getter
-            acl_o = Acl(line, platform=platform)
+            acl_o = Acl(**kwargs)
             result = str(acl_o)
             req = req_d["line"]
-            self.assertEqual(result, req, msg=f"{line=}")
+            self.assertEqual(result, req, msg=f"{kwargs=}")
             for attr, req in req_d.items():
                 result = getattr(acl_o, attr)
-                self.assertEqual(result, req, msg=f"{line=}")
+                self.assertEqual(result, req, msg=f"{kwargs=}")
 
             # setter
-            acl_o.line = line
+            acl_o.line = kwargs["line"]
             result = str(acl_o)
             req = req_d["line"]
-            self.assertEqual(result, req, msg=f"{line=}")
+            self.assertEqual(result, req, msg=f"{kwargs=}")
             for attr, req in req_d.items():
                 result = getattr(acl_o, attr)
-                self.assertEqual(result, req, msg=f"{line=}")
+                self.assertEqual(result, req, msg=f"{kwargs=}")
 
             # deleter
             del acl_o.line
             result = str(acl_o)
             req = f"{ACL_CNX}\n" if acl_o.platform == "cnx" else f"{ACL_IOS}\n"
             # noinspection PyUnboundLocalVariable
-            self.assertEqual(result, req, msg=f"{line=}")
+            self.assertEqual(result, req, msg=f"{kwargs=}")
 
     def test_invalid__line(self):
         """Acl.line"""

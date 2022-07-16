@@ -12,6 +12,8 @@ from tests.helpers_test import (
     PERMIT_IP,
     PERMIT_IP_1,
     PERMIT_IP_2,
+    PERMIT_NAM,
+    PERMIT_NUM,
     REMARK,
 )
 
@@ -69,13 +71,17 @@ class Test(Helpers):
 
     def test_valid__items(self):
         """AceGroup.items"""
-        aceg_o = AceGroup()
         for items, req, in [
             ([], []),
             ([Ace(PERMIT_IP), Ace(DENY_IP)], [PERMIT_IP, DENY_IP]),
             ([Remark(REMARK), Ace(DENY_IP)], [REMARK, DENY_IP]),
         ]:
+            # init
+            aceg_o = AceGroup(items=items)
+            result = [str(o) for o in aceg_o]
+            self.assertEqual(result, req, msg=f"{items=}")
             # setter
+            aceg_o = AceGroup()
             aceg_o.items = items
             result = [str(o) for o in aceg_o]
             self.assertEqual(result, req, msg=f"{items=}")
@@ -99,22 +105,25 @@ class Test(Helpers):
         group1 = f"{PERMIT_IP}\n{DENY_IP}\n{REMARK}"
         group2 = f"2 {group1}"
 
-        for line, req_d, in [
-            ("", dict(line="", sequence="")),
-            ("typo", dict(line="", sequence="")),
-            (PERMIT_IP, dict(line=PERMIT_IP, sequence="")),
-            (PERMIT_IP_1, dict(line=PERMIT_IP_1, sequence="1")),
-            (acl1, dict(line=group1, sequence="")),
-            (acl1_name, dict(line=group1, sequence="")),
-            (acl2, dict(line=group2, sequence="2")),
+        for kwargs, req_d, in [
+            (dict(line=""), dict(line="", sequence="")),
+            (dict(line="typo"), dict(line="", sequence="")),
+            (dict(line=PERMIT_IP), dict(line=PERMIT_IP, sequence="")),
+            (dict(line=PERMIT_IP_1), dict(line=PERMIT_IP_1, sequence="1")),
+            (dict(line=acl1), dict(line=group1, sequence="")),
+            (dict(line=acl1_name), dict(line=group1, sequence="")),
+            (dict(line=acl2), dict(line=group2, sequence="2")),
+            # numerically
+            (dict(line=PERMIT_NUM, numerically=False), dict(line=PERMIT_NAM)),
+            (dict(line=PERMIT_NAM, numerically=True), dict(line=PERMIT_NUM)),
         ]:
             # getter
-            aceg_o = AceGroup(line)
-            self._test_attrs(obj=aceg_o, req_d=req_d, msg=f"getter {line=}")
+            aceg_o = AceGroup(**kwargs)
+            self._test_attrs(obj=aceg_o, req_d=req_d, msg=f"getter {kwargs=}")
 
             # setter
-            aceg_o.line = line
-            self._test_attrs(obj=aceg_o, req_d=req_d, msg=f"setter {line=}")
+            aceg_o.line = kwargs["line"]
+            self._test_attrs(obj=aceg_o, req_d=req_d, msg=f"setter {kwargs=}")
 
         # deleter
         aceg_o = AceGroup(PERMIT_IP)
@@ -149,6 +158,17 @@ class Test(Helpers):
                 result = aceg_o.data()
                 diff = list(dictdiffer.diff(first=result, second=req_d))
                 self.assertEqual(diff, [], msg=f"{line=}")
+
+    def test_valid__numerically(self):
+        """AceGroup.numerically"""
+        for kwargs, numerically, req_d, in [
+            (dict(line=PERMIT_NUM, numerically=True), False, dict(line=PERMIT_NAM)),
+            (dict(line=PERMIT_NAM, numerically=False), True, dict(line=PERMIT_NUM)),
+        ]:
+            # setter
+            aceg_o = AceGroup(**kwargs)
+            aceg_o.numerically = numerically
+            self._test_attrs(obj=aceg_o, req_d=req_d, msg=f"setter {kwargs=}")
 
     # =========================== helpers ============================
 

@@ -6,6 +6,8 @@ ACL_IOS = "ip access-list extended "
 ACL_NAME_IOS = "ip access-list extended A"
 ACL_NAME_RP_IOS = "ip access-list extended A\n  remark text\n  permit ip any any"
 ACL_RP_IOS = "ip access-list extended \n  remark text\n  permit ip any any"
+ACL_NUM_IOS = "ip access-list extended \n  permit tcp any eq 21 any eq 80"
+ACL_NAM_IOS = "ip access-list extended \n  permit tcp any eq ftp any eq www"
 
 ACL_CNX = "ip access-list "
 ACL_NAME_CNX = "ip access-list A"
@@ -23,6 +25,8 @@ PERMIT_IP = "permit ip any any"
 PERMIT_IP_1 = "1 permit ip any any"
 PERMIT_IP_2 = "2 permit ip any any"
 PERMIT_OBJ_GR = "permit ip object-group NAME any"
+PERMIT_NUM = "permit tcp any eq 21 any eq 80"
+PERMIT_NAM = "permit tcp any eq ftp any eq www"
 
 REMARK = "remark text"
 REMARK_1 = "1 remark text"
@@ -52,3 +56,23 @@ class Helpers(unittest.TestCase):
             if hasattr(result, "line"):
                 result = str(result)
             self.assertEqual(result, req, msg=f"{msg} {attr=}")
+
+    def _test_keys(self, data: dict, req_d: dict, msg: str):
+        """Test values of data in req_d
+        :param data: Tested dict
+        :param req_d: Valid keys and values
+        :param msg: Message
+        """
+        for key, req in req_d.items():
+            result = data[key]
+            self.assertEqual(result, req, msg=f"{msg} {key=}")
+
+    def _test_no_keys(self, data: dict, absent: list, msg: str):
+        """Test `absent_d` keys absent in `data`
+        :param data: Tested dict
+        :param absent: Valid keys and values
+        :param msg: Message
+        """
+        for key in absent:
+            result = data.get(key)
+            self.assertIsNone(result, msg=f"{msg} {key=}")

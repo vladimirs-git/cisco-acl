@@ -56,19 +56,19 @@ class Test(Helpers):
     def test_valid__line(self):
         """Remark.line"""
         remark_0 = "remark text1 text2"
-        remark_0b = " remark\ttext1  text2\n"
+        remark_0_dirty = " remark\ttext1  text2\n"
         remark_0_d = dict(line=remark_0,
                           sequence="",
                           action="remark",
                           text="text1 text2")
         remark_10 = "10 remark text1 text2"
-        remark_10b = " 10\tremark  text1  text2\n"
+        remark_10_dirty = " 10\tremark  text1  text2\n"
         remark_10_d = {**remark_0_d, **{"line": remark_10, "sequence": "10"}}
         for line, req_d in [
             (remark_0, remark_0_d),
-            (remark_0b, remark_0_d),
+            (remark_0_dirty, remark_0_d),
             (remark_10, remark_10_d),
-            (remark_10b, remark_10_d),
+            (remark_10_dirty, remark_10_d),
         ]:
             # getter
             rem_o = Remark(line)

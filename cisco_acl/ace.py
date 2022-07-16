@@ -18,14 +18,18 @@ from cisco_acl.types_ import LStr, LInt
 class Ace(BaseAce):
     """ACE - Access Control Entry"""
 
-    __slots__ = ("_platform", "_note", "_line",
-                 "_sequence", "_action", "_protocol", "_srcaddr", "_srcport",
+    __slots__ = ("_platform", "_note", "_line", "_numerically"
+                                                "_sequence", "_action", "_protocol", "_srcaddr",
+                 "_srcport",
                  "_dstaddr", "_dstport", "option")
 
     def __init__(self, line: str, **kwargs):
         """ACE - Access Control Entry
-        :param line: ACE config line
-        :param platform: Supported platforms: "ios", "cnx". By default, "ios"
+        :param str line: ACE config line
+        :param str platform: Supported platforms: "ios", "cnx" (default "ios")
+        :param bool numerically: Cisco ACL outputs well-known tcp/udp ports as names
+            True  - all tcp/udp ports as numbers
+            False - well-known tcp/udp ports as names (default)
         :param note: Object description. Not part of the ACE configuration,
             can be used for ACEs sorting
 
@@ -202,10 +206,13 @@ class Ace(BaseAce):
         self.sequence.line = ace_d["sequence"]
         self.action = ace_d["action"]
         self.protocol = Protocol(ace_d["protocol"], platform=self.platform)
-        self.srcaddr = Address(ace_d["srcaddr"], platform=self.platform)
-        self.srcport = Port(ace_d["srcport"], platform=self.platform)
+        self.srcaddr = Address(ace_d["srcaddr"], platform=self.platform, protocol=str(self.protocol))
+        port_kwargs = dict(platform=self.platform,
+                           protocol=str(self.protocol),
+                           numerically=self.numerically)
+        self.srcport = Port(ace_d["srcport"], **port_kwargs)
         self.dstaddr = Address(ace_d["dstaddr"], platform=self.platform)
-        self.dstport = Port(ace_d["dstport"], platform=self.platform)
+        self.dstport = Port(ace_d["dstport"], **port_kwargs)
         self.option = ace_d["option"]
 
     @property
@@ -310,7 +317,7 @@ class Ace(BaseAce):
     @classmethod
     def rule(cls, **kwargs) -> LAce:
         """Converts data of Rule to Ace objects
-        :param str platform: Supported platforms: "ios", "cnx". By default, "ios"
+        :param str platform: Supported platforms: "ios", "cnx" (default "ios")
         :param str action: ACE action: "permit", "deny"
         :param List[str] srcaddrs: Source addresses
         :param List[str] dstaddrs: Destination addresses

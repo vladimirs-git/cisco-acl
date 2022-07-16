@@ -5,12 +5,12 @@ The following example creates an Ace object and demonstrate various manipulation
 from cisco_acl import Ace
 from ipaddress import ip_network
 
-ace = Ace(line="10 permit tcp host 10.0.0.1 range 1 3 10.0.0.0 0.0.0.3 eq www 443 log",
+ace = Ace(line="10 permit tcp host 10.0.0.1 range 21 23 10.0.0.0 0.0.0.3 eq 80 443 log",
           platform="ios",
           note="allow web")
 
 assert ace.note == "allow web"
-assert ace.line == "10 permit tcp host 10.0.0.1 range 1 3 10.0.0.0 0.0.0.3 eq www 443 log"
+assert ace.line == "10 permit tcp host 10.0.0.1 range ftp telnet 10.0.0.0 0.0.0.3 eq www 443 log"
 assert ace.platform == "ios"
 assert ace.sequence == 10
 assert ace.action == "permit"
@@ -23,10 +23,10 @@ assert ace.srcaddr.ipnet == ip_network("10.0.0.1/32")
 assert ace.srcaddr.prefix == "10.0.0.1/32"
 assert ace.srcaddr.subnet == "10.0.0.1 255.255.255.255"
 assert ace.srcaddr.wildcard == "10.0.0.1 0.0.0.0"
-assert ace.srcport.line == "range 1 3"
+assert ace.srcport.line == "range ftp telnet"
 assert ace.srcport.operator == "range"
-assert ace.srcport.ports == [1, 2, 3]
-assert ace.srcport.sport == "1-3"
+assert ace.srcport.ports == [21, 22, 23]
+assert ace.srcport.sport == "21-23"
 assert ace.dstaddr.line == "10.0.0.0 0.0.0.3"
 assert ace.dstaddr.addrgroup == ""
 assert ace.dstaddr.ipnet == ip_network("10.0.0.0/30")
@@ -40,8 +40,12 @@ assert ace.dstport.sport == "80,443"
 assert ace.option == "log"
 
 print(ace.line)
-# 10 permit tcp host 10.0.0.1 range 1 3 10.0.0.0 0.0.0.3 eq www 443 log
+# 10 permit tcp host 10.0.0.1 range ftp telnet 10.0.0.0 0.0.0.3 eq www 443 log
+ace.numerically = True
+print(ace.line)
+# 10 permit tcp host 10.0.0.1 range 21 23 10.0.0.0 0.0.0.3 eq 80 443 log
 
+ace.numerically = False
 ace.sequence = 20
 ace.protocol.name = "udp"
 ace.srcaddr.prefix = "10.0.0.0/24"
@@ -62,7 +66,6 @@ ace.dstport.line = ""
 print(ace.line)
 print()
 # 10 permit tcp any any
-
 
 # copy
 ace1 = Ace("permit ip any any")

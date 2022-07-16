@@ -26,7 +26,10 @@ class AceGroup(Group, BaseAce):
     def __init__(self, line: str = "", **kwargs):
         """Group of ACE (Access Control Entry)
         :param str line: string of ACEs
-        :param str platform: Supported platforms: "ios", "cnx". By default, "ios"
+        :param str platform: Supported platforms: "ios", "cnx" (default "ios")
+        :param bool numerically: Cisco ACL outputs well-known tcp/udp ports as names
+            True  - all tcp/udp ports as numbers
+            False - well-known tcp/udp ports as names (default)
         :param str note: Object description. Not part of the ACE configuration,
             can be used for ACEs sorting
         :param List[Ace] items: An alternate way to create AceGroup object from a list of Ace objects
@@ -212,7 +215,7 @@ class AceGroup(Group, BaseAce):
         except ValueError:
             return None
         if action in ["permit", "deny"]:
-            return Ace(line, platform=self.platform)
+            return Ace(line, platform=self.platform, numerically=self._numerically)
         if action in ["remark"]:
             return Remark(line, platform=self.platform)
         return None

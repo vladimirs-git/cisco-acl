@@ -3,7 +3,7 @@
 - Create ACL with groups
 - Generate sequence numbers
 - Sort rules by comment
-- Resequence numbers
+- Re-sequence numbers
 """
 
 from cisco_acl import Acl, AceGroup
@@ -34,7 +34,7 @@ group1 = AceGroup(lines1)
 print(str(group1))
 print()
 # remark ===== web =====
-# permit tcp any any eq 80
+# permit tcp any any eq www
 
 lines2 = """
 ip access-list extended ACL2
@@ -47,16 +47,16 @@ print(str(acl2))
 print()
 # ip access-list extended ACL2
 #   remark ===== dns =====
-#   permit udp any any eq 53
-#   permit tcp any any eq 53
+#   permit udp any any eq domain
+#   permit tcp any any eq domain
 
-# Convert Acl object to to AceGroup.
+# Convert Acl object to AceGroup.
 group2 = AceGroup(str(acl2))
 print(str(group2))
 print()
 # remark ===== dns =====
-# permit udp any any eq 53
-# permit tcp any any eq 53
+# permit udp any any eq domain
+# permit tcp any any eq domain
 
 # Add groups to acl1.
 # Note, acl1.append() and acl1.items.append() make the same action.
@@ -71,10 +71,10 @@ print()
 #   permit ip object-group A object-group B log
 #   permit tcp host 1.1.1.1 eq 1 2 2.2.2.0 0.0.0.255 eq 3 4
 #   remark ===== web =====
-#   permit tcp any any eq 80
+#   permit tcp any any eq www
 #   remark ===== dns =====
-#   permit udp any any eq 53
-#   permit tcp any any eq 53
+#   permit udp any any eq domain
+#   permit tcp any any eq domain
 
 # Generate sequence numbers.
 acl1.resequence()
@@ -85,10 +85,10 @@ print()
 #   20 permit ip object-group A object-group B log
 #   30 permit tcp host 1.1.1.1 eq 1 2 2.2.2.0 0.0.0.255 eq 3 4
 #   40 remark ===== web =====
-#   50 permit tcp any any eq 80
+#   50 permit tcp any any eq www
 #   60 remark ===== dns =====
-#   70 permit udp any any eq 53
-#   80 permit tcp any any eq 53
+#   70 permit udp any any eq domain
+#   80 permit tcp any any eq domain
 
 # Add note to Acl items
 notes = ["icmp", "object-group", "host 1.1.1.1", "web", "dns"]
@@ -100,8 +100,10 @@ print()
 # Ace('10 permit icmp any any', note='icmp')
 # Ace('20 permit ip object-group A object-group B log', note='object-group')
 # Ace('30 permit tcp host 1.1.1.1 eq 1 2 2.2.2.0 0.0.0.255 eq 3 4', note='host 1.1.1.1')
-# AceGroup('40 remark ===== web =====\n50 permit tcp any any eq 80', note='web')
-# AceGroup('60 remark ===== dns =====\n70 permit udp any any eq 53\n80 permit tcp any any eq 53', note='dns')
+# AceGroup('40 remark ===== web =====\n50 permit tcp any any eq www', note='web')
+# AceGroup('60 remark ===== dns =====\n
+#           70 permit udp any any eq domain\n
+#           80 permit tcp any any eq domain', note='dns')
 
 # Sorting rules by notes.
 # Note that ACE has been moved up with the same sequence numbers.
@@ -110,24 +112,24 @@ print(acl1)
 print()
 # ip access-list extended ACL1
 #   60 remark ===== dns =====
-#   70 permit udp any any eq 53
-#   80 permit tcp any any eq 53
+#   70 permit udp any any eq domain
+#   80 permit tcp any any eq domain
 #   30 permit tcp host 1.1.1.1 eq 1 2 2.2.2.0 0.0.0.255 eq 3 4
 #   10 permit icmp any any
 #   20 permit ip object-group A object-group B log
 #   40 remark ===== web =====
-#   50 permit tcp any any eq 80
+#   50 permit tcp any any eq www
 
-# Resequence numbers with custom start and step.
+# Re-sequence numbers with custom start and step.
 acl1.resequence(start=100, step=1)
 print(acl1)
 print()
 # ip access-list extended ACL1
 #   100 remark ===== dns =====
-#   101 permit udp any any eq 53
-#   102 permit tcp any any eq 53
+#   101 permit udp any any eq domain
+#   102 permit tcp any any eq domain
 #   103 permit tcp host 1.1.1.1 eq 1 2 2.2.2.0 0.0.0.255 eq 3 4
 #   104 permit icmp any any
 #   105 permit ip object-group A object-group B log
 #   106 remark ===== web =====
-#   107 permit tcp any any eq 80
+#   107 permit tcp any any eq www
