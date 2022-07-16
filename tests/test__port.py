@@ -23,7 +23,6 @@ EQ2456 = "eq 2 4 5 6"
 EQ_FTP = "eq ftp"
 EQ_FTP_T = "eq ftp telnet"
 
-
 NEQ1 = "neq 1"
 NEQ2 = "neq 2"
 NEQ13 = "neq 1 3"
@@ -126,13 +125,13 @@ class Test(Helpers):
             (dict(line=GT, platform="ios", protocol="tcp", numerically=False), GT_D),
             (dict(line=LT3, platform="ios", protocol="tcp", numerically=False), LT3_D),
             (dict(line=R24, platform="ios", protocol="tcp", numerically=False), R24_D),
-            # range cnx
-            (dict(line="", platform="cnx", protocol="tcp", numerically=False), EQ0_D),
-            (dict(line=EQ1, platform="cnx", protocol="tcp", numerically=False), EQ1_D),
-            (dict(line=NEQ1, platform="cnx", protocol="tcp", numerically=False), NEQ1_D),
-            (dict(line=GT, platform="cnx", protocol="tcp", numerically=False), GT_D),
-            (dict(line=LT3, platform="cnx", protocol="tcp", numerically=False), LT3_D),
-            (dict(line=R24, platform="cnx", protocol="tcp", numerically=False), R24_D),
+            # range nxos
+            (dict(line="", platform="nxos", protocol="tcp", numerically=False), EQ0_D),
+            (dict(line=EQ1, platform="nxos", protocol="tcp", numerically=False), EQ1_D),
+            (dict(line=NEQ1, platform="nxos", protocol="tcp", numerically=False), NEQ1_D),
+            (dict(line=GT, platform="nxos", protocol="tcp", numerically=False), GT_D),
+            (dict(line=LT3, platform="nxos", protocol="tcp", numerically=False), LT3_D),
+            (dict(line=R24, platform="nxos", protocol="tcp", numerically=False), R24_D),
 
             # numerically ios
             (dict(line=EQ_21, platform="ios", protocol="tcp", numerically=False), EQ_FTP_D),
@@ -149,16 +148,16 @@ class Test(Helpers):
             (dict(line=R_21_23, platform="ios", protocol="tcp", numerically=True), R_21_23_D),
             (dict(line=R_FTP_T, platform="ios", protocol="tcp", numerically=True), R_21_23_D),
 
-            # numerically cnx
-            (dict(line=EQ_21, platform="cnx", protocol="tcp", numerically=False), EQ_FTP_D),
-            (dict(line=EQ_FTP, platform="cnx", protocol="tcp", numerically=False), EQ_FTP_D),
-            (dict(line=R_21_23, platform="cnx", protocol="tcp", numerically=False), R_FTP_T_D),
-            (dict(line=R_FTP_T, platform="cnx", protocol="tcp", numerically=False), R_FTP_T_D),
+            # numerically nxos
+            (dict(line=EQ_21, platform="nxos", protocol="tcp", numerically=False), EQ_FTP_D),
+            (dict(line=EQ_FTP, platform="nxos", protocol="tcp", numerically=False), EQ_FTP_D),
+            (dict(line=R_21_23, platform="nxos", protocol="tcp", numerically=False), R_FTP_T_D),
+            (dict(line=R_FTP_T, platform="nxos", protocol="tcp", numerically=False), R_FTP_T_D),
 
-            (dict(line=EQ_21, platform="cnx", protocol="tcp", numerically=True), EQ_21_D),
-            (dict(line=EQ_FTP, platform="cnx", protocol="tcp", numerically=True), EQ_21_D),
-            (dict(line=R_21_23, platform="cnx", protocol="tcp", numerically=True), R_21_23_D),
-            (dict(line=R_FTP_T, platform="cnx", protocol="tcp", numerically=True), R_21_23_D),
+            (dict(line=EQ_21, platform="nxos", protocol="tcp", numerically=True), EQ_21_D),
+            (dict(line=EQ_FTP, platform="nxos", protocol="tcp", numerically=True), EQ_21_D),
+            (dict(line=R_21_23, platform="nxos", protocol="tcp", numerically=True), R_21_23_D),
+            (dict(line=R_FTP_T, platform="nxos", protocol="tcp", numerically=True), R_21_23_D),
 
             # tcp/udp 514 cmd/syslog ios
             (dict(line="eq 514", platform="ios", protocol="tcp", numerically=False), EQ_CMD_D),
@@ -166,11 +165,11 @@ class Test(Helpers):
             (dict(line="eq syslog", platform="ios", protocol="tcp", numerically=False), EQ_CMD_D),
             (dict(line="eq 514", platform="ios", protocol="udp", numerically=False), EQ_SYSL_D),
             (dict(line="eq syslog", platform="ios", protocol="udp", numerically=False), EQ_SYSL_D),
-            # tcp/udp 514 cmd/syslog cnx
-            (dict(line="eq 514", platform="cnx", protocol="tcp", numerically=False), EQ_CMD_D),
-            (dict(line="eq cmd", platform="cnx", protocol="tcp", numerically=False), EQ_CMD_D),
-            (dict(line="eq 514", platform="cnx", protocol="udp", numerically=False), EQ_SYSL_D),
-            (dict(line="eq syslog", platform="cnx", protocol="udp", numerically=False), EQ_SYSL_D),
+            # tcp/udp 514 cmd/syslog nxos
+            (dict(line="eq 514", platform="nxos", protocol="tcp", numerically=False), EQ_CMD_D),
+            (dict(line="eq cmd", platform="nxos", protocol="tcp", numerically=False), EQ_CMD_D),
+            (dict(line="eq 514", platform="nxos", protocol="udp", numerically=False), EQ_SYSL_D),
+            (dict(line="eq syslog", platform="nxos", protocol="udp", numerically=False), EQ_SYSL_D),
         ]:
             # getter
             port_o = Port(**kwargs)
@@ -197,13 +196,14 @@ class Test(Helpers):
             (dict(line="gt 1 2", platform="ios"), ValueError),
             (dict(line="range 1", platform="ios"), ValueError),
             (dict(line="range 1 2 3", platform="ios"), ValueError),
-            # cnx
-            (dict(line=EQ12, platform="cnx"), ValueError),
-            (dict(line=EQ13, platform="cnx"), ValueError),
-            (dict(line=EQ123, platform="cnx"), ValueError),
-            (dict(line=EQ2456, platform="cnx"), ValueError),
-            (dict(line=NEQ13, platform="cnx"), ValueError),
-            (dict(line="eq syslog", platform="cnx", protocol="tcp", numerically=False), ValueError),
+            # nxos
+            (dict(line=EQ12, platform="nxos"), ValueError),
+            (dict(line=EQ13, platform="nxos"), ValueError),
+            (dict(line=EQ123, platform="nxos"), ValueError),
+            (dict(line=EQ2456, platform="nxos"), ValueError),
+            (dict(line=NEQ13, platform="nxos"), ValueError),
+            (
+            dict(line="eq syslog", platform="nxos", protocol="tcp", numerically=False), ValueError),
         ]:
             with self.assertRaises(error, msg=f"{kwargs=}"):
                 Port(**kwargs)
@@ -217,11 +217,11 @@ class Test(Helpers):
             ("ios", LT1, [3], LT3_D),
             ("ios", R13, [2, 4], R24_D),
 
-            ("cnx", EQ2, [1], EQ1_D),
-            ("cnx", NEQ2, [1], NEQ1_D),
-            ("cnx", GT1, [65532], GT_D),
-            ("cnx", LT1, [3], LT3_D),
-            ("cnx", R13, [2, 4], R24_D),
+            ("nxos", EQ2, [1], EQ1_D),
+            ("nxos", NEQ2, [1], NEQ1_D),
+            ("nxos", GT1, [65532], GT_D),
+            ("nxos", LT1, [3], LT3_D),
+            ("nxos", R13, [2, 4], R24_D),
 
         ]:
             # setter
@@ -242,8 +242,8 @@ class Test(Helpers):
             ("ios", GT1, [1, 2], ValueError),
             ("ios", LT1, [1, 2], ValueError),
             ("ios", LT1, [1, 2], ValueError),
-            ("cnx", R13, [1, 2, 3], ValueError),
-            ("cnx", NEQ2, [1, 2], ValueError),
+            ("nxos", R13, [1, 2, 3], ValueError),
+            ("nxos", NEQ2, [1, 2], ValueError),
         ]:
             port_o = Port(line, platform=platform)
             with self.assertRaises(error, msg=f"{items=}"):
@@ -274,23 +274,23 @@ class Test(Helpers):
             ("ios", LT1, "lt", LT1_D),
             ("ios", R24, "range", R24_D),
 
-            ("cnx", EQ1, "eq", EQ1_D),
-            ("cnx", EQ1, "neq", NEQ1_D),
-            ("cnx", EQ1, "gt", GT1_D),
-            ("cnx", EQ1, "lt", LT1_D),
-            ("cnx", NEQ1, "eq", EQ1_D),
-            ("cnx", NEQ1, "neq", NEQ1_D),
-            ("cnx", NEQ1, "gt", GT1_D),
-            ("cnx", NEQ1, "lt", LT1_D),
-            ("cnx", GT1, "eq", EQ1_D),
-            ("cnx", GT1, "neq", NEQ1_D),
-            ("cnx", GT1, "gt", GT1_D),
-            ("cnx", GT1, "lt", LT1_D),
-            ("cnx", LT1, "eq", EQ1_D),
-            ("cnx", LT1, "neq", NEQ1_D),
-            ("cnx", LT1, "gt", GT1_D),
-            ("cnx", LT1, "lt", LT1_D),
-            ("cnx", R24, "range", R24_D),
+            ("nxos", EQ1, "eq", EQ1_D),
+            ("nxos", EQ1, "neq", NEQ1_D),
+            ("nxos", EQ1, "gt", GT1_D),
+            ("nxos", EQ1, "lt", LT1_D),
+            ("nxos", NEQ1, "eq", EQ1_D),
+            ("nxos", NEQ1, "neq", NEQ1_D),
+            ("nxos", NEQ1, "gt", GT1_D),
+            ("nxos", NEQ1, "lt", LT1_D),
+            ("nxos", GT1, "eq", EQ1_D),
+            ("nxos", GT1, "neq", NEQ1_D),
+            ("nxos", GT1, "gt", GT1_D),
+            ("nxos", GT1, "lt", LT1_D),
+            ("nxos", LT1, "eq", EQ1_D),
+            ("nxos", LT1, "neq", NEQ1_D),
+            ("nxos", LT1, "gt", GT1_D),
+            ("nxos", LT1, "lt", LT1_D),
+            ("nxos", R24, "range", R24_D),
 
         ]:
             # setter
@@ -339,11 +339,11 @@ class Test(Helpers):
             ("ios", LT1, [1, 2], LT3_D),
             ("ios", R13, [2, 3, 4], R24_D),
 
-            ("cnx", EQ2, [1], EQ1_D),
-            ("cnx", NEQ2, WO_1, NEQ1_D),
-            ("cnx", GT1, GT_65532, GT_D),
-            ("cnx", LT1, [1, 2], LT3_D),
-            ("cnx", R13, [2, 3, 4], R24_D),
+            ("nxos", EQ2, [1], EQ1_D),
+            ("nxos", NEQ2, WO_1, NEQ1_D),
+            ("nxos", GT1, GT_65532, GT_D),
+            ("nxos", LT1, [1, 2], LT3_D),
+            ("nxos", R13, [2, 3, 4], R24_D),
 
         ]:
             # setter
@@ -361,8 +361,8 @@ class Test(Helpers):
         """Port.ports"""
         for platform, line, ports, error in [
             ("ios", EQ2, [], ValueError),
-            ("cnx", EQ2, [1, 2, 3], ValueError),
-            ("cnx", NEQ2, WO_13, ValueError),
+            ("nxos", EQ2, [1, 2, 3], ValueError),
+            ("nxos", NEQ2, WO_13, ValueError),
         ]:
             port_o = Port(EQ1, platform=platform)
             with self.assertRaises(error, msg=f"{ports=}"):
@@ -390,11 +390,11 @@ class Test(Helpers):
             ("ios", LT1, "1-2", LT3_D),
             ("ios", R13, "2-4", R24_D),
 
-            ("cnx", EQ2, "1", EQ1_D),
-            ("cnx", NEQ2, "2-65535", NEQ1_D),
-            ("cnx", GT1, "65533-65535", GT_D),
-            ("cnx", LT1, "1-2", LT3_D),
-            ("cnx", R13, "2-4", R24_D),
+            ("nxos", EQ2, "1", EQ1_D),
+            ("nxos", NEQ2, "2-65535", NEQ1_D),
+            ("nxos", GT1, "65533-65535", GT_D),
+            ("nxos", LT1, "1-2", LT3_D),
+            ("nxos", R13, "2-4", R24_D),
 
         ]:
             # setter
@@ -412,8 +412,8 @@ class Test(Helpers):
         """Port.sport"""
         for platform, line, sport, error in [
             ("ios", EQ2, "", ValueError),
-            ("cnx", EQ2, "1-3", ValueError),
-            ("cnx", NEQ2, "2,4-65535", ValueError),
+            ("nxos", EQ2, "1-3", ValueError),
+            ("nxos", NEQ2, "2,4-65535", ValueError),
         ]:
             port_o = Port(EQ1, platform=platform)
             with self.assertRaises(error, msg=f"{sport=}"):
@@ -455,11 +455,11 @@ class Test(Helpers):
             ("ios", GT1, ["1"], [1]),
             ("ios", R24, ["1", "3"], [1, 3]),
 
-            ("cnx", EQ1, ["1"], [1]),
-            ("cnx", NEQ1, ["1"], [1]),
-            ("cnx", LT1, ["1"], [1]),
-            ("cnx", GT1, ["1"], [1]),
-            ("cnx", R24, ["1", "3"], [1, 3]),
+            ("nxos", EQ1, ["1"], [1]),
+            ("nxos", NEQ1, ["1"], [1]),
+            ("nxos", LT1, ["1"], [1]),
+            ("nxos", GT1, ["1"], [1]),
+            ("nxos", R24, ["1", "3"], [1, 3]),
         ]:
             port_o = Port(line, platform=platform)
             result = port_o._line__items_to_ints(items)
@@ -474,8 +474,8 @@ class Test(Helpers):
             ("ios", R24, ["1"], ValueError),
             ("ios", R24, ["1", "2", "3"], ValueError),
 
-            ("cnx", EQ1, ["1", "2"], ValueError),
-            ("cnx", NEQ1, ["1", "2"], ValueError),
+            ("nxos", EQ1, ["1", "2"], ValueError),
+            ("nxos", NEQ1, ["1", "2"], ValueError),
         ]:
             port_o = Port(line, platform=platform)
             with self.assertRaises(error, msg=f"{platform=} {line=} {ports=}"):

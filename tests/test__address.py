@@ -38,7 +38,7 @@ WILD2_D = dict(
     prefix="",
     wildcard="10.0.0.0 0.0.3.3",
 )
-CNX_PREFIX_D = dict(
+NXOS_PREFIX_D = dict(
     line="10.0.0.0/30",
     addrgroup="",
     subnet="10.0.0.0 255.255.255.252",
@@ -54,7 +54,7 @@ IOS_HOST_D = dict(
     prefix="10.0.0.1/32",
     wildcard="10.0.0.1 0.0.0.0",
 )
-CNX_HOST_D = dict(
+NXOS_HOST_D = dict(
     line="10.0.0.1/32",
     addrgroup="",
     subnet="10.0.0.1 255.255.255.255",
@@ -70,7 +70,7 @@ IOS_ADDRGROUP_D = dict(
     prefix="",
     wildcard="",
 )
-CNX_ADDRGROUP_D = dict(
+NXOS_ADDRGROUP_D = dict(
     line="addrgroup NAME",
     addrgroup="NAME",
     subnet="",
@@ -88,7 +88,7 @@ class Test(Helpers):
     def test_valid__hash__(self):
         """Address.__hash__()"""
         line = PREFIX30
-        addr_o = Address(line, platform="cnx")
+        addr_o = Address(line, platform="nxos")
         result = addr_o.__hash__()
         req = PREFIX30.__hash__()
         self.assertEqual(result, req, msg=f"{line=}")
@@ -99,10 +99,10 @@ class Test(Helpers):
 
     def test_valid__eq__(self):
         """Address.__eq__() __ne__()"""
-        addr_o = Address(PREFIX30, platform="cnx")
+        addr_o = Address(PREFIX30, platform="nxos")
         for other_o, req, in [
             (PREFIX30, True),
-            (Address(PREFIX30, platform="cnx"), True),
+            (Address(PREFIX30, platform="nxos"), True),
             (Address(PREFIX30, platform="ios"), False),
             (Address(OBJGROUP), False),
         ]:
@@ -156,14 +156,14 @@ class Test(Helpers):
             ("ios", "object-group NAME", IOS_ADDRGROUP_D),
             ("ios", "addrgroup NAME", IOS_ADDRGROUP_D),
 
-            ("cnx", "any", ANY_D),
-            ("cnx", "10.0.0.0 0.0.0.3", CNX_PREFIX_D),
-            ("cnx", "10.0.0.0 0.0.3.3", WILD2_D),
-            ("cnx", "10.0.0.0/30", CNX_PREFIX_D),
-            ("cnx", "10.0.0.1/32", CNX_HOST_D),
-            ("cnx", "host 10.0.0.1", CNX_HOST_D),
-            ("cnx", "object-group NAME", CNX_ADDRGROUP_D),
-            ("cnx", "addrgroup NAME", CNX_ADDRGROUP_D),
+            ("nxos", "any", ANY_D),
+            ("nxos", "10.0.0.0 0.0.0.3", NXOS_PREFIX_D),
+            ("nxos", "10.0.0.0 0.0.3.3", WILD2_D),
+            ("nxos", "10.0.0.0/30", NXOS_PREFIX_D),
+            ("nxos", "10.0.0.1/32", NXOS_HOST_D),
+            ("nxos", "host 10.0.0.1", NXOS_HOST_D),
+            ("nxos", "object-group NAME", NXOS_ADDRGROUP_D),
+            ("nxos", "addrgroup NAME", NXOS_ADDRGROUP_D),
         ]:
             # getter
             addr_o = Address(line=line, platform=platform)
@@ -195,8 +195,8 @@ class Test(Helpers):
         for platform, line, req_d in [
             ("ios", "object-group NAME", IOS_ADDRGROUP_D),
             ("ios", "addrgroup NAME", IOS_ADDRGROUP_D),
-            ("cnx", "object-group NAME", CNX_ADDRGROUP_D),
-            ("cnx", "addrgroup NAME", CNX_ADDRGROUP_D),
+            ("nxos", "object-group NAME", NXOS_ADDRGROUP_D),
+            ("nxos", "addrgroup NAME", NXOS_ADDRGROUP_D),
         ]:
             # getter
             addr_o = Address(line, platform=platform)
@@ -229,7 +229,7 @@ class Test(Helpers):
         """Address.ipnet()"""
         for platform, ipnet, req_d in [
             ("ios", IPNET30, WILD_D),
-            ("cnx", IPNET30, CNX_PREFIX_D),
+            ("nxos", IPNET30, NXOS_PREFIX_D),
         ]:
             # getter
             addr_o = Address(str(ipnet), platform=platform)
@@ -257,17 +257,17 @@ class Test(Helpers):
         """Address.prefix()"""
         for prefix, platform, req_d in [
             ("any", "ios", ANY_D),
-            ("any", "cnx", ANY_D),
+            ("any", "nxos", ANY_D),
             ("0.0.0.0 255.255.255.255", "ios", ANY_D),
-            ("0.0.0.0 255.255.255.255", "cnx", ANY_D),
+            ("0.0.0.0 255.255.255.255", "nxos", ANY_D),
             ("10.0.0.0 0.0.3.3", "ios", WILD2_D),
-            ("10.0.0.0 0.0.3.3", "cnx", WILD2_D),
+            ("10.0.0.0 0.0.3.3", "nxos", WILD2_D),
             (PREFIX0, "ios", ANY_D),
-            (PREFIX0, "cnx", ANY_D),
+            (PREFIX0, "nxos", ANY_D),
             (PREFIX30, "ios", WILD_D),
-            (PREFIX30, "cnx", CNX_PREFIX_D),
+            (PREFIX30, "nxos", NXOS_PREFIX_D),
             (PREFIX32, "ios", IOS_HOST_D),
-            (PREFIX32, "cnx", CNX_HOST_D),
+            (PREFIX32, "nxos", NXOS_HOST_D),
         ]:
             # getter
             addr_o = Address(prefix, platform=platform)
@@ -297,7 +297,7 @@ class Test(Helpers):
         subnet30 = "10.0.0.0 255.255.255.252"
         for platform, subnet, req_d in [
             ("ios", subnet30, WILD_D),
-            ("cnx", subnet30, CNX_PREFIX_D),
+            ("nxos", subnet30, NXOS_PREFIX_D),
         ]:
             # setter
             addr_o = Address(PREFIX30, platform=platform)
@@ -325,7 +325,7 @@ class Test(Helpers):
         wildcard30 = "10.0.0.0 0.0.0.3"
         for platform, wildcard, req_d in [
             ("ios", wildcard30, WILD_D),
-            ("cnx", wildcard30, CNX_PREFIX_D),
+            ("nxos", wildcard30, NXOS_PREFIX_D),
         ]:
             # setter
             addr_o = Address(PREFIX30, platform=platform)

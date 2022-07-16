@@ -5,7 +5,7 @@ MAX_LINE_LENGTH = 100
 SEQUENCE_MAX = 4294967295
 INDENTATION = 2
 
-PLATFORMS = ("ios", "cnx")
+PLATFORMS = ("ios", "nxos")
 ACTIONS = ("remark", "permit", "deny")
 OPERATORS = ("eq", "gt", "lt", "neq", "range")
 
@@ -44,7 +44,7 @@ IOS_PROTOCOLS = {
     "tcp": 6,
     "udp": 17,
 }
-CNX_PROTOCOLS = {
+NXOS_PROTOCOLS = {
     "ahp": 51,
     "eigrp": 88,
     "esp": 50,
@@ -59,12 +59,12 @@ CNX_PROTOCOLS = {
     "tcp": 6,
     "udp": 17,
 }
-ANY_PROTOCOLS = {**IOS_PROTOCOLS, **CNX_PROTOCOLS}
+ANY_PROTOCOLS = {**IOS_PROTOCOLS, **NXOS_PROTOCOLS}
 PROTOCOL_TO_NR = dict(
     ios=IOS_PROTOCOLS,
-    cnx=CNX_PROTOCOLS,
+    nxos=NXOS_PROTOCOLS,
 )
 NR_TO_PROTOCOL = dict(
     ios={i: s for s, i in IOS_PROTOCOLS.items()},
-    cnx={i: s for s, i in CNX_PROTOCOLS.items()},
+    nxos={i: s for s, i in NXOS_PROTOCOLS.items()},
 )

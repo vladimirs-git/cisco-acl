@@ -5,9 +5,9 @@ from typing import List
 
 from cisco_acl import helpers as h
 from cisco_acl.base import Base
+from cisco_acl.port_name import PortName
 from cisco_acl.static import OPERATORS
 from cisco_acl.types_ import LInt, LStr, IInt
-from cisco_acl.port_name import PortName
 
 
 @total_ordering
@@ -20,7 +20,7 @@ class Port(Base):
     def __init__(self, line: str = "", **kwargs):
         """ACE. TCP/UDP Port
         :param str line: TCP/UDP ports line
-        :param str platform: Supported platforms: "ios", "cnx" (default "ios")
+        :param str platform: Supported platforms: "ios", "nxos" (default "ios")
         :param protocol: ACL protocol: "tcp", "udp"
         :param bool numerically: Cisco ACL outputs well-known tcp/udp ports as names
             True  - all tcp/udp ports as numbers
@@ -38,9 +38,9 @@ class Port(Base):
                 self.ports = [80, 443]
                 self.sport = "80,443"
 
-        :example: cnx, "neq" (can match only one port in single line)
+        :example: nxos, "neq" (can match only one port in single line)
             line: "neq www"
-            platform: "cnx"
+            platform: "nxos"
             result:
                 self.line = "neq www"
                 self.operator = "neq"
@@ -272,7 +272,7 @@ class Port(Base):
         if operator == "range" and len(ports) != 2:
             raise ValueError(f"invalid {operator=} with {ports=} expected 2 ports")
         if self.operator in ["eq", "neq"]:
-            if platform == "cnx" and len(ports) != 1:
+            if platform == "nxos" and len(ports) != 1:
                 raise ValueError(f"invalid count of {ports=}, for {platform=} expected 1 port")
 
         return sorted(ports)

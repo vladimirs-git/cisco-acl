@@ -15,7 +15,7 @@ class Base(ABC):
 
     def __init__(self, **kwargs):
         """Base - Parent of: AceBase, Address, Port, Protocol
-        :param platform: Supported platforms: "ios", "cnx" (default "ios")
+        :param platform: Supported platforms: "ios", "nxos" (default "ios")
         :param note: Object description (can be used for ACEs sorting)
         """
         self._uuid = str(uuid.uuid1())
@@ -38,7 +38,7 @@ class Base(ABC):
 
     @staticmethod
     def _init_platform(**kwargs) -> str:
-        """Init device platform type: "ios", "cnx" """
+        """Init device platform type: "ios", "nxos" """
         platform = kwargs.get("platform") or DEFAULT_PLATFORM
         if platform not in PLATFORMS:
             raise ValueError(f"invalid {platform=}, expected={PLATFORMS}")
@@ -95,7 +95,7 @@ class Base(ABC):
 
     @property
     def platform(self) -> str:
-        """Device platform type: "ios", "cnx" """
+        """Device platform type: "ios", "nxos" """
         return self._platform
 
     @platform.setter

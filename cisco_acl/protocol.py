@@ -19,7 +19,7 @@ class Protocol(Base):
     def __init__(self, line: str = "", **kwargs):
         """ACE. IP protocol object
         :param line: IP protocol line
-        :param platform: Supported platforms: "ios", "cnx" (default "ios")
+        :param platform: Supported platforms: "ios", "nxos" (default "ios")
         :param note: Object description (can be used for ACEs sorting)
 
         :example:
@@ -122,7 +122,7 @@ class Protocol(Base):
 
     @property
     def platform(self) -> str:
-        """Platforms: "ios", "cnx" """
+        """Platforms: "ios", "nxos" """
         return self._platform
 
     @platform.setter

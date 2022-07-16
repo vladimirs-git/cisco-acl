@@ -22,10 +22,10 @@ from cisco_acl.static import (
 class Acl(AceGroup):
     """ACL (Access Control List)"""
 
-    def __init__(self, line: str = "", **kwargs):  # TODO rename platform cnx to nxos
+    def __init__(self, line: str = "", **kwargs):
         """ACL (Access Control List)
         :param str line: ACL config (name and following remarks and access entries)
-        :param str platform: Supported platforms: "ios", "cnx" (default "ios")
+        :param str platform: Supported platforms: "ios", "nxos" (default "ios")
         :param bool numerically: Cisco ACL outputs well-known tcp/udp ports as names
             True  - all tcp/udp ports as numbers
             False - well-known tcp/udp ports as names (default)
@@ -172,7 +172,7 @@ class Acl(AceGroup):
             return: "ip access-list extended NAME"
 
         :example:
-            self.platform: "cnx"
+            self.platform: "nxos"
             return: "ip access-list NAME"
         """
         items = ["ip access-list"]
@@ -236,7 +236,7 @@ class Acl(AceGroup):
     def platform(self) -> str:
         """Platform
         - "ios" - Cisco IOS (extended ACL)
-        - "cnx" Cisco Nexus NX-OS
+        - "nxos" Cisco Nexus NX-OS
         """
         return self._platform
 
@@ -246,7 +246,7 @@ class Acl(AceGroup):
         if platform == self.platform:
             return
 
-        if platform == "cnx":
+        if platform == "nxos":
             self._split_aces_by_ports(attr="srcport")
             self._split_aces_by_ports(attr="dstport")
         self._platform = platform
@@ -254,7 +254,7 @@ class Acl(AceGroup):
             item.platform = platform
 
     def _split_aces_by_ports(self, attr: str) -> None:
-        """CNX. Split Aces with multiple ports in single line to multiple lines
+        """NXOS. Split Aces with multiple ports in single line to multiple lines
         :param attr: "srcport", "dstport"
 
         :example:

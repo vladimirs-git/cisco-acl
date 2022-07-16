@@ -59,7 +59,7 @@ Acl.items can be edited, sorted, indexed by sequence numbers or notes.
 Parameter       Type         Description
 =============== ============ =======================================================================
 line            *str*        ACL config (name and following remarks and access entries)
-platform        *str*        Supported platforms: "ios", "cnx" (default "ios")
+platform        *str*        Supported platforms: "ios", "nxos" (default "ios")
 numerically     *bool*       Cisco ACL outputs well-known tcp/udp ports as names, True  - all tcp/udp ports as numbers, False - well-known tcp/udp ports as names (default)
 name            *str*        ACL name. By default, parsed from line
 items           *List[str]*  List of ACE (strings or Ace, AceGroup, Remark objects). By default, parsed from line
@@ -108,7 +108,7 @@ platform
 **Acl.platform** - Platform:
 
 - "ios" - Cisco IOS (extended ACL)
-- "cnx" Cisco Nexus NX-OS
+- "nxos" Cisco Nexus NX-OS
 
 
 Methods
@@ -419,11 +419,11 @@ The following example creates Acl with not ordered groups and sorts and resequen
 	#   permit tcp host 1.1.1.1 eq 1 2 2.2.2.0 0.0.0.255 eq 3 4
 
 	# Change syntax from Cisco IOS platform to Cisco Nexus NX-OS.
-	acl1.platform = "cnx"
+	acl1.platform = "nxos"
 	print(f"{acl1.platform=}")
 	print(acl1)
 	print()
-	# acl1.platform='cnx'
+	# acl1.platform='nxos'
 	# ip access-list ACL1
 	#   deny tcp any any eq domain
 	#   permit icmp any any
@@ -459,7 +459,7 @@ ACE - Access Control Entry. Each entry statement permit or deny in the `Acl`_.
 Parameter       Type         Description
 =============== ============ =======================================================================
 line            *str*        ACE config line
-platform        *str*        Supported platforms: "ios", "cnx" (default "ios")
+platform        *str*        Supported platforms: "ios", "nxos" (default "ios")
 numerically     *bool*       Cisco ACL outputs well-known tcp/udp ports as names, True  - all tcp/udp ports as numbers, False - well-known tcp/udp ports as names (default)
 note            *str*        Object description. Not part of the ACE configuration, can be used for ACEs sorting
 =============== ============ =======================================================================
@@ -494,7 +494,7 @@ platform
 **Ace.platform** - Platform:
 
 - "ios" - Cisco IOS (extended ACL)
-- "cnx" Cisco Nexus NX-OS
+- "nxos" Cisco Nexus NX-OS
 
 
 sequence
@@ -538,7 +538,7 @@ rule(platform, action, srcaddrs, dstaddrs, protocols, tcp_srcports, tcp_dstports
 =============== ============ =======================================================================
 Parameter       Type         Description
 =============== ============ =======================================================================
-platform        *str*        Supported platforms: "ios", "cnx" (default "ios")
+platform        *str*        Supported platforms: "ios", "nxos" (default "ios")
 action          *str*        ACE action: "permit", "deny"
 srcaddrs        *List[str]*  Source addresses
 dstaddrs        *List[str]*  Destination addresses
@@ -667,11 +667,11 @@ Useful for sorting ACL entries with frozen sections within which the sequence do
 Parameter       Type         Description
 =============== ============ =======================================================================
 line            *str*        string of ACEs
-platform        *str*        Supported platforms: "ios", "cnx" (default "ios")
+platform        *str*        Supported platforms: "ios", "nxos" (default "ios")
 numerically     *bool*       Cisco ACL outputs well-known tcp/udp ports as names, True  - all tcp/udp ports as numbers, False - well-known tcp/udp ports as names (default)
 note            *str*        Object description. Not part of the ACE configuration, can be used for ACEs sorting
-items           *List[Ace]*  An alternate way to create AceGroup object from a list of Ace objects. By default, an object is created from a line
-data            *dict*       An alternate way to create AceGroup object from a *dict*. By default, an object is created from a line
+items           *List[Ace]*  An alternate way to create *AceGroup* object from a list of *Ace* objects. By default, an object is created from a line
+data            *dict*       An alternate way to create *AceGroup* object from a *dict*. By default, an object is created from a line
 =============== ============ =======================================================================
 
 
@@ -699,7 +699,7 @@ platform
 **AceGroup.platform** - Platform:
 
 - "ios" - Cisco IOS (extended ACL)
-- "cnx" Cisco Nexus NX-OS
+- "nxos" Cisco Nexus NX-OS
 
 
 Methods
@@ -1056,7 +1056,7 @@ Remark - comments ACE in ACL.
 Parameter       Type         Description
 =============== ============ =======================================================================
 line            *str*        string of ACEs
-platform        *str*        Supported platforms: "ios", "cnx" (default "ios")
+platform        *str*        Supported platforms: "ios", "nxos" (default "ios")
 note            *str*        Object description. Not part of the ACE configuration, can be used for ACEs sorting
 =============== ============ =======================================================================
 
@@ -1117,7 +1117,7 @@ Address - Source or destination address object
 Parameter       Type         Description
 =============== ============ =======================================================================
 line            *str*        Address line
-platform        *str*        Supported platforms: "ios", "cnx" (default "ios")
+platform        *str*        Supported platforms: "ios", "nxos" (default "ios")
 note            *str*        Object description. Not part of the ACE configuration, can be used for ACEs sorting
 =============== ============ =======================================================================
 
@@ -1127,11 +1127,11 @@ where line
 Line pattern        Platform    Description
 =================== =========== ====================================================================
 A.B.C.D A.B.C.D                 Address and wildcard bits
-A.B.C.D/LEN         cnx         Network prefix
+A.B.C.D/LEN         nxos        Network prefix
 any                             Any host
 host A.B.C.D        ios         A single host
 object-group NAME   ios         Network object group
-addrgroup NAME      cnx         Network object group
+addrgroup NAME      nxos        Network object group
 =================== =========== ====================================================================
 
 
@@ -1156,7 +1156,7 @@ ipnet
 
 platform
 ........
-**Address.platform** - Device platform type: "ios", "cnx"
+**Address.platform** - Device platform type: "ios", "nxos"
 
 
 prefix
@@ -1199,17 +1199,17 @@ The following example demonstrates Address object.
 	# Change syntax from Cisco IOS platform to Cisco Nexus NX-OS.
 	addr = Address("10.0.0.0 0.0.0.3", platform="ios")
 	assert addr.line == "10.0.0.0 0.0.0.3"
-	addr.platform = "cnx"
+	addr.platform = "nxos"
 	assert addr.line == "10.0.0.0/30"
 
 	addr = Address("host 10.0.0.1", platform="ios")
 	assert addr.line == "host 10.0.0.1"
-	addr.platform = "cnx"
+	addr.platform = "nxos"
 	assert addr.line == "10.0.0.1/32"
 
 	addr = Address("object-group NAME", platform="ios")
 	assert addr.line == "object-group NAME"
-	addr.platform = "cnx"
+	addr.platform = "nxos"
 	assert addr.line == "addrgroup NAME"
 
 
@@ -1221,7 +1221,7 @@ Port - Source or destination port object
 Parameter       Type         Description
 =============== ============ =======================================================================
 line            *str*        TCP/UDP ports line
-platform        *str*        Supported platforms: "ios", "cnx" (default "ios")
+platform        *str*        Supported platforms: "ios", "nxos" (default "ios")
 numerically     *bool*       Cisco ACL outputs well-known tcp/udp ports as names, True  - all tcp/udp ports as numbers, False - well-known tcp/udp ports as names (default)
 note            *str*        Object description. Not part of the ACE configuration, can be used for ACEs sorting
 =============== ============ =======================================================================
@@ -1232,9 +1232,9 @@ where line
 Line pattern        Platform    Description
 =================== =========== ====================================================================
 eq www 443          ios         equal list of protocols
-eq www              cnx         equal protocol
+eq www              nxos        equal protocol
 eq www 443          ios         not equal list of protocols
-neq www             cnx         not equal protocol
+neq www             nxos        not equal protocol
 range 1 3           ios         range of protocols
 =================== =========== ====================================================================
 
@@ -1307,7 +1307,7 @@ Protocol - IP protocol object
 Parameter       Type         Description
 =============== ============ =======================================================================
 line            *str*        IP protocol line
-platform        *str*        Supported platforms: "ios", "cnx" (default "ios")
+platform        *str*        Supported platforms: "ios", "nxos" (default "ios")
 note            *str*        Object description. Not part of the ACE configuration, can be used for ACEs sorting
 =============== ============ =======================================================================
 
@@ -1333,7 +1333,7 @@ number
 
 platform
 ........
-**Protocol.platform** - Device platform type: "ios", "cnx"
+**Protocol.platform** - Device platform type: "ios", "nxos"
 
 
 Examples - Protocol

@@ -86,13 +86,13 @@ class Test(unittest.TestCase):
             (Remark, REMARK, "", 0, f"Remark('{REMARK}')"),
             (Remark, REMARK, "ios", None, f"Remark('{REMARK}')"),
             (Remark, REMARK, "ios", "a", f"Remark('{REMARK}', note='a')"),
-            (Remark, REMARK, "cnx", None, f"Remark('{REMARK}', platform='cnx')"),
-            (Remark, REMARK, "cnx", "a", f"Remark('{REMARK}', platform='cnx', note='a')"),
+            (Remark, REMARK, "nxos", None, f"Remark('{REMARK}', platform='nxos')"),
+            (Remark, REMARK, "nxos", "a", f"Remark('{REMARK}', platform='nxos', note='a')"),
             (Ace, PERMIT_IP, "", None, f"Ace('{PERMIT_IP}')"),
             (Ace, PERMIT_IP, "ios", None, f"Ace('{PERMIT_IP}')"),
             (Ace, PERMIT_IP, "ios", "a", f"Ace('{PERMIT_IP}', note='a')"),
-            (Ace, PERMIT_IP, "cnx", None, f"Ace('{PERMIT_IP}', platform='cnx')"),
-            (Ace, PERMIT_IP, "cnx", "a", f"Ace('{PERMIT_IP}', platform='cnx', note='a')"),
+            (Ace, PERMIT_IP, "nxos", None, f"Ace('{PERMIT_IP}', platform='nxos')"),
+            (Ace, PERMIT_IP, "nxos", "a", f"Ace('{PERMIT_IP}', platform='nxos', note='a')"),
         ]:
             obj = class_(line, platform=platform, note=note)
             result = str(obj)
@@ -143,11 +143,11 @@ class Test(unittest.TestCase):
 
     def test_valid__platform(self):
         """Base.platform"""
-        ios, cnx = "ios", "cnx"
+        ios, nxos = "ios", "nxos"
         for platform, req in [
             ("", ios),
             (ios, ios),
-            (cnx, cnx),
+            (nxos, nxos),
         ]:
             for class_, line in [
                 (Remark, REMARK),

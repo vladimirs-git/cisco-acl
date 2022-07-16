@@ -14,7 +14,7 @@ class BaseAce(Base):
     def __init__(self, line, **kwargs):
         """BaseAce - Parent of: Ace, Remark
         :param line: ACE line, can contain index
-        :param platform: Supported platforms: "ios", "cnx" (default "ios")
+        :param platform: Supported platforms: "ios", "nxos" (default "ios")
         :param note: Object description (can be used for ACEs sorting)
         """
         super().__init__(**kwargs)

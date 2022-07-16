@@ -234,11 +234,11 @@ class Test(Helpers):
     def test_valid__platform(self):
         """Ace.platform"""
         ios_grp = "deny ip object-group A object-group B"
-        cnx_grp = "deny ip addrgroup A addrgroup B"
+        nxos_grp = "deny ip addrgroup A addrgroup B"
         ios_host = "permit ip host 1.1.1.1 host 2.2.2.2"
-        cnx_host = "permit ip 1.1.1.1/32 2.2.2.2/32"
+        nxos_host = "permit ip 1.1.1.1/32 2.2.2.2/32"
         ios_prefix = "permit ip 1.1.1.0 0.0.0.255 2.2.2.0 0.0.0.255"
-        cnx_prefix = "permit ip 1.1.1.0/24 2.2.2.0/24"
+        nxos_prefix = "permit ip 1.1.1.0/24 2.2.2.0/24"
         any_wild = "permit ip 1.1.0.0 0.0.3.3 2.2.0.0 0.0.3.3"
         any_eq = "permit tcp any eq 1 any neq 3 log"
         any_gt = "permit tcp any gt 65533 any lt 3 log"
@@ -251,26 +251,26 @@ class Test(Helpers):
             ("ios", "ios", any_eq, any_eq),
             ("ios", "ios", any_gt, any_gt),
 
-            ("ios", "cnx", ios_grp, cnx_grp),
-            ("ios", "cnx", ios_host, cnx_host),
-            ("ios", "cnx", ios_prefix, cnx_prefix),
-            ("ios", "cnx", any_wild, any_wild),
-            ("ios", "cnx", any_eq, any_eq),
-            ("ios", "cnx", any_gt, any_gt),
+            ("ios", "nxos", ios_grp, nxos_grp),
+            ("ios", "nxos", ios_host, nxos_host),
+            ("ios", "nxos", ios_prefix, nxos_prefix),
+            ("ios", "nxos", any_wild, any_wild),
+            ("ios", "nxos", any_eq, any_eq),
+            ("ios", "nxos", any_gt, any_gt),
 
-            ("cnx", "ios", cnx_grp, ios_grp),
-            ("cnx", "ios", cnx_host, ios_host),
-            ("cnx", "ios", cnx_prefix, ios_prefix),
-            ("cnx", "ios", any_wild, any_wild),
-            ("cnx", "ios", any_eq, any_eq),
-            ("cnx", "ios", any_gt, any_gt),
+            ("nxos", "ios", nxos_grp, ios_grp),
+            ("nxos", "ios", nxos_host, ios_host),
+            ("nxos", "ios", nxos_prefix, ios_prefix),
+            ("nxos", "ios", any_wild, any_wild),
+            ("nxos", "ios", any_eq, any_eq),
+            ("nxos", "ios", any_gt, any_gt),
 
-            ("cnx", "cnx", cnx_grp, cnx_grp),
-            ("cnx", "cnx", cnx_host, cnx_host),
-            ("cnx", "cnx", cnx_prefix, cnx_prefix),
-            ("cnx", "cnx", any_wild, any_wild),
-            ("cnx", "cnx", any_eq, any_eq),
-            ("cnx", "cnx", any_gt, any_gt),
+            ("nxos", "nxos", nxos_grp, nxos_grp),
+            ("nxos", "nxos", nxos_host, nxos_host),
+            ("nxos", "nxos", nxos_prefix, nxos_prefix),
+            ("nxos", "nxos", any_wild, any_wild),
+            ("nxos", "nxos", any_eq, any_eq),
+            ("nxos", "nxos", any_gt, any_gt),
         ]:
             # getter
             ace_o = Ace(line, platform=platform)
@@ -355,7 +355,7 @@ class Test(Helpers):
         )
         permit_ip = ["permit ip any any"]
         permit_tcp_ios = ["permit tcp host 10.0.0.1 eq 1 2 3 10.0.0.0 0.0.0.3 eq www 443 log"]
-        permit_tcp_cnx = [
+        permit_tcp_nxos = [
             "permit tcp 10.0.0.1/32 eq 1 10.0.0.0/30 eq www log",
             "permit tcp 10.0.0.1/32 eq 1 10.0.0.0/30 eq 443 log",
             "permit tcp 10.0.0.1/32 eq 2 10.0.0.0/30 eq www log",
@@ -378,7 +378,7 @@ class Test(Helpers):
             "permit udp host 10.0.0.2 eq 5 6 10.0.0.0 0.0.0.3 eq echo 8 log",
             "permit udp host 10.0.0.2 eq 5 6 10.0.0.4 0.0.0.3 eq echo 8 log",
         ]
-        permit_group_cnx = [
+        permit_group_nxos = [
             "permit icmp 10.0.0.1/32 10.0.0.0/30 log",
             "permit icmp 10.0.0.1/32 10.0.0.4/30 log",
             "permit icmp 10.0.0.2/32 10.0.0.0/30 log",
@@ -422,13 +422,13 @@ class Test(Helpers):
         ]
         for kwargs, platform, req in [
             (allow_ip, "ios", permit_ip),
-            (allow_ip, "cnx", permit_ip),
+            (allow_ip, "nxos", permit_ip),
             (allow_tcp, "ios", permit_tcp_ios),
-            (allow_tcp, "cnx", permit_tcp_cnx),
+            (allow_tcp, "nxos", permit_tcp_nxos),
             (deny_udp, "ios", deny_udp_),
-            (deny_udp, "cnx", deny_udp_),
+            (deny_udp, "nxos", deny_udp_),
             (allow_group, "ios", permit_group_ios),
-            (allow_group, "cnx", permit_group_cnx),
+            (allow_group, "nxos", permit_group_nxos),
         ]:
             result_lo = Ace.rule(platform=platform, **kwargs)
             result = [o.line for o in result_lo]

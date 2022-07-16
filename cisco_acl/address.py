@@ -25,12 +25,12 @@ class Address(Base):
             Line pattern        Platform    Description
             ==================  ==========  ===========================
             A.B.C.D A.B.C.D                 Address and wildcard bits
-            A.B.C.D/LEN         cnx         Network prefix
+            A.B.C.D/LEN         nxos        Network prefix
             any                             Any host
             host A.B.C.D        ios         A single host
             object-group NAME   ios         Network object group
-            addrgroup NAME      cnx         Network object group
-        :param str platform: Supported platforms: "ios", "cnx" (default "ios").
+            addrgroup NAME      nxos        Network object group
+        :param str platform: Supported platforms: "ios", "nxos" (default "ios").
         :param str note: Object description. Not part of the ACE configuration,
             can be used for ACEs sorting
 
@@ -47,7 +47,7 @@ class Address(Base):
 
         :example: Host
             line: "host 10.0.0.1"
-            platform: "cnx"
+            platform: "nxos"
             result:
                 self.line = "10.0.0.1/32"
                 self.addrgroup = ""
@@ -99,10 +99,10 @@ class Address(Base):
         Line                    Platform    Description
         ======================  ==========  ====================
         "object-group NAME"     ios         Network object group
-        "addrgroup NAME"        cnx         Network object group
+        "addrgroup NAME"        nxos        Network object group
         "any"                               Any source host
         "host 10.0.0.1"         ios         Single source host
-        "10.0.0.1/32"           cnx         Network prefix
+        "10.0.0.1/32"           nxos        Network prefix
         "10.0.0.0 0.0.0.3"                  Network wildcard
         """
         return self._line
@@ -139,7 +139,7 @@ class Address(Base):
         regex = r"(?:object-group|addrgroup) (.+)"
         if name := h.re_find_s(regex, line):
             h.check_name(name)
-            addr_line = "addrgroup" if self.platform == "cnx" else "object-group"
+            addr_line = "addrgroup" if self.platform == "nxos" else "object-group"
             addr_line = f"{addr_line} {name}"
 
             self._line: str = addr_line
@@ -169,7 +169,7 @@ class Address(Base):
 
     @addrgroup.setter
     def addrgroup(self, name: str) -> None:
-        if self.platform == "cnx":
+        if self.platform == "nxos":
             line = f"addrgroup {name}"
         else:
             line = f"object-group {name}"
@@ -194,7 +194,7 @@ class Address(Base):
 
     @property
     def platform(self) -> str:
-        """Device platform type: "ios", "cnx" """
+        """Device platform type: "ios", "nxos" """
         return self._platform
 
     @platform.setter
@@ -266,7 +266,7 @@ class Address(Base):
 
     def _line__wildcard(self, line: str) -> None:
         """ACE address line, wildcard: A.B.C.D A.B.C.D
-        Result line is different for ios, cnx, host
+        Result line is different for ios, nxos, host
 
         :example: ios
             line: "10.0.0.0 0.0.0.3"
@@ -278,9 +278,9 @@ class Address(Base):
             self.platform: "ios"
             result: self.line = "host 10.0.0.1", ...
 
-        :example: cnx
+        :example: nxos
             line: "10.0.0.0 0.0.0.3"
-            self.platform: "cnx"
+            self.platform: "nxos"
             result: self.line = "10.0.0.0/30", ...
         """
         wildcard = line
@@ -298,7 +298,7 @@ class Address(Base):
         if not isinstance(ipnet, IPv4Network):
             raise TypeError(f"{ipnet} expected {IPv4Network}")
         prefix = str(ipnet)
-        if self.platform == "cnx":
+        if self.platform == "nxos":
             self._line = prefix
         else:
             self._line = wildcard
@@ -312,16 +312,16 @@ class Address(Base):
 
     def _line__prefix(self, line: str) -> None:
         """ACE address line, prefix A.B.C.D/LEN
-        Result line is different for ios, cnx, host
+        Result line is different for ios, nxos, host
 
         :example: os host
             line: "10.0.0.1/32"
             self.platform: "ios"
             result: self.line = "host 10.0.0.1", ...
 
-        :example: cnx
+        :example: nxos
             line: "10.0.0.0/30"
-            self.platform: "cnx"
+            self.platform: "nxos"
             result: self.line = "10.0.0.0/30", ...
         """
         ipnet = ip_network(line)
@@ -330,7 +330,7 @@ class Address(Base):
         subnet = ipnet.with_netmask.replace("/", " ")
         wildcard = ipnet.with_hostmask.replace("/", " ")
         prefix = str(ipnet)
-        if self.platform == "cnx":
+        if self.platform == "nxos":
             self._line = prefix
         else:
             self._line = wildcard
@@ -345,16 +345,16 @@ class Address(Base):
 
     def _line__host(self, ip_: str) -> None:
         """ACE address line, host
-        Result line is different for ios, cnx, host
+        Result line is different for ios, nxos, host
 
         :example: ios
             host: "10.0.0.1"
             self.platform: "ios"
             result: self.line = "host 10.0.0.1", ...
 
-        :example: cnx
+        :example: nxos
             host: "10.0.0.1"
-            self.platform: "cnx"
+            self.platform: "nxos"
             result: self.line = "10.0.0.1/32", ...
         """
         subnet = f"{ip_} 255.255.255.255"
@@ -362,7 +362,7 @@ class Address(Base):
         if not isinstance(ipnet, IPv4Network):
             raise TypeError(f"{ipnet} expected {IPv4Network}")
         prefix = str(ipnet)
-        self._line = prefix if self.platform == "cnx" else f"host {ip_}"
+        self._line = prefix if self.platform == "nxos" else f"host {ip_}"
         self._addrgroup = ""
         self._subnet = subnet
         self._ipnet = ipnet

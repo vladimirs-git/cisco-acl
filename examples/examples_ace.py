@@ -2,8 +2,9 @@
 The following example creates an Ace object and demonstrate various manipulation approaches.
 """
 
-from cisco_acl import Ace
 from ipaddress import ip_network
+
+from cisco_acl import Ace
 
 ace = Ace(line="10 permit tcp host 10.0.0.1 range 21 23 10.0.0.0 0.0.0.3 eq 80 443 log",
           platform="ios",

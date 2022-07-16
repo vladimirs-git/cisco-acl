@@ -26,7 +26,7 @@ class Ace(BaseAce):
     def __init__(self, line: str, **kwargs):
         """ACE - Access Control Entry
         :param str line: ACE config line
-        :param str platform: Supported platforms: "ios", "cnx" (default "ios")
+        :param str platform: Supported platforms: "ios", "nxos" (default "ios")
         :param bool numerically: Cisco ACL outputs well-known tcp/udp ports as names
             True  - all tcp/udp ports as numbers
             False - well-known tcp/udp ports as names (default)
@@ -148,8 +148,8 @@ class Ace(BaseAce):
             Ace("permit ip host 1.1.1.1 any")
             return: Address("host 1.1.1.1")
 
-        :example: cnx
-            Ace("10 permit ip host 1.1.1.1 any", platform="cnx")
+        :example: nxos
+            Ace("10 permit ip host 1.1.1.1 any", platform="nxos")
             return: Address("1.1.1.1/32")
         """
         return self._dstaddr
@@ -206,7 +206,8 @@ class Ace(BaseAce):
         self.sequence.line = ace_d["sequence"]
         self.action = ace_d["action"]
         self.protocol = Protocol(ace_d["protocol"], platform=self.platform)
-        self.srcaddr = Address(ace_d["srcaddr"], platform=self.platform, protocol=str(self.protocol))
+        self.srcaddr = Address(ace_d["srcaddr"], platform=self.platform,
+                               protocol=str(self.protocol))
         port_kwargs = dict(platform=self.platform,
                            protocol=str(self.protocol),
                            numerically=self.numerically)
@@ -219,7 +220,7 @@ class Ace(BaseAce):
     def platform(self) -> str:
         """Platform
         - "ios" - Cisco IOS (extended ACL)
-        - "cnx" Cisco Nexus NX-OS
+        - "nxos" Cisco Nexus NX-OS
         """
         return self._platform
 
@@ -275,8 +276,8 @@ class Ace(BaseAce):
             Ace("permit ip host 1.1.1.1 any")
             return: Address("host 1.1.1.1")
 
-        :example: cnx
-            Ace("10 permit ip host 1.1.1.1 any", platform="cnx")
+        :example: nxos
+            Ace("10 permit ip host 1.1.1.1 any", platform="nxos")
             return: Address("1.1.1.1/32")
         """
         return self._srcaddr
@@ -317,7 +318,7 @@ class Ace(BaseAce):
     @classmethod
     def rule(cls, **kwargs) -> LAce:
         """Converts data of Rule to Ace objects
-        :param str platform: Supported platforms: "ios", "cnx" (default "ios")
+        :param str platform: Supported platforms: "ios", "nxos" (default "ios")
         :param str action: ACE action: "permit", "deny"
         :param List[str] srcaddrs: Source addresses
         :param List[str] dstaddrs: Destination addresses
@@ -392,22 +393,22 @@ class Ace(BaseAce):
 
 def _split_by_ports(aces: LStr, ports: LInt, platform: str) -> LStr:
     """If platform="ios", join ports to string and append to aces lines
-    If platform="cnx", make multiple ACE lines, each port in separate ace line
+    If platform="nxos", make multiple ACE lines, each port in separate ace line
     :param aces: List of ACE lines, ready for split
     :param ports: List of ports
-    :param platform: Platform: "ios", "cnx"
+    :param platform: Platform: "ios", "nxos"
     :return: Split list of ACE lines
 
-    :example: source ports for cnx
+    :example: source ports for nxos
         aces: "permit tcp any"
         ports: [1, 2]
-        platform: "cnx"
+        platform: "nxos"
         return: ["permit tcp any eq 1", "permit tcp any  eq 2"]
 
-    :example: destination ports fo cnx
+    :example: destination ports fo nxos
         aces: "permit tcp any eq 1 any"
         ports: [3, 4]
-        platform: "cnx"
+        platform: "nxos"
         return: ["permit tcp any eq 1 any eq 3", "permit tcp any eq 1 any eq 4"]
 
     :example: source ports for ios
@@ -418,7 +419,7 @@ def _split_by_ports(aces: LStr, ports: LInt, platform: str) -> LStr:
     """
     aces_: LStr = []
     for ace in aces:
-        if platform == "cnx":
+        if platform == "nxos":
             aces_.extend([_join_ports(ace=ace, ports=[i]) for i in ports])
         else:
             aces_.append(_join_ports(ace=ace, ports=ports))

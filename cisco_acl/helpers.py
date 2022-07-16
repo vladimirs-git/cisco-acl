@@ -4,12 +4,13 @@ import re
 from ipaddress import ip_network
 from string import ascii_letters, digits, punctuation
 from typing import Any, List, NamedTuple
+
 from cisco_acl.port_name import all_known_names
-from cisco_acl.static import ACTIONS, OPERATORS, OPTIONS, MAX_LINE_LENGTH
+from cisco_acl.static import ACTIONS, OPERATORS, MAX_LINE_LENGTH
 from cisco_acl.types_ import DStr, LStr, StrInt, LInt, OInt, SInt, T2Str, T3Str, DInt
 
-
 ALL_KNOWN_TUDP_NAMES = all_known_names()
+
 
 # =============================== str ================================
 
@@ -197,7 +198,7 @@ def parse_ace(line: str) -> DStr:
     addr = "|".join([
         "any",  # "any"
         f"host {octets}",  # "host A.B.C.D"
-        f"(?:object-group|addrgroup) {text}",  # ios: "object-group NAME", cnx: "addrgroup NAME"
+        f"(?:object-group|addrgroup) {text}",  # ios: "object-group NAME", nxos: "addrgroup NAME"
         octets + r"/\d+",  # "A.B.C.D/LEN"
         f"{octets} {octets}",  # "A.B.C.D A.B.C.D"
     ])
@@ -327,7 +328,7 @@ def check_subnet(subnet: str) -> bool:
     return True
 
 
-def invert_mask(subnet: str) -> str:  # TODO delete if not used
+def invert_mask(subnet: str) -> str:
     """Inverts mask to wildcard and vice versa
     :example:
         subnet: "10.0.0.0 0.0.0.3"
@@ -452,6 +453,3 @@ def _port_range_min_max(ranges) -> List[PortRange]:
         ranges_tup.append(PortRange(range_string, range_int, port_min, port_max))
     ranges_tup = sorted(ranges_tup, key=lambda o: o.min)
     return ranges_tup
-
-
-

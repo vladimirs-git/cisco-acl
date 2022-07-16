@@ -40,10 +40,10 @@ TCP_NAME_PORT__BASE = {
 }
 
 # cisco Nexus 3172T, NXOS: version 9.3(8)
-TCP_NAME_PORT__CNX = {
+TCP_NAME_PORT__NXOS = {
     "drip": 3949,
 }
-TCP_NAME_PORT__CNX = {**TCP_NAME_PORT__BASE, **TCP_NAME_PORT__CNX}
+TCP_NAME_PORT__NXOS = {**TCP_NAME_PORT__BASE, **TCP_NAME_PORT__NXOS}
 
 # cisco ISR4331/K9, Cisco IOS XE Software, Version 16.09.06
 TCP_NAME_PORT__IOS = {
@@ -86,7 +86,7 @@ UDP_NAME_PORT__BASE = {
     "xdmcp": 177,
 }
 # cisco Nexus 3172T, NXOS: version 9.3(8)
-UDP_NAME_PORT__CNX = UDP_NAME_PORT__BASE
+UDP_NAME_PORT__NXOS = UDP_NAME_PORT__BASE
 
 # cisco ISR4331/K9, Cisco IOS XE Software, Version 16.09.06
 UDP_NAME_PORT__IOS = {
@@ -118,14 +118,14 @@ class PortName:
         if self.protocol == "tcp":
             if self.platform == "ios":
                 return TCP_NAME_PORT__IOS
-            if self.platform == "cnx":
-                return TCP_NAME_PORT__CNX
+            if self.platform == "nxos":
+                return TCP_NAME_PORT__NXOS
             return {}
         if self.protocol == "udp":
             if self.platform == "ios":
                 return UDP_NAME_PORT__IOS
-            if self.platform == "cnx":
-                return UDP_NAME_PORT__CNX
+            if self.platform == "nxos":
+                return UDP_NAME_PORT__NXOS
             return {}
         return {}
 
@@ -135,16 +135,16 @@ class PortName:
             if self.platform == "ios":
                 name_port = {**TCP_NAME_PORT__BASE, **TCP_NAME_PORT__IOS}
                 return self._swap(name_port)
-            if self.platform == "cnx":
-                name_port = {**TCP_NAME_PORT__BASE, **TCP_NAME_PORT__CNX}
+            if self.platform == "nxos":
+                name_port = {**TCP_NAME_PORT__BASE, **TCP_NAME_PORT__NXOS}
                 return self._swap(name_port)
             return {}
         if self.protocol == "udp":
             if self.platform == "ios":
                 name_port = {**UDP_NAME_PORT__BASE, **UDP_NAME_PORT__IOS}
                 return self._swap(name_port)
-            if self.platform == "cnx":
-                name_port = {**UDP_NAME_PORT__BASE, **UDP_NAME_PORT__CNX}
+            if self.platform == "nxos":
+                name_port = {**UDP_NAME_PORT__BASE, **UDP_NAME_PORT__NXOS}
                 return self._swap(name_port)
             return {}
         return {}
@@ -165,9 +165,9 @@ def all_known_names() -> LStr:
     """Returns all known names, that can be used in Cisco ACL (platform does not matter)"""
     items = set()
     items.update(set(TCP_NAME_PORT__BASE))
-    items.update(set(TCP_NAME_PORT__CNX))
+    items.update(set(TCP_NAME_PORT__NXOS))
     items.update(set(TCP_NAME_PORT__IOS))
     items.update(set(UDP_NAME_PORT__BASE))
-    items.update(set(UDP_NAME_PORT__CNX))
+    items.update(set(UDP_NAME_PORT__NXOS))
     items.update(set(UDP_NAME_PORT__IOS))
     return sorted(items)

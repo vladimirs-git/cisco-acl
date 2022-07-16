@@ -4,14 +4,14 @@ import unittest
 
 from cisco_acl import Ace, AceGroup, Acl, Remark
 from tests.helpers_test import (
-    ACL_CNX,
+    ACL_NXOS,
     ACL_IOS,
-    ACL_NAME_CNX,
+    ACL_NAME_NXOS,
     ACL_NAME_IOS,
-    ACL_NAME_RP_CNX,
+    ACL_NAME_RP_NXOS,
     ACL_NAME_RP_IOS,
     ACL_NUM_IOS,
-    ACL_RP_CNX,
+    ACL_RP_NXOS,
     ACL_RP_IOS,
     DENY_IP,
     DENY_IP_1,
@@ -65,7 +65,7 @@ class Test(unittest.TestCase):
             (1, TypeError),
             ([1], TypeError),
             (REMARK, TypeError),
-            ([Ace(PERMIT_IP, platform="cnx")], ValueError),
+            ([Ace(PERMIT_IP, platform="nxos")], ValueError),
         ]:
             with self.assertRaises(error, msg=f"{items=}"):
                 acl_o._init_items(items=items)
@@ -85,13 +85,14 @@ class Test(unittest.TestCase):
             (dict(line=PERMIT_IP, platform="ios"), dict(line=f"{ACL_IOS}\n  {PERMIT_IP}", name="")),
             (dict(line=ACL_RP_IOS, platform="ios"), dict(line=ACL_RP_IOS, name="")),
             (dict(line=ACL_NAME_RP_IOS, platform="ios"), dict(line=ACL_NAME_RP_IOS, name="A")),
-            # cnx
-            (dict(line="\n", platform="cnx"), dict(line=f"{ACL_CNX}\n", name="")),
-            (dict(line=ACL_CNX, platform="cnx"), dict(line=f"{ACL_CNX}\n", name="")),
-            (dict(line=ACL_NAME_CNX, platform="cnx"), dict(line=f"{ACL_NAME_CNX}\n", name="A")),
-            (dict(line=PERMIT_IP, platform="cnx"), dict(line=f"{ACL_CNX}\n  {PERMIT_IP}", name="")),
-            (dict(line=ACL_RP_CNX, platform="cnx"), dict(line=ACL_RP_CNX, name="")),
-            (dict(line=ACL_NAME_RP_CNX, platform="cnx"), dict(line=ACL_NAME_RP_CNX, name="A")),
+            # nxos
+            (dict(line="\n", platform="nxos"), dict(line=f"{ACL_NXOS}\n", name="")),
+            (dict(line=ACL_NXOS, platform="nxos"), dict(line=f"{ACL_NXOS}\n", name="")),
+            (dict(line=ACL_NAME_NXOS, platform="nxos"), dict(line=f"{ACL_NAME_NXOS}\n", name="A")),
+            (dict(line=PERMIT_IP, platform="nxos"),
+             dict(line=f"{ACL_NXOS}\n  {PERMIT_IP}", name="")),
+            (dict(line=ACL_RP_NXOS, platform="nxos"), dict(line=ACL_RP_NXOS, name="")),
+            (dict(line=ACL_NAME_RP_NXOS, platform="nxos"), dict(line=ACL_NAME_RP_NXOS, name="A")),
             # numerically
             (dict(line=ACL_NUM_IOS, platform="ios", numerically=False), dict(line=ACL_NAM_IOS)),
             (dict(line=ACL_NAM_IOS, platform="ios", numerically=True), dict(line=ACL_NUM_IOS)),
@@ -117,7 +118,7 @@ class Test(unittest.TestCase):
             # deleter
             del acl_o.line
             result = str(acl_o)
-            req = f"{ACL_CNX}\n" if acl_o.platform == "cnx" else f"{ACL_IOS}\n"
+            req = f"{ACL_NXOS}\n" if acl_o.platform == "nxos" else f"{ACL_IOS}\n"
             # noinspection PyUnboundLocalVariable
             self.assertEqual(result, req, msg=f"{kwargs=}")
 
@@ -167,7 +168,7 @@ class Test(unittest.TestCase):
         """Acl.ip_acl_name"""
         for platform, req in [
             ("ios", "ip access-list extended NAME"),
-            ("cnx", "ip access-list NAME"),
+            ("nxos", "ip access-list NAME"),
         ]:
             # getter
             acl_o = Acl(name="NAME", platform=platform)
@@ -247,11 +248,11 @@ class Test(unittest.TestCase):
                    "  permit tcp any eq 2 any neq 3\n" \
                    "  permit tcp any eq 2 any neq 4"
         # one ports in single line
-        acl1_cnx = "ip access-list NAME\n" \
-                   "  permit tcp any eq 1 any neq 3\n" \
-                   "  permit tcp any eq 1 any neq 4\n" \
-                   "  permit tcp any eq 2 any neq 3\n" \
-                   "  permit tcp any eq 2 any neq 4"
+        acl1_nxos = "ip access-list NAME\n" \
+                    "  permit tcp any eq 1 any neq 3\n" \
+                    "  permit tcp any eq 1 any neq 4\n" \
+                    "  permit tcp any eq 2 any neq 3\n" \
+                    "  permit tcp any eq 2 any neq 4"
         # combo
         acl3_ios = "ip access-list extended NAME\n" \
                    "  remark text\n" \
@@ -261,24 +262,24 @@ class Test(unittest.TestCase):
                    "  permit udp 1.1.0.0 0.0.3.3 2.2.0.0 0.0.3.3 range 1 3\n" \
                    "  permit tcp any eq 1 2 any neq 3 4\n" \
                    "  permit tcp any gt 65533 any lt 3"
-        acl3_cnx = "ip access-list NAME\n" \
-                   "  remark text\n" \
-                   "  permit ip addrgroup A addrgroup B log\n" \
-                   "  permit ip 1.1.1.1/32 2.2.2.2/32\n" \
-                   "  permit ip 1.1.1.0/24 2.2.2.0/24\n" \
-                   "  permit udp 1.1.0.0 0.0.3.3 2.2.0.0 0.0.3.3 range 1 3\n" \
-                   "  permit tcp any eq 1 any neq 3\n" \
-                   "  permit tcp any eq 1 any neq 4\n" \
-                   "  permit tcp any eq 2 any neq 3\n" \
-                   "  permit tcp any eq 2 any neq 4\n" \
-                   "  permit tcp any gt 65533 any lt 3"
+        acl3_nxos = "ip access-list NAME\n" \
+                    "  remark text\n" \
+                    "  permit ip addrgroup A addrgroup B log\n" \
+                    "  permit ip 1.1.1.1/32 2.2.2.2/32\n" \
+                    "  permit ip 1.1.1.0/24 2.2.2.0/24\n" \
+                    "  permit udp 1.1.0.0 0.0.3.3 2.2.0.0 0.0.3.3 range 1 3\n" \
+                    "  permit tcp any eq 1 any neq 3\n" \
+                    "  permit tcp any eq 1 any neq 4\n" \
+                    "  permit tcp any eq 2 any neq 3\n" \
+                    "  permit tcp any eq 2 any neq 4\n" \
+                    "  permit tcp any gt 65533 any lt 3"
         for platform, to_platform, line, req in [
             ("ios", "ios", acl1_ios, acl1_ios),
-            ("ios", "cnx", acl1_ios, acl1_cnx),
-            ("cnx", "ios", acl1_cnx, acl2_ios),
-            ("cnx", "cnx", acl1_cnx, acl1_cnx),
+            ("ios", "nxos", acl1_ios, acl1_nxos),
+            ("nxos", "ios", acl1_nxos, acl2_ios),
+            ("nxos", "nxos", acl1_nxos, acl1_nxos),
 
-            ("ios", "cnx", acl3_ios, acl3_cnx),
+            ("ios", "nxos", acl3_ios, acl3_nxos),
         ]:
             # getter
             acl_o = Acl(line, platform=platform)
