@@ -2,13 +2,13 @@
 
 from cisco_acl.ace import Ace
 from cisco_acl.ace_group import AceGroup
-from cisco_acl.acl import Acl
+from cisco_acl.acl import Acl, from_config
 from cisco_acl.address import Address
 from cisco_acl.port import Port
 from cisco_acl.protocol import Protocol
 from cisco_acl.remark import Remark
 
-__all__ = ["Ace", "AceGroup", "Acl", "Address", "Port", "Protocol", "Remark"]
+__all__ = ["Ace", "AceGroup", "Acl", "Address", "Port", "Protocol", "Remark", "from_config"]
 
 __version__ = "1.0.0"
 __date__ = "2022-07-16"

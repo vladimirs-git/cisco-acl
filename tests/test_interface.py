@@ -7,7 +7,7 @@ from tests.helpers_test import ETH1, ETH2
 
 
 # noinspection DuplicatedCode
-class Test(unittest.TestCase):
+class Test(unittest.TestCase):  # TODO delete
     """Interface"""
 
     # =========================== property ===========================

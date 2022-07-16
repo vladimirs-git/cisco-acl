@@ -4,7 +4,7 @@ from cisco_acl import helpers as h
 from cisco_acl.types_ import LStr, UStr
 
 
-class Interface:
+class Interface:  # TODO delete
     """Interfaces with applied ACL"""
 
     def __init__(self, **kwargs):
@@ -24,7 +24,7 @@ class Interface:
 
     @input.setter
     def input(self, items: UStr) -> None:
-        items_: LStr = h.convert_to_lstr(name="input", items=items)
+        items_: LStr = h.convert_to_lstr(items=items)
         self._input = sorted(items_)
 
     @input.deleter
@@ -38,7 +38,7 @@ class Interface:
 
     @output.setter
     def output(self, items: UStr) -> None:
-        items_: LStr = h.convert_to_lstr(name="output", items=items)
+        items_: LStr = h.convert_to_lstr(items=items)
         self._output = sorted(items_)
 
     @output.deleter

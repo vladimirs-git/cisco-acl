@@ -8,14 +8,11 @@ from typing import List
 from cisco_acl import helpers as h
 from cisco_acl.ace import Ace
 from cisco_acl.ace_group import AceGroup, LUAcl
-from cisco_acl.interface import Interface
+from cisco_acl.parser import ParserIOS, ParserNXOS
 from cisco_acl.port import Port
 from cisco_acl.remark import Remark
-from cisco_acl.static import (
-    SEQUENCE_MAX,
-    DEFAULT_PLATFORM,
-    INDENTATION,
-)
+from cisco_acl.static import SEQUENCE_MAX, INDENTATION
+from cisco_acl.types_ import LStr, UStr
 
 
 @total_ordering
@@ -52,8 +49,8 @@ class Acl(AceGroup):
                 self.name = "NAME"
                 self.items = [Remark("remark TEXT"), Ace("permit icmp any any")]
                 self.ip_acl_name = "ip access-list NAME"
-                self.interface.input = ["interface FastEthernet1"]
-                self.interface.output = []
+                self.input = ["interface FastEthernet1"]
+                self.output = []
                 self.indent = "    "
                 self.note = "allow icmp"
         """
@@ -63,22 +60,11 @@ class Acl(AceGroup):
             self.name = kwargs.get("name") or ""
             self.items = kwargs.get("items") or []
         self.indent = kwargs.get("indent", INDENTATION)
-        self.interface = Interface(**kwargs)
+        self.input = kwargs.get("input") or []
+        self.output = kwargs.get("output") or []
 
     def __repr__(self):
-        params = [f"{self.line!r}"]
-        if self._platform != DEFAULT_PLATFORM:
-            params.append(f"platform={self._platform!r}")
-        if self.note:
-            params.append(f"note={self.note!r}")
-        if self.name:
-            params.append(f"name={self.name!r}")
-        if self.interface.input:
-            params.append(f"input={self.interface.input!r}")
-        if self.interface.output:
-            params.append(f"output={self.interface.output!r}")
-        kwargs = ", ".join(params)
-        return f"{self.__class__.__name__}({kwargs})"
+        return f"<{self.__class__.__name__}: {self.name}>"
 
     def __hash__(self) -> int:
         return self.line.__hash__()
@@ -161,6 +147,34 @@ class Acl(AceGroup):
     @indent.deleter
     def indent(self) -> None:
         self._indent = ""
+
+    @property
+    def input(self) -> LStr:
+        """Interfaces, where Acl is used on input"""
+        return self._input
+
+    @input.setter
+    def input(self, items: UStr) -> None:
+        items_: LStr = h.convert_to_lstr(items=items)
+        self._input = sorted(items_)
+
+    @input.deleter
+    def input(self) -> None:
+        self._input = []
+
+    @property
+    def output(self) -> LStr:
+        """Interfaces, where Acl is used on output"""
+        return self._output
+
+    @output.setter
+    def output(self, items: UStr) -> None:
+        items_: LStr = h.convert_to_lstr(items=items)
+        self._output = sorted(items_)
+
+    @output.deleter
+    def output(self) -> None:
+        self._output = []
 
     @property
     def ip_acl_name(self) -> str:
@@ -290,14 +304,14 @@ class Acl(AceGroup):
             items=[o.copy() for o in self.items],
             platform=self.platform,
             note=self.note,
-            input=self.interface.input.copy(),
-            output=self.interface.output.copy(),
+            input=self.input.copy(),
+            output=self.output.copy(),
         )
         return acl
 
     # noinspection PyIncorrectDocstring
     def resequence(self, start: int = 10, step: int = 10, **kwargs) -> int:
-        """Resequences all Acl.items and change sequence numbers
+        """Resequence all Acl.items and change sequence numbers
         :param start: Starting sequence number. start=0 - delete all sequence numbers
         :param step: Step to increment the sequence number
         :param items: List of Ace objects. By default, self.items
@@ -325,3 +339,24 @@ class Acl(AceGroup):
 
 
 LAcl = List[Acl]
+
+
+def from_config(config: str, platform: str = "ios") -> LAcl:
+    """Parses ACLs from config"""
+    parser = ParserIOS
+    if platform == "nxos":
+        parser = ParserNXOS
+    parser = parser(config=config, platform=platform)
+    parser.parse_config()
+    acls_by_remark = parser.parse_acls_by_remark()
+
+    acls = []
+    for acl_name, acl_d in acls_by_remark.items():
+        items = []
+        for ace_group_d in acl_d["ace_group"]:
+            ace_group_o = AceGroup(platform=platform, **ace_group_d)
+            items.append(ace_group_o)
+        acl_o = Acl(name=acl_name, platform=platform, items=items,
+                    input=acl_d["input"], output=acl_d["output"])
+        acls.append(acl_o)
+    return acls

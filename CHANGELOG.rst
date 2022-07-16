@@ -3,6 +3,11 @@
 CHANGELOG
 =========
 
+1.1.0 (2022-07-17)
+------------------
+* [new] acl.py from_config()
+
+
 1.0.0 (2022-07-16)
 ------------------
 * [new] numerically: Cisco ACL outputs some tcp/udp ports as names

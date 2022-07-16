@@ -4,6 +4,7 @@ import unittest
 
 from cisco_acl import Ace, AceGroup, Acl, Remark
 from tests.helpers_test import (
+    Helpers,
     ACL_NXOS,
     ACL_IOS,
     ACL_NAME_NXOS,
@@ -36,7 +37,7 @@ ACE_GR_20 = AceGroup(f"20 {DENY_IP}\n{PERMIT_IP}")
 
 
 # noinspection DuplicatedCode
-class Test(unittest.TestCase):
+class Test(Helpers):
     """Acl"""
 
     # ============================= init =============================
@@ -93,34 +94,27 @@ class Test(unittest.TestCase):
              dict(line=f"{ACL_NXOS}\n  {PERMIT_IP}", name="")),
             (dict(line=ACL_RP_NXOS, platform="nxos"), dict(line=ACL_RP_NXOS, name="")),
             (dict(line=ACL_NAME_RP_NXOS, platform="nxos"), dict(line=ACL_NAME_RP_NXOS, name="A")),
+            # input output
+            (dict(line=ACL_IOS, input="port1"), dict(line=f"{ACL_IOS}\n", input=["port1"])),
+            (dict(line=ACL_IOS, input=["port1"]), dict(line=f"{ACL_IOS}\n", input=["port1"])),
+            (dict(line=ACL_IOS, output="port1"), dict(line=f"{ACL_IOS}\n", output=["port1"])),
+            (dict(line=ACL_IOS, output=["port1"]), dict(line=f"{ACL_IOS}\n", output=["port1"])),
             # numerically
             (dict(line=ACL_NUM_IOS, platform="ios", numerically=False), dict(line=ACL_NAM_IOS)),
             (dict(line=ACL_NAM_IOS, platform="ios", numerically=True), dict(line=ACL_NUM_IOS)),
         ]:
             # getter
             acl_o = Acl(**kwargs)
-            result = str(acl_o)
-            req = req_d["line"]
-            self.assertEqual(result, req, msg=f"{kwargs=}")
-            for attr, req in req_d.items():
-                result = getattr(acl_o, attr)
-                self.assertEqual(result, req, msg=f"{kwargs=}")
+            self._test_attrs(obj=acl_o, req_d=req_d, msg=f"getter {kwargs=}")
 
             # setter
             acl_o.line = kwargs["line"]
-            result = str(acl_o)
-            req = req_d["line"]
-            self.assertEqual(result, req, msg=f"{kwargs=}")
-            for attr, req in req_d.items():
-                result = getattr(acl_o, attr)
-                self.assertEqual(result, req, msg=f"{kwargs=}")
+            self._test_attrs(obj=acl_o, req_d=req_d, msg=f"getter {kwargs=}")
 
-            # deleter
-            del acl_o.line
-            result = str(acl_o)
-            req = f"{ACL_NXOS}\n" if acl_o.platform == "nxos" else f"{ACL_IOS}\n"
-            # noinspection PyUnboundLocalVariable
-            self.assertEqual(result, req, msg=f"{kwargs=}")
+        # deleter
+        acl_o = Acl(ACL_NUM_IOS)
+        del acl_o.line
+        self._test_attrs(obj=acl_o, req_d=dict(line=f"{ACL_IOS}\n"), msg=f"getter {kwargs=}")
 
     def test_invalid__line(self):
         """Acl.line"""
@@ -304,8 +298,7 @@ class Test(unittest.TestCase):
         acl_o2 = acl_o1.copy()
         # mix data
         acl_o2.items[0], acl_o2.items[1] = acl_o2.items[1], acl_o2.items[0]
-        intf = acl_o2.interface
-        intf.input[0], intf.input[1] = intf.input[1], intf.input[0]
+        acl_o2.input[0], acl_o2.input[1] = acl_o2.input[1], acl_o2.input[0]
 
         for acl_o, req, intf_req in [
             (acl_o1, [PERMIT_IP, DENY_IP], [ETH1, ETH2]),
@@ -313,7 +306,7 @@ class Test(unittest.TestCase):
         ]:
             result = [str(o) for o in acl_o]
             self.assertEqual(result, req, msg=f"{acl_o=}")
-            result = acl_o.interface.input
+            result = acl_o.input
             self.assertEqual(result, intf_req, msg=f"{acl_o=}")
 
     def test_valid__resequence(self):

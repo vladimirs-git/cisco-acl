@@ -159,7 +159,7 @@ def str_to_positive_int(line: StrInt) -> int:
 
 # =============================== list ===============================
 
-def convert_to_lstr(items: Any, name: str = "") -> LStr:
+def convert_to_lstr(items: Any) -> LStr:
     """Converts items to *List[str]*. If items has other type, raise ERROR"""
     if not items:
         items = []
@@ -171,7 +171,7 @@ def convert_to_lstr(items: Any, name: str = "") -> LStr:
         if isinstance(item, str):
             items_.append(item)
         else:
-            raise TypeError(f"{name} {item=} {str} expected")
+            raise TypeError(f"{item=} {str} expected")
     return items_
 
 

@@ -42,6 +42,12 @@ Install the package from pypi.org release
 
     pip install cisco-acl
 
+or install the package from github.com release
+
+.. code:: bash
+
+    pip install https://github.com/vladimirs-git/cisco-acl/archive/refs/tags/1.0.0.tar.gz
+
 or install the package from github.com repository
 
 .. code:: bash
@@ -51,8 +57,8 @@ or install the package from github.com repository
 
 Acl
 ---
-ACL - Access Control List. Class that has methods to manipulate with Acl.items: `Ace`_, `Remark`_, `AceGroup`_.
-In this class implements most of the python list methods: append(), extend(), pop(), sort(), etc.
+ACL - Access Control List. A class that has methods for working with Acl.items: `Ace`_, `Remark`_, `AceGroup`_.
+This class implements most of the Python list methods: append(), extend(), pop(), sort(), etc.
 Acl.items can be edited, sorted, indexed by sequence numbers or notes.
 
 =============== ============ =======================================================================

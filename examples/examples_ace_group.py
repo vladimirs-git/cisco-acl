@@ -3,7 +3,7 @@
 - Create ACL with groups
 - Generate sequence numbers
 - Sort rules by comment
-- Re-sequence numbers
+- Resequence numbers
 """
 
 from cisco_acl import Acl, AceGroup
@@ -120,7 +120,7 @@ print()
 #   40 remark ===== web =====
 #   50 permit tcp any any eq www
 
-# Re-sequence numbers with custom start and step.
+# Resequence numbers with custom start and step.
 acl1.resequence(start=100, step=1)
 print(acl1)
 print()
