@@ -137,44 +137,64 @@ class Test(Helpers):
 
     def test_valid__line(self):
         """Ace.line"""
-        permit_0 = "permit tcp any eq www 443 object-group NAME neq 22 ack log"
-        permit_0b = " permit\ttcp any eq www 443 object-group NAME neq 22 ack log\n"
-        permit_10 = f"10 {permit_0}"
-        permit_0_d = dict(line=permit_0,
-                          sequence="",
-                          action="permit",
-                          protocol="tcp",
-                          srcaddr="any",
-                          srcport="eq www 443",
-                          dstaddr="object-group NAME",
-                          dstport="neq 22",
-                          option="ack log")
-        permit_10_d = {**permit_0_d, **{"line": permit_10, "sequence": "10"}}
+        permit_tcp_0 = "permit tcp any eq ftp 443 object-group NAME neq cmd ack log"
+        permit_tcp_0_dirty = "  " + "\t".join(permit_tcp_0.split()) + "\n"
+        permit_tcp_0_d = dict(line=permit_tcp_0,
+                              sequence="",
+                              action="permit",
+                              protocol="tcp",
+                              srcaddr="any",
+                              srcport="eq ftp 443",
+                              dstaddr="object-group NAME",
+                              dstport="neq cmd",
+                              option="ack log")
+        permit_tcp_10 = f"10 {permit_tcp_0}"
+        permit_tcp_10_d = {**permit_tcp_0_d, **{"line": permit_tcp_10, "sequence": "10"}}
 
-        deny_0 = "deny udp host 1.1.1.1 lt 3 2.2.2.0 0.0.0.3 range www bgp"
-        deny_0b = " deny\tudp host 1.1.1.1 lt 3 2.2.2.0 0.0.0.3 range www bgp\n"
-        deny_10 = f"10 {deny_0}"
-        deny_0_d = dict(line=deny_0,
-                        sequence="",
-                        action="deny",
-                        protocol="udp",
-                        srcaddr="host 1.1.1.1",
-                        srcport="lt 3",
-                        dstaddr="2.2.2.0 0.0.0.3",
-                        dstport="range www bgp",
-                        option="")
-        deny_10_d = {**deny_0_d, **{"line": deny_10, "sequence": "10"}}
+        permit_tcp_n_0 = "permit tcp any eq 21 443 object-group NAME neq 514 ack log"
+        permit_tcp_n_0_d = {**permit_tcp_0_d, **{"line": permit_tcp_n_0,
+                                                 "srcport": "eq 21 443",
+                                                 "dstport": "neq 514"}}
+        permit_tcp_n_10_d = {**permit_tcp_n_0_d, **{"line": f"10 {permit_tcp_n_0}",
+                                                    "sequence": "10"}}
 
-        for line, req_d in [
-            (permit_0, permit_0_d),
-            (permit_10, permit_10_d),
-            (permit_0b, permit_0_d),
-            (deny_0, deny_0_d),
-            (deny_10, deny_10_d),
-            (deny_0b, deny_0_d),
+        deny_udp_0 = "deny udp host 1.1.1.1 lt syslog 2.2.2.0 0.0.0.3 range bootps tftp"
+        deny_udp_10 = f"10 {deny_udp_0}"
+        deny_udp_0_d = dict(line=deny_udp_0,
+                            sequence="",
+                            action="deny",
+                            protocol="udp",
+                            srcaddr="host 1.1.1.1",
+                            srcport="lt syslog",
+                            dstaddr="2.2.2.0 0.0.0.3",
+                            dstport="range bootps tftp",
+                            option="")
+        deny_udp_n_0 = "deny udp host 1.1.1.1 lt 514 2.2.2.0 0.0.0.3 range 67 69"
+        deny_udp_n_0_d = {**deny_udp_0_d, **{"line": deny_udp_n_0,
+                                             "srcport": "lt 514",
+                                             "dstport": "range 67 69"}}
+        deny_udp_10_d = {**deny_udp_0_d, **{"line": deny_udp_10, "sequence": "10"}}
+
+        for numerically, line, req_d in [
+            # indexes
+            (False, permit_tcp_0, permit_tcp_0_d),
+            (False, permit_tcp_0_dirty, permit_tcp_0_d),
+            (False, permit_tcp_n_0, permit_tcp_0_d),
+            (False, permit_tcp_10, permit_tcp_10_d),
+            (False, deny_udp_0, deny_udp_0_d),
+            (False, deny_udp_n_0, deny_udp_0_d),
+            (False, deny_udp_10, deny_udp_10_d),
+
+            # numerically
+            (True, permit_tcp_0, permit_tcp_n_0_d),
+            (True, permit_tcp_0_dirty, permit_tcp_n_0_d),
+            (True, permit_tcp_n_0, permit_tcp_n_0_d),
+            (True, permit_tcp_10, permit_tcp_n_10_d),
+            (True, deny_udp_0, deny_udp_n_0_d),
+            (True, deny_udp_n_0, deny_udp_n_0_d),
         ]:
             # getter
-            ace_o = Ace(line)
+            ace_o = Ace(line=line, numerically=numerically)
             self._test_attrs(obj=ace_o, req_d=req_d, msg=f"getter {line=}")
 
             # setter
@@ -321,13 +341,13 @@ class Test(Helpers):
             options=["log"],
         )
         permit_ip = ["permit ip any any"]
-        permit_tcp_ios = ["permit tcp host 10.0.0.1 eq 1 2 3 10.0.0.0 0.0.0.3 eq 80 443 log"]
+        permit_tcp_ios = ["permit tcp host 10.0.0.1 eq 1 2 3 10.0.0.0 0.0.0.3 eq www 443 log"]
         permit_tcp_cnx = [
-            "permit tcp 10.0.0.1/32 eq 1 10.0.0.0/30 eq 80 log",
+            "permit tcp 10.0.0.1/32 eq 1 10.0.0.0/30 eq www log",
             "permit tcp 10.0.0.1/32 eq 1 10.0.0.0/30 eq 443 log",
-            "permit tcp 10.0.0.1/32 eq 2 10.0.0.0/30 eq 80 log",
+            "permit tcp 10.0.0.1/32 eq 2 10.0.0.0/30 eq www log",
             "permit tcp 10.0.0.1/32 eq 2 10.0.0.0/30 eq 443 log",
-            "permit tcp 10.0.0.1/32 eq 3 10.0.0.0/30 eq 80 log",
+            "permit tcp 10.0.0.1/32 eq 3 10.0.0.0/30 eq www log",
             "permit tcp 10.0.0.1/32 eq 3 10.0.0.0/30 eq 443 log",
         ]
         deny_udp_ = ["deny udp any eq 1 any eq 2"]
@@ -340,10 +360,10 @@ class Test(Helpers):
             "permit tcp host 10.0.0.1 eq 1 2 10.0.0.4 0.0.0.3 eq 3 4 log",
             "permit tcp host 10.0.0.2 eq 1 2 10.0.0.0 0.0.0.3 eq 3 4 log",
             "permit tcp host 10.0.0.2 eq 1 2 10.0.0.4 0.0.0.3 eq 3 4 log",
-            "permit udp host 10.0.0.1 eq 5 6 10.0.0.0 0.0.0.3 eq 7 8 log",
-            "permit udp host 10.0.0.1 eq 5 6 10.0.0.4 0.0.0.3 eq 7 8 log",
-            "permit udp host 10.0.0.2 eq 5 6 10.0.0.0 0.0.0.3 eq 7 8 log",
-            "permit udp host 10.0.0.2 eq 5 6 10.0.0.4 0.0.0.3 eq 7 8 log",
+            "permit udp host 10.0.0.1 eq 5 6 10.0.0.0 0.0.0.3 eq echo 8 log",
+            "permit udp host 10.0.0.1 eq 5 6 10.0.0.4 0.0.0.3 eq echo 8 log",
+            "permit udp host 10.0.0.2 eq 5 6 10.0.0.0 0.0.0.3 eq echo 8 log",
+            "permit udp host 10.0.0.2 eq 5 6 10.0.0.4 0.0.0.3 eq echo 8 log",
         ]
         permit_group_cnx = [
             "permit icmp 10.0.0.1/32 10.0.0.0/30 log",
@@ -369,22 +389,22 @@ class Test(Helpers):
             "permit tcp 10.0.0.2/32 eq 2 10.0.0.4/30 eq 3 log",
             "permit tcp 10.0.0.2/32 eq 2 10.0.0.4/30 eq 4 log",
 
-            "permit udp 10.0.0.1/32 eq 5 10.0.0.0/30 eq 7 log",
+            "permit udp 10.0.0.1/32 eq 5 10.0.0.0/30 eq echo log",
             "permit udp 10.0.0.1/32 eq 5 10.0.0.0/30 eq 8 log",
-            "permit udp 10.0.0.1/32 eq 5 10.0.0.4/30 eq 7 log",
+            "permit udp 10.0.0.1/32 eq 5 10.0.0.4/30 eq echo log",
             "permit udp 10.0.0.1/32 eq 5 10.0.0.4/30 eq 8 log",
-            "permit udp 10.0.0.1/32 eq 6 10.0.0.0/30 eq 7 log",
+            "permit udp 10.0.0.1/32 eq 6 10.0.0.0/30 eq echo log",
             "permit udp 10.0.0.1/32 eq 6 10.0.0.0/30 eq 8 log",
-            "permit udp 10.0.0.1/32 eq 6 10.0.0.4/30 eq 7 log",
+            "permit udp 10.0.0.1/32 eq 6 10.0.0.4/30 eq echo log",
             "permit udp 10.0.0.1/32 eq 6 10.0.0.4/30 eq 8 log",
 
-            "permit udp 10.0.0.2/32 eq 5 10.0.0.0/30 eq 7 log",
+            "permit udp 10.0.0.2/32 eq 5 10.0.0.0/30 eq echo log",
             "permit udp 10.0.0.2/32 eq 5 10.0.0.0/30 eq 8 log",
-            "permit udp 10.0.0.2/32 eq 5 10.0.0.4/30 eq 7 log",
+            "permit udp 10.0.0.2/32 eq 5 10.0.0.4/30 eq echo log",
             "permit udp 10.0.0.2/32 eq 5 10.0.0.4/30 eq 8 log",
-            "permit udp 10.0.0.2/32 eq 6 10.0.0.0/30 eq 7 log",
+            "permit udp 10.0.0.2/32 eq 6 10.0.0.0/30 eq echo log",
             "permit udp 10.0.0.2/32 eq 6 10.0.0.0/30 eq 8 log",
-            "permit udp 10.0.0.2/32 eq 6 10.0.0.4/30 eq 7 log",
+            "permit udp 10.0.0.2/32 eq 6 10.0.0.4/30 eq echo log",
             "permit udp 10.0.0.2/32 eq 6 10.0.0.4/30 eq 8 log",
         ]
         for kwargs, platform, req in [

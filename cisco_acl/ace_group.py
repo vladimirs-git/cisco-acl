@@ -26,7 +26,7 @@ class AceGroup(Group, BaseAce):
     def __init__(self, line: str = "", **kwargs):
         """Group of ACE (Access Control Entry)
         :param str line: string of ACEs
-        :param str platform: Supported platforms: "ios", "cnx". By default, "ios"
+        :param str platform: Supported platforms: "ios", "cnx" (default "ios")
         :param str note: Object description. Not part of the ACE configuration,
             can be used for ACEs sorting
         :param List[Ace] items: An alternate way to create AceGroup object from a list of Ace objects

@@ -5,21 +5,27 @@ from typing import List
 
 from cisco_acl import helpers as h
 from cisco_acl.base import Base
-from cisco_acl.static import OPERATORS, PORTS
+from cisco_acl.static import OPERATORS
 from cisco_acl.types_ import LInt, LStr, IInt
+from cisco_acl.port_name import PortName
 
 
 @total_ordering
 class Port(Base):
     """ACE. TCP/UDP Port"""
 
-    __slots__ = ("_platform", "_note", "_line", "_items", "_operator", "_ports", "_sport")
+    __slots__ = ("_platform", "_note", "_line",
+                 "_numerically", "protocol", "_items", "_operator", "_ports", "_sport")
 
     def __init__(self, line: str = "", **kwargs):
         """ACE. TCP/UDP Port
-        :param line: TCP/UDP ports line
-        :param platform: Supported platforms: "ios", "cnx". By default, "ios"
-        :param note: Object description. Not part of the ACE configuration,
+        :param str line: TCP/UDP ports line
+        :param str platform: Supported platforms: "ios", "cnx" (default "ios")
+        :param protocol: ACL protocol: "tcp", "udp"
+        :param bool numerically: Cisco ACL outputs some tcp/udp ports as names
+            True  - all tcp/udp ports as numbers
+            False - some tcp/udp ports as names (by default)
+        :param str note: Object description. Not part of the ACE configuration,
             can be used for ACEs sorting
 
         :example: ios, "eq" (can match multiple ports in single line)
@@ -52,6 +58,8 @@ class Port(Base):
                 self.sport = "1-3"
         """
         super().__init__(**kwargs)
+        self.protocol = str(kwargs.get("protocol") or "")
+        self.numerically = bool(kwargs.get("numerically"))
         self.line = line
 
     # ========================== redefined ===========================
@@ -80,7 +88,15 @@ class Port(Base):
     @property
     def line(self) -> str:
         """ACE source or destination TCP/UDP ports"""
-        return self._line
+        if not (self.operator and self._items and self.protocol in ["tcp", "udp"]):
+            return ""
+        if self.numerically:
+            items_s = " ".join([str(i) for i in self._items])
+        else:
+            port_name = PortName(protocol=self.protocol, platform=self.platform)
+            data = port_name.ports()
+            items_s = " ".join([str(data.get(i) or i) for i in self._items])
+        return f"{self._operator} {items_s}"
 
     @line.setter
     def line(self, line: str) -> None:
@@ -89,7 +105,6 @@ class Port(Base):
         if not items:
             self._delete_port()
             return
-        self._line = line
         self._operator = self._line__operator(items)
         items = items[1:]
         items_: LInt = self._line__items_to_ints(items)
@@ -124,6 +139,22 @@ class Port(Base):
         self.line = " ".join(items_)
 
     @property
+    def numerically(self) -> bool:
+        """Cisco ACL outputs some tcp/udp ports as names
+            True  - all tcp/udp ports as numbers
+            False - some tcp/udp ports as names (by default)
+        """
+        return self._numerically
+
+    @numerically.setter
+    def numerically(self, numerically: bool) -> None:
+        self._numerically = bool(numerically)
+
+    @numerically.deleter
+    def numerically(self) -> None:
+        self._numerically = False
+
+    @property
     def operator(self) -> str:
         """ACE TCP/UDP port operator: "eq", "gt", "lt", "neq", "range"
 
@@ -135,12 +166,14 @@ class Port(Base):
 
     @operator.setter
     def operator(self, operator: str) -> None:
+        if not (self.operator and self._items and self.protocol in ["tcp", "udp"]):
+            line = self.line
+            raise ValueError(f"invalid {operator=} for {line=}")
         if operator != self.operator and "range" in [operator, self.operator]:
             expected = [s for s in OPERATORS if s != "range"]
             raise ValueError(f"invalid {operator=}, {expected=}")
         items = self.line.split()
         items[0] = operator
-
         self.line = " ".join(items)
 
     @operator.deleter
@@ -188,7 +221,6 @@ class Port(Base):
 
     def _delete_port(self) -> None:
         """Clears port data"""
-        self._line = ""
         self._operator = ""
         self._items = []
         self._ports = []
@@ -222,13 +254,15 @@ class Port(Base):
         ports: LInt = []  # return
         for item in items:
             if item.isdigit():
-                port = int(item)
-            elif port_nr := PORTS.get(item):
-                port = port_nr
-            else:
-                expected = sorted(PORTS)
-                raise ValueError(f"invalid {item=}, {expected=}")
-            ports.append(port)
+                ports.append(int(item))
+                continue
+            port_name = PortName(protocol=self.protocol, platform=self.platform)
+            data = port_name.names()
+            if port_nr := data.get(item):
+                ports.append(port_nr)
+                continue
+            expected = sorted(data)
+            raise ValueError(f"invalid {item=}, {expected=}")
 
         # validation
         platform = self.platform

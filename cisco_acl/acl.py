@@ -22,10 +22,10 @@ from cisco_acl.static import (
 class Acl(AceGroup):
     """ACL (Access Control List)"""
 
-    def __init__(self, line: str = "", **kwargs):
+    def __init__(self, line: str = "", **kwargs):  # TODO rename platform cnx to nxos
         """ACL (Access Control List)
         :param str line: ACL config (name and following remarks and access entries)
-        :param str platform: Supported platforms: "ios", "cnx". By default, "ios"
+        :param str platform: Supported platforms: "ios", "cnx" (default "ios")
         :param str name: ACL name. By default, parsed from line
         :param items: List of ACE (strings or Ace, AceGroup, Remark objects)
                 By default, parsed from line

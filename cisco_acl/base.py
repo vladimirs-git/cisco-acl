@@ -15,7 +15,7 @@ class Base(ABC):
 
     def __init__(self, **kwargs):
         """Base - Parent of: AceBase, Address, Port, Protocol
-        :param platform: Supported platforms: "ios", "cnx". By default, "ios"
+        :param platform: Supported platforms: "ios", "cnx" (default "ios")
         :param note: Object description (can be used for ACEs sorting)
         """
         self._uuid = str(uuid.uuid1())

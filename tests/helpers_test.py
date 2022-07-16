@@ -52,3 +52,23 @@ class Helpers(unittest.TestCase):
             if hasattr(result, "line"):
                 result = str(result)
             self.assertEqual(result, req, msg=f"{msg} {attr=}")
+
+    def _test_keys(self, data: dict, req_d: dict, msg: str):
+        """Test values of data in req_d
+        :param data: Tested dict
+        :param req_d: Valid keys and values
+        :param msg: Message
+        """
+        for key, req in req_d.items():
+            result = data[key]
+            self.assertEqual(result, req, msg=f"{msg} {key=}")
+
+    def _test_no_keys(self, data: dict, absent: list, msg: str):
+        """Test `absent_d` keys absent in `data`
+        :param data: Tested dict
+        :param absent: Valid keys and values
+        :param msg: Message
+        """
+        for key in absent:
+            result = data.get(key)
+            self.assertIsNone(result, msg=f"{msg} {key=}")

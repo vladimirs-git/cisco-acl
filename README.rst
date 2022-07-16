@@ -42,12 +42,6 @@ Install the package from pypi.org release
 
     pip install cisco-acl
 
-or install the package from github.com release
-
-.. code:: bash
-
-    pip install https://github.com/vladimirs-git/cisco-acl/archive/refs/tags/0.1.1.tar.gz
-
 or install the package from github.com repository
 
 .. code:: bash
