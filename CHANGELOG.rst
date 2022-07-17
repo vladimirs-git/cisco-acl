@@ -5,7 +5,8 @@ CHANGELOG
 
 1.1.0 (2022-07-17)
 ------------------
-* [new] acl.py from_config()
+* [new] cisco_acl.config_to_ace() cisco_acl.config_to_aceg()
+* [delete] Interface
 
 
 1.0.0 (2022-07-16)

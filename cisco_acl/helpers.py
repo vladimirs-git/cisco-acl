@@ -91,6 +91,8 @@ def check_name(name: str) -> bool:
     """True if first char is ascii_letters, other chars can be punctuation, else raise ERROR"""
     if not name:
         raise ValueError(f"absent {name=}")
+    if name.isdigit():
+        return True
     first_char = name[0]
     if first_char not in ascii_letters:
         raise ValueError(f"acl name {first_char=}, expected={ascii_letters}")

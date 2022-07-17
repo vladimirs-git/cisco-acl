@@ -26,7 +26,7 @@ class AceGroup(Group, BaseAce):
     def __init__(self, line: str = "", **kwargs):
         """Group of ACE (Access Control Entry)
         :param str line: string of ACEs
-        :param str platform: Supported platforms: "ios", "nxos" (default "ios")
+        :param str platform: Platform: "ios", "nxos" (default "ios")
         :param bool numerically: Cisco ACL outputs well-known tcp/udp ports as names
             True  - all tcp/udp ports as numbers
             False - well-known tcp/udp ports as names (default)
@@ -154,6 +154,9 @@ class AceGroup(Group, BaseAce):
     @sequence.setter
     def sequence(self, sequence: StrInt) -> None:
         self._sequence = Sequence(sequence)
+        # if hasattr(self, "items"):  # todo remake sequence numbering
+        #     item1 = getattr(self, "items")[0]
+        #     setattr(item1, "sequence", sequence)
 
     @sequence.deleter
     def sequence(self) -> None:

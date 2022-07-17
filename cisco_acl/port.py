@@ -20,7 +20,7 @@ class Port(Base):
     def __init__(self, line: str = "", **kwargs):
         """ACE. TCP/UDP Port
         :param str line: TCP/UDP ports line
-        :param str platform: Supported platforms: "ios", "nxos" (default "ios")
+        :param str platform: Platform: "ios", "nxos" (default "ios")
         :param protocol: ACL protocol: "tcp", "udp"
         :param bool numerically: Cisco ACL outputs well-known tcp/udp ports as names
             True  - all tcp/udp ports as numbers

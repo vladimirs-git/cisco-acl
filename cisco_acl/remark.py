@@ -17,7 +17,7 @@ class Remark(BaseAce):
     def __init__(self, line: str, **kwargs):
         """ACL Remark
         :param str line: string of ACEs
-        :param platform: Supported platforms: "ios", "nxos" (default "ios")
+        :param platform: Platform: "ios", "nxos" (default "ios")
         :param str note: Object description. Not part of the ACE configuration,
             can be used for ACEs sorting
 

@@ -99,9 +99,14 @@ class PortName:
     """TCP/UDP ports and names mapping for Cisco ACL"""
 
     def __init__(self, protocol: str = "tcp", platform: str = "ios", version: str = ""):
-        self.protocol = protocol
-        self.platform = platform
-        self.version = version  # todo
+        """TCP/UDP ports and names
+        :param protocol: Protocol: "tcp", "udp"
+        :param platform: Platform: "ios", "nxos"
+        :param version: Software version (not implemented, planned for compatability)
+        """
+        self.protocol = str(protocol).lower()
+        self.platform = str(platform).lower()
+        self.version = str(version).lower()
 
     def __repr__(self):
         name = self.__class__.__name__

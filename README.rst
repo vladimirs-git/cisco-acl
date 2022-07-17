@@ -1,19 +1,20 @@
 cisco-acl
 =========
 
-Python package to parse and manage Cisco extended ACL (Access Control List).
+Python package to parse and manage Cisco extended ACLs (Access Control Lists).
 
 Supported platforms:
 
-- Cisco IOS extended ACL
+- Cisco IOS (extended ACL)
 - Cisco Nexus NX-OS
 
 Main features:
 
-- Parses ACL from part of Cisco config
+- Parses ACLs from Cisco config
 - Generates ACEs sequence numbers
-- Changes the Cisco IOS syntax to Nexus NX-OS syntax and vice vera
-- Groups and sorts ACEs (Access Control Entries). The order of lines within a group does not change
+- Prints TCP/UDP ports as numbers or as well-known names
+- Changes the IOS syntax to NX-OS syntax and vice vera
+- Groups and sorts ACEs. The order of ACEs within a group does not change
 
 .. contents::
 
@@ -55,6 +56,211 @@ or install the package from github.com repository
     pip install git+https://github.com/vladimirs-git/cisco-acl
 
 
+config_to_ace()
+---------------
+**config_to_ace(config, platform)**
+Creates *Acl* objects based on the "show running-config" output.
+*Acl* contains *Ace* items, where each ACE line is treated as an independent element
+
+=============== ============ =======================================================================
+Parameter       Type         Description
+=============== ============ =======================================================================
+config          *str*        Config file, output of "show running-config" command
+platform        *str*        Platform: "ios", "nxos" (default "ios")
+=============== ============ =======================================================================
+
+Return
+	*Acl* objects
+
+Examples - config_to_ace()
+::::::::::::::::::::::::::
+`./examples/examples_config_to_ace.py`_
+
+.. code:: python
+
+	from cisco_acl import config_to_ace, Ace, AceGroup
+
+	config = """
+	hostname ROUTER_IOS
+	ip access-list extended ACL_NAME
+	  5 permit tcp host 10.0.0.1 10.0.0.0 0.0.0.255 eq 21 22 23
+	  10 deny tcp any any eq 53
+	  15 permit ip any any
+	"""
+
+	# Create ACL
+	# Note, ACL represented with TCP/UDP ports as well-known names
+	acls = config_to_ace(config=config)
+	acl = acls[0]
+	print(acl)
+	print()
+	# ip access-list extended ACL_NAME
+	#   5 permit tcp host 10.0.0.1 10.0.0.0 0.0.0.255 eq ftp 22 telnet
+	#   10 deny tcp any any eq domain
+	#   15 permit ip any any
+
+	# TCP/UDP ports represented numerically
+	acl.numerically = True
+	print(acl)
+	print()
+	# ip access-list extended ACL_NAME
+	#   5 permit tcp host 10.0.0.1 10.0.0.0 0.0.0.255 eq 21 22 23
+	#   10 deny tcp any any eq 53
+	#   15 permit ip any any
+
+	# Insert new ACEs to ACL
+	# Note, ACEs has invalid sequence numbers
+	ace = Ace("deny ip object-group A object-group B log")
+	aceg = AceGroup("remark ICMP\npermit icmp any any")
+	acl.items.extend([ace, aceg])
+	ace.sequence = 1
+	aceg.sequence = 7
+	acl.items.sort(key=lambda o: o.sequence)
+	print(acl)
+	print()
+	# ip access-list extended ACL_NAME
+	#   1 deny ip object-group A object-group B log
+	#   5 permit tcp host 10.0.0.1 10.0.0.0 0.0.0.255 eq 21 22 23
+	#   remark ICMP
+	#   permit icmp any any
+	#   10 deny tcp any any eq 53
+	#   15 permit ip any any
+
+	# Delete sequence numbers
+	acl.resequence(start=0)
+	print(acl)
+	print()
+	# ip access-list extended ACL_NAME
+	#   deny ip object-group A object-group B log
+	#   permit tcp host 10.0.0.1 10.0.0.0 0.0.0.255 eq 21 22 23
+	#   remark ICMP
+	#   permit icmp any any
+	#   deny tcp any any eq 53
+	#   permit ip any any
+
+	# Set sequence numbers
+	acl.resequence(start=20, step=2)
+	print(acl)
+	print()
+	# ip access-list extended ACL_NAME
+	#   20 deny ip object-group A object-group B log
+	#   22 permit tcp host 10.0.0.1 10.0.0.0 0.0.0.255 eq 21
+	#   24 remark ICMP
+	#   26 permit icmp any any
+	#   28 deny tcp any any eq 53
+	#   30 permit ip any any
+
+
+	# Change syntax from IOS to NX-OS.
+	acl.platform = "nxos"
+	acl.resequence(start=20, step=2)
+	print(acl)
+	print()
+	# ip access-list ACL_NAME
+	#   20 deny ip addrgroup A addrgroup B log
+	#   22 permit tcp 10.0.0.1/32 10.0.0.0/24 eq ftp
+	#   24 permit tcp 10.0.0.1/32 10.0.0.0/24 eq 22
+	#   26 permit tcp 10.0.0.1/32 10.0.0.0/24 eq telnet
+	#   28 remark ICMP
+	#   30 permit icmp any any
+	#   32 deny tcp any any eq domain
+	#   34 permit ip any any
+
+
+config_to_aceg()
+----------------
+**config_to_aceg(config, platform)**
+Creates *Acl* objects based on the "show running-config" output.
+*Acl* contains *AceGroup* items, where ACE lines grouped by remarks
+
+=============== ============ =======================================================================
+Parameter       Type         Description
+=============== ============ =======================================================================
+config          *str*        Config file, output of "show running-config" command
+platform        *str*        Platform: "ios", "nxos" (default "ios")
+=============== ============ =======================================================================
+
+Return
+	*Acl* objects
+
+Examples - config_to_aceg()
+:::::::::::::::::::::::::::
+`./examples/examples_config_to_aceg.py`_
+
+.. code:: python
+
+	from cisco_acl import config_to_aceg, AceGroup
+
+	config = """
+	hostname ROUTER_IOS
+	ip access-list extended ACL_NAME
+	  remark ========== ACE_NAME1 ==========
+	  permit tcp host 10.0.0.1 10.0.0.0 0.0.0.255 eq 21 22 23
+	  deny tcp any any eq 53
+	  remark ========== ACE_NAME2 ==========
+	  permit ip any any
+	"""
+
+	# Create ACL
+	acls = config_to_aceg(config=config)
+	acl = acls[0]
+	print(acl)
+	print()
+	# ip access-list extended ACL_NAME
+	#   remark ========== ACE_NAME1 ==========
+	#   permit tcp host 10.0.0.1 10.0.0.0 0.0.0.255 eq ftp 22 telnet
+	#   deny tcp any any eq domain
+	#   remark ========== ACE_NAME2 ==========
+	#   permit ip any any
+
+
+	# Insert new AceGroup to ACL
+	aceg = AceGroup("remark ========== ACE_NAME3 ==========\npermit icmp any any")
+	acl.items.insert(1, aceg)
+	acl.resequence(start=20, step=1)
+	print(acl)
+	print()
+	# ip access-list extended ACL_NAME
+	#   20 remark ========== ACE_NAME1 ==========
+	#   21 permit tcp host 10.0.0.1 10.0.0.0 0.0.0.255 eq ftp 22 telnet
+	#   22 deny tcp any any eq domain
+	#   23 remark ========== ACE_NAME3 ==========
+	#   24 permit icmp any any
+	#   25 remark ========== ACE_NAME2 ==========
+	#   26 permit ip any any
+
+	# Move ACE_NAME3 to top
+	aceg.sequence = 1
+	acl.items.sort(key=lambda o: o.sequence)
+	acl.resequence(start=20, step=1)
+	print(acl)
+	print()
+	# ip access-list extended ACL_NAME
+	#   20 remark ========== ACE_NAME3 ==========
+	#   21 permit icmp any any
+	#   22 remark ========== ACE_NAME1 ==========
+	#   23 permit tcp host 10.0.0.1 10.0.0.0 0.0.0.255 eq ftp 22 telnet
+	#   24 deny tcp any any eq domain
+	#   25 remark ========== ACE_NAME2 ==========
+	#   26 permit ip any any
+
+	# Ordering by notes
+	acl.items[0].note = "B"
+	acl.items[1].note = "A"
+	acl.items[2].note = "C"
+	acl.items.sort(key=lambda o: o.note)
+	print(acl)
+	print()
+	# ip access-list extended ACL_NAME
+	#   22 remark ========== ACE_NAME1 ==========
+	#   23 permit tcp host 10.0.0.1 10.0.0.0 0.0.0.255 eq ftp 22 telnet
+	#   24 deny tcp any any eq domain
+	#   20 remark ========== ACE_NAME3 ==========
+	#   21 permit icmp any any
+	#   25 remark ========== ACE_NAME2 ==========
+	#   26 permit ip any any
+
+
 Acl
 ---
 ACL - Access Control List. A class that has methods for working with Acl.items: `Ace`_, `Remark`_, `AceGroup`_.
@@ -65,7 +271,7 @@ Acl.items can be edited, sorted, indexed by sequence numbers or notes.
 Parameter       Type         Description
 =============== ============ =======================================================================
 line            *str*        ACL config (name and following remarks and access entries)
-platform        *str*        Supported platforms: "ios", "nxos" (default "ios")
+platform        *str*        Platform: "ios", "nxos" (default "ios")
 numerically     *bool*       Cisco ACL outputs well-known tcp/udp ports as names, True  - all tcp/udp ports as numbers, False - well-known tcp/udp ports as names (default)
 name            *str*        ACL name. By default, parsed from line
 items           *List[str]*  List of ACE (strings or Ace, AceGroup, Remark objects). By default, parsed from line
@@ -390,7 +596,7 @@ The following example creates Acl with not ordered groups and sorts and resequen
 	#   40 deny tcp any any eq domain
 
 	# Moved up ACE "deny tcp any any eq 53".
-	# Note that ACE have been moved up with the same sequence numbers.
+	# Note that the ACE have been moved up with the same sequence numbers.
 	# Note, Ace class has list methods pop(), insert().
 	rule1 = acl1.pop(3)
 	acl1.insert(0, rule1)
@@ -465,7 +671,7 @@ ACE - Access Control Entry. Each entry statement permit or deny in the `Acl`_.
 Parameter       Type         Description
 =============== ============ =======================================================================
 line            *str*        ACE config line
-platform        *str*        Supported platforms: "ios", "nxos" (default "ios")
+platform        *str*        Platform: "ios", "nxos" (default "ios")
 numerically     *bool*       Cisco ACL outputs well-known tcp/udp ports as names, True  - all tcp/udp ports as numbers, False - well-known tcp/udp ports as names (default)
 note            *str*        Object description. Not part of the ACE configuration, can be used for ACEs sorting
 =============== ============ =======================================================================
@@ -544,7 +750,7 @@ rule(platform, action, srcaddrs, dstaddrs, protocols, tcp_srcports, tcp_dstports
 =============== ============ =======================================================================
 Parameter       Type         Description
 =============== ============ =======================================================================
-platform        *str*        Supported platforms: "ios", "nxos" (default "ios")
+platform        *str*        Platform: "ios", "nxos" (default "ios")
 action          *str*        ACE action: "permit", "deny"
 srcaddrs        *List[str]*  Source addresses
 dstaddrs        *List[str]*  Destination addresses
@@ -673,7 +879,7 @@ Useful for sorting ACL entries with frozen sections within which the sequence do
 Parameter       Type         Description
 =============== ============ =======================================================================
 line            *str*        string of ACEs
-platform        *str*        Supported platforms: "ios", "nxos" (default "ios")
+platform        *str*        Platform: "ios", "nxos" (default "ios")
 numerically     *bool*       Cisco ACL outputs well-known tcp/udp ports as names, True  - all tcp/udp ports as numbers, False - well-known tcp/udp ports as names (default)
 note            *str*        Object description. Not part of the ACE configuration, can be used for ACEs sorting
 items           *List[Ace]*  An alternate way to create *AceGroup* object from a list of *Ace* objects. By default, an object is created from a line
@@ -1062,7 +1268,7 @@ Remark - comments ACE in ACL.
 Parameter       Type         Description
 =============== ============ =======================================================================
 line            *str*        string of ACEs
-platform        *str*        Supported platforms: "ios", "nxos" (default "ios")
+platform        *str*        Platform: "ios", "nxos" (default "ios")
 note            *str*        Object description. Not part of the ACE configuration, can be used for ACEs sorting
 =============== ============ =======================================================================
 
@@ -1123,7 +1329,7 @@ Address - Source or destination address object
 Parameter       Type         Description
 =============== ============ =======================================================================
 line            *str*        Address line
-platform        *str*        Supported platforms: "ios", "nxos" (default "ios")
+platform        *str*        Platform: "ios", "nxos" (default "ios")
 note            *str*        Object description. Not part of the ACE configuration, can be used for ACEs sorting
 =============== ============ =======================================================================
 
@@ -1227,7 +1433,7 @@ Port - Source or destination port object
 Parameter       Type         Description
 =============== ============ =======================================================================
 line            *str*        TCP/UDP ports line
-platform        *str*        Supported platforms: "ios", "nxos" (default "ios")
+platform        *str*        Platform: "ios", "nxos" (default "ios")
 numerically     *bool*       Cisco ACL outputs well-known tcp/udp ports as names, True  - all tcp/udp ports as numbers, False - well-known tcp/udp ports as names (default)
 note            *str*        Object description. Not part of the ACE configuration, can be used for ACEs sorting
 =============== ============ =======================================================================
@@ -1313,7 +1519,7 @@ Protocol - IP protocol object
 Parameter       Type         Description
 =============== ============ =======================================================================
 line            *str*        IP protocol line
-platform        *str*        Supported platforms: "ios", "nxos" (default "ios")
+platform        *str*        Platform: "ios", "nxos" (default "ios")
 note            *str*        Object description. Not part of the ACE configuration, can be used for ACEs sorting
 =============== ============ =======================================================================
 
@@ -1371,5 +1577,7 @@ The following example demonstrates Protocol object.
 .. _`./examples/examples_acl.py`: ./examples/examples_acl.py
 .. _`./examples/examples_acl_objects.py`: ./examples/examples_acl_objects.py
 .. _`./examples/examples_address.py`: ./examples/examples_address.py
+.. _`./examples/examples_config_to_ace.py` : ./examples/examples_config_to_ace.py
+.. _`./examples/examples_config_to_aceg.py` : ./examples/examples_config_to_aceg.py
 .. _`./examples/examples_port.py`: ./examples/examples_port.py
 .. _`./examples/examples_protocol.py`: ./examples/examples_protocol.py

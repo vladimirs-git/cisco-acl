@@ -26,7 +26,7 @@ class Ace(BaseAce):
     def __init__(self, line: str, **kwargs):
         """ACE - Access Control Entry
         :param str line: ACE config line
-        :param str platform: Supported platforms: "ios", "nxos" (default "ios")
+        :param str platform: Platform: "ios", "nxos" (default "ios")
         :param bool numerically: Cisco ACL outputs well-known tcp/udp ports as names
             True  - all tcp/udp ports as numbers
             False - well-known tcp/udp ports as names (default)
@@ -69,6 +69,7 @@ class Ace(BaseAce):
             return self.__hash__() == other.__hash__()
         return False
 
+    # noinspection DuplicatedCode
     def __lt__(self, other) -> bool:
         """< less than"""
         if hasattr(other, "sequence"):
@@ -318,7 +319,7 @@ class Ace(BaseAce):
     @classmethod
     def rule(cls, **kwargs) -> LAce:
         """Converts data of Rule to Ace objects
-        :param str platform: Supported platforms: "ios", "nxos" (default "ios")
+        :param str platform: Platform: "ios", "nxos" (default "ios")
         :param str action: ACE action: "permit", "deny"
         :param List[str] srcaddrs: Source addresses
         :param List[str] dstaddrs: Destination addresses

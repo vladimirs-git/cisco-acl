@@ -52,7 +52,7 @@ print()
 #   40 deny tcp any any eq domain
 
 # Moved up ACE "deny tcp any any eq 53".
-# Note that ACE have been moved up with the same sequence numbers.
+# Note that the ACE have been moved up with the same sequence numbers.
 # Note, Ace class has list methods pop(), insert().
 rule1 = acl1.pop(3)
 acl1.insert(0, rule1)

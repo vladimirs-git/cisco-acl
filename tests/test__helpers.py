@@ -153,7 +153,9 @@ class Test(unittest.TestCase):
         punctuation = r"""!"#$%&"()*+,-./:;<=>@[\]^_`{|}~"""
         valid_chars = f"{ascii_letters}{digits}{punctuation}"
         for line, req in [
-            (valid_chars, True),
+            (ascii_letters, True),
+            (digits, True),
+            (f"a{valid_chars}", True),
         ]:
             result = h.check_name(line)
             self.assertEqual(result, req, msg=f"{line=}")
@@ -162,7 +164,7 @@ class Test(unittest.TestCase):
         """check_name()"""
         for line, error in [
             ("", ValueError),
-            ("1", ValueError),
+            ("1a", ValueError),
             ("_", ValueError),
             ("a?", ValueError),
         ]:

@@ -1,14 +1,12 @@
 """ACL (Access Control List)"""
 from __future__ import annotations
 
-import re
 from functools import total_ordering
 from typing import List
 
 from cisco_acl import helpers as h
 from cisco_acl.ace import Ace
 from cisco_acl.ace_group import AceGroup, LUAcl
-from cisco_acl.parser import ParserIOS, ParserNXOS
 from cisco_acl.port import Port
 from cisco_acl.remark import Remark
 from cisco_acl.static import SEQUENCE_MAX, INDENTATION
@@ -22,7 +20,7 @@ class Acl(AceGroup):
     def __init__(self, line: str = "", **kwargs):
         """ACL (Access Control List)
         :param str line: ACL config (name and following remarks and access entries)
-        :param str platform: Supported platforms: "ios", "nxos" (default "ios")
+        :param str platform: Platform: "ios", "nxos" (default "ios")
         :param bool numerically: Cisco ACL outputs well-known tcp/udp ports as names
             True  - all tcp/udp ports as numbers
             False - well-known tcp/udp ports as names (default)
@@ -110,8 +108,8 @@ class Acl(AceGroup):
             return
 
         name = ""
-        first_line = items[0]
-        if re.match("ip access-list", first_line):
+        item1 = items[0]
+        if item1.startswith("ip access-list "):
             ip_acl_name, *items = items
             regex = r"^ip access-list (\S+)"
             if self.platform == "ios":
@@ -339,24 +337,3 @@ class Acl(AceGroup):
 
 
 LAcl = List[Acl]
-
-
-def from_config(config: str, platform: str = "ios") -> LAcl:
-    """Parses ACLs from config"""
-    parser = ParserIOS
-    if platform == "nxos":
-        parser = ParserNXOS
-    parser = parser(config=config, platform=platform)
-    parser.parse_config()
-    acls_by_remark = parser.parse_acls_by_remark()
-
-    acls = []
-    for acl_name, acl_d in acls_by_remark.items():
-        items = []
-        for ace_group_d in acl_d["ace_group"]:
-            ace_group_o = AceGroup(platform=platform, **ace_group_d)
-            items.append(ace_group_o)
-        acl_o = Acl(name=acl_name, platform=platform, items=items,
-                    input=acl_d["input"], output=acl_d["output"])
-        acls.append(acl_o)
-    return acls

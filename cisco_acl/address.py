@@ -30,7 +30,7 @@ class Address(Base):
             host A.B.C.D        ios         A single host
             object-group NAME   ios         Network object group
             addrgroup NAME      nxos        Network object group
-        :param str platform: Supported platforms: "ios", "nxos" (default "ios").
+        :param str platform: Platform: "ios", "nxos" (default "ios").
         :param str note: Object description. Not part of the ACE configuration,
             can be used for ACEs sorting
 

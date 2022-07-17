@@ -80,6 +80,7 @@ NXOS_ADDRGROUP_D = dict(
 )
 
 
+# noinspection DuplicatedCode
 class Test(Helpers):
     """Address"""
 

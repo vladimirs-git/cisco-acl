@@ -202,8 +202,8 @@ class Test(Helpers):
             (dict(line=EQ123, platform="nxos"), ValueError),
             (dict(line=EQ2456, platform="nxos"), ValueError),
             (dict(line=NEQ13, platform="nxos"), ValueError),
-            (
-            dict(line="eq syslog", platform="nxos", protocol="tcp", numerically=False), ValueError),
+            (dict(line="eq syslog", platform="nxos", protocol="tcp", numerically=False),
+             ValueError),
         ]:
             with self.assertRaises(error, msg=f"{kwargs=}"):
                 Port(**kwargs)
