@@ -109,7 +109,7 @@ class AceGroup(Group, BaseAce):
 
     @property
     def items(self) -> LUAcl:
-        """List of Ace, Remark objects"""
+        """List of ACE items: *Ace*, *Remark*, *AceGroup*"""
         return self._items
 
     @items.setter
@@ -128,7 +128,7 @@ class AceGroup(Group, BaseAce):
 
     @property
     def line(self) -> str:
-        """ACEs in string format"""
+        """ACE lines joined to ACL line"""
         return "\n".join([o.line for o in self.items])
 
     @line.setter

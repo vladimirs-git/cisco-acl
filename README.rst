@@ -285,47 +285,24 @@ note            *str*        Object description. Not part of the ACL configurati
 Attributes
 ::::::::::
 
-
-line
-....
-**Acl.line** - ACE lines in string format
-
-
-indent
-......
-**Acl.indent** - ACE lines indentation
-
-
-ip_acl_name
-...........
-**Acl.ip_acl_name** - Platform dependent Acl line with name
-
-
-items
-.....
-**Acl.items** - List of Acl objects
-
-
-name
-....
-**Acl.name** - ACL name. Requirements:
-
-- length <= 100 chars
-- first char is ascii_letters
-- other chars are ascii_letters and punctuation
-
-
-platform
-........
-**Acl.platform** - Platform:
-
-- "ios" - Cisco IOS (extended ACL)
-- "nxos" Cisco Nexus NX-OS
+=============== ============ =======================================================================
+Attributes      Type         Description
+=============== ============ =======================================================================
+indent          *str*        ACE lines indentation
+input           *List[str]*  Interfaces where Acl is used on input
+ip_acl_name     *str*        Acl name line, with "ip access-list" keyword in line
+items           *List[Ace]*  List of ACE items: *Ace*, *Remark*, *AceGroup*
+line            *str*        ACE lines joined to ACL line
+name            *str*        Acl name, without "ip access-list" prefix
+note            *str*        Object description
+numerically     *bool*       Cisco ACL outputs well-known tcp/udp ports as names
+output          *List[str]*  Interfaces where Acl is used on output
+platform        *str*        Platform: "ios" Cisco IOS (extended ACL), "nxos" Cisco Nexus NX-OS
+=============== ============ =======================================================================
 
 
 Methods
 :::::::
-
 
 add()
 .....
@@ -680,63 +657,25 @@ note            *str*        Object description. Not part of the ACE configurati
 Attributes
 ::::::::::
 
-
-action
-......
-**Ace.action** - ACE action: "permit", "deny"
-
-
-dstaddr
-.......
-**Ace.dstaddr** - ACE destination Address object
-
-
-dstport
-.......
-**Ace.indent** - ACE destination Port object
-
-
-line
-....
-**Ace.line** - ACE config line
-
-
-platform
-........
-**Ace.platform** - Platform:
-
-- "ios" - Cisco IOS (extended ACL)
-- "nxos" Cisco Nexus NX-OS
-
-
-sequence
-........
-**Ace.sequence** - Sequence object. ACE sequence number in ACL
-
-
-protocol
-........
-**Ace.protocol** - ACE Protocol object
-
-
-srcaddr
-.......
-**Ace.srcaddr** - ACE source Address object
-
-
-srcport
-.......
-**Ace.srcport** - ACE source Port object
-
-
-uuid
-....
-**Ace.uuid** - Universally Unique Identifier
+=============== ============ =======================================================================
+Attributes      Type         Description
+=============== ============ =======================================================================
+action          *str*        ACE action: "permit", "deny"
+dstaddr         *Address*    ACE destination Address object
+dstport         *Port*       ACE destination Port object
+line            *str*        ACE config line
+note            *str*        Object description
+numerically     *bool*       Cisco ACL outputs well-known tcp/udp ports as names
+platform        *str*        Platform: "ios" Cisco IOS (extended ACL), "nxos" Cisco Nexus NX-OS
+protocol        *Protocol*   ACE Protocol object
+sequence        *Sequence*   Sequence object. ACE sequence number in ACL
+srcaddr         *Address*    ACE source Address object
+srcport         *Port*       ACE source Port object
+=============== ============ =======================================================================
 
 
 Methods
 :::::::
-
 
 copy()
 ......
@@ -890,33 +829,20 @@ data            *dict*       An alternate way to create *AceGroup* object from a
 Attributes
 ::::::::::
 
-
-items
-.....
-**AceGroup.items** - List of Ace, Remark objects
-
-
-line
-....
-**AceGroup.line** - ACEs in string format
-
-
-sequence
-........
-**AceGroup.sequence** - ACE sequence (sequence object of the first Ace in group)
-
-
-platform
-........
-**AceGroup.platform** - Platform:
-
-- "ios" - Cisco IOS (extended ACL)
-- "nxos" Cisco Nexus NX-OS
+=============== ============ =======================================================================
+Attributes      Type         Description
+=============== ============ =======================================================================
+items           *List[Ace]*  List of ACE items: *Ace*, *Remark*, *AceGroup*
+line            *str*        ACE lines joined to ACL line
+note            *str*        Object description
+numerically     *bool*       Cisco ACL outputs well-known tcp/udp ports as names
+platform        *str*        Platform: "ios" Cisco IOS (extended ACL), "nxos" Cisco Nexus NX-OS
+sequence        *Sequence*   ACE sequence (sequence object of the first Ace in group)
+=============== ============ =======================================================================
 
 
 Methods
 :::::::
-
 
 add()
 .....
@@ -1259,7 +1185,6 @@ The following example creates ACL from objects, with groups
 	# AceGroup('remark ===== dns =====\npermit udp any any eq domain\npermit tcp any any eq domain')
 
 
-
 Remark
 ------
 Remark - comments ACE in ACL.
@@ -1276,25 +1201,17 @@ note            *str*        Object description. Not part of the ACE configurati
 Attributes
 ::::::::::
 
-
-action
-......
-**Remark.action** - ACE remark action
-
-
-line
-....
-**Remark.line** - ACE remark line
-
-
-text
-....
-**Remark.text** - ACE remark text
+=============== ============ =======================================================================
+Attributes      Type         Description
+=============== ============ =======================================================================
+action          *str*        ACE remark action
+line            *str*        ACE remark line
+text            *str*        ACE remark text
+=============== ============ =======================================================================
 
 
 Methods
 :::::::
-
 
 copy()
 ......
@@ -1303,7 +1220,6 @@ copy()
 
 Examples - Remark
 :::::::::::::::::
-
 
 **Remark(line)**
 The following example creates Remark object.
@@ -1350,40 +1266,17 @@ addrgroup NAME      nxos        Network object group
 Attributes
 ::::::::::
 
-
-line
-....
-**Address.line** - ACE source or destination address line
-
-
-addrgroup
-.........
-**Address.addrgroup** - ACE address addrgroup
-
-
-ipnet
-.....
-**Address.ipnet** - ACE address IPv4Network object
-
-
-platform
-........
-**Address.platform** - Device platform type: "ios", "nxos"
-
-
-prefix
-......
-**Address.prefix** - ACE address prefix
-
-
-subnet
-......
-**Address.subnet** - ACE address subnet
-
-
-wildcard
-........
-**Address.wildcard** - ACE address wildcard
+=============== ============ =======================================================================
+Attributes      Type         Description
+=============== ============ =======================================================================
+line            *str*        ACE source or destination address line
+addrgroup       *str*        ACE address addrgroup
+ipnet           *IpNetwork*  ACE address IPv4Network object
+platform        *str*        Platform: "ios" Cisco IOS (extended ACL), "nxos" Cisco Nexus NX-OS
+prefix          *str*        ACE address prefix
+subnet          *str*        ACE address subnet
+wildcard        *str*        ACE address wildcard
+=============== ============ =======================================================================
 
 
 Examples - Address
@@ -1454,25 +1347,15 @@ range 1 3           ios         range of protocols
 Attributes
 ::::::::::
 
-
-line
-....
-**Port.line** - ACE source or destination TCP/UDP ports
-
-
-operator
-........
-**Port.operator** - ACE TCP/UDP port operator: "eq", "gt", "lt", "neq", "range"
-
-
-ports
-.....
-**Port.ports** - ACE list of *int* TCP/UDP port numbers
-
-
-sport
-.....
-**Port.sport** - ACE *str* of TCP/UDP ports range
+=============== ============ =======================================================================
+Attributes      Type         Description
+=============== ============ =======================================================================
+line            *str*        ACE source or destination TCP/UDP ports
+operator        *str*        ACE TCP/UDP port operator: "eq", "gt", "lt", "neq", "range"
+ports           *List[int]*  ACE list of *int* TCP/UDP port numbers
+sport           *str*        ACE TCP/UDP ports range
+items           *List[int]*  ACE port items (first and last digits in range)
+=============== ============ =======================================================================
 
 
 Examples - Port
@@ -1527,25 +1410,14 @@ note            *str*        Object description. Not part of the ACE configurati
 Attributes
 ::::::::::
 
-
-line
-....
-**Protocol.line** - ACE protocol name: "ip", "icmp", "tcp", etc.
-
-
-name
-....
-**Protocol.name** - ACE protocol name: "ip", "icmp", "tcp", etc.
-
-
-number
-......
-**Protocol.number** - ACE protocol number: 0..255, where 0="ip", 1="icmp", etc.
-
-
-platform
-........
-**Protocol.platform** - Device platform type: "ios", "nxos"
+=============== ============ =======================================================================
+Attributes      Type         Description
+=============== ============ =======================================================================
+line            *str*        ACE protocol name: "ip", "icmp", "tcp", etc.
+name            *str*        ACE protocol name: "ip", "icmp", "tcp", etc.
+number          *int*        ACE protocol number: 0..255, where 0="ip", 1="icmp", etc.
+platform        *str*        Platform: "ios" Cisco IOS (extended ACL), "nxos" Cisco Nexus NX-OS
+=============== ============ =======================================================================
 
 
 Examples - Protocol

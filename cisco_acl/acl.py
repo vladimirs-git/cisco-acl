@@ -88,7 +88,7 @@ class Acl(AceGroup):
 
     @property
     def line(self) -> str:
-        """ACE lines in string format"""
+        """ACE lines joined to ACL line"""
         items = []
         for item in self.items:
             if isinstance(item, AceGroup):
@@ -148,7 +148,7 @@ class Acl(AceGroup):
 
     @property
     def input(self) -> LStr:
-        """Interfaces, where Acl is used on input"""
+        """Interfaces where Acl is used on input"""
         return self._input
 
     @input.setter
@@ -161,23 +161,9 @@ class Acl(AceGroup):
         self._input = []
 
     @property
-    def output(self) -> LStr:
-        """Interfaces, where Acl is used on output"""
-        return self._output
-
-    @output.setter
-    def output(self, items: UStr) -> None:
-        items_: LStr = h.convert_to_lstr(items=items)
-        self._output = sorted(items_)
-
-    @output.deleter
-    def output(self) -> None:
-        self._output = []
-
-    @property
     def ip_acl_name(self) -> str:
-        """Platform dependent Acl line with name
-        :return: Acl line with name
+        """Acl name line, with "ip access-list" keyword in line
+        :return: Acl name line
 
         :example:
             self.platform: "ios"
@@ -195,7 +181,7 @@ class Acl(AceGroup):
 
     @property  # type:ignore
     def items(self) -> LUAcl:
-        """List of Acl objects"""
+        """List of ACE items: *Ace*, *Remark*, *AceGroup*"""
         return self._items
 
     @items.setter
@@ -223,10 +209,11 @@ class Acl(AceGroup):
 
     @name.setter
     def name(self, name: str) -> None:
-        """ACL name. Requirements:
+        """Acl name, without "ip access-list" prefix.
+        Requirements:
         - length <= 100 chars
-        - first char is ascii_letters
-        - other chars are ascii_letters and punctuation
+        - all chars are digits
+        - first char is ascii_letters, other chars are ascii_letters and punctuation
         """
         if name is None:
             name = ""
@@ -245,9 +232,23 @@ class Acl(AceGroup):
         self._name = ""
 
     @property
+    def output(self) -> LStr:
+        """Interfaces, where Acl is used on output"""
+        return self._output
+
+    @output.setter
+    def output(self, items: UStr) -> None:
+        items_: LStr = h.convert_to_lstr(items=items)
+        self._output = sorted(items_)
+
+    @output.deleter
+    def output(self) -> None:
+        self._output = []
+
+    @property
     def platform(self) -> str:
         """Platform
-        - "ios" - Cisco IOS (extended ACL)
+        - "ios" Cisco IOS (extended ACL)
         - "nxos" Cisco Nexus NX-OS
         """
         return self._platform
