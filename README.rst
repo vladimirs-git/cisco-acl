@@ -21,6 +21,7 @@ Main features:
 .. sectnum::
 
 
+
 Acronyms
 --------
 
@@ -32,6 +33,7 @@ ACE         Access Control Entry.
 ACEs        Multiple Access Control Entries.
 Acl.items   List of objects: Ace, AceGroup, Remark.
 ==========  ========================================================================================
+
 
 
 Installation
@@ -54,6 +56,7 @@ or install the package from github.com repository
 .. code:: bash
 
     pip install git+https://github.com/vladimirs-git/cisco-acl
+
 
 
 config_to_ace()
@@ -259,6 +262,7 @@ Examples - config_to_aceg()
 	#   21 permit icmp any any
 	#   25 remark ========== ACE_NAME2 ==========
 	#   26 permit ip any any
+
 
 
 Acl
@@ -639,7 +643,6 @@ The following example creates Acl with not ordered groups and sorts and resequen
 
 
 
-
 Ace
 ---
 ACE - Access Control Entry. Each entry statement permit or deny in the `Acl`_.
@@ -807,6 +810,7 @@ but in the copied `ace2` prefix will remain unchanged.
 	print()
 	# permit ip 10.0.0.0 0.0.0.255 any
 	# permit ip any any
+
 
 
 AceGroup
@@ -1185,6 +1189,7 @@ The following example creates ACL from objects, with groups
 	# AceGroup('remark ===== dns =====\npermit udp any any eq domain\npermit tcp any any eq domain')
 
 
+
 Remark
 ------
 Remark - comments ACE in ACL.
@@ -1235,6 +1240,7 @@ The following example creates Remark object.
 	assert remark.action == "remark"
 	assert remark.text == "text"
 	assert remark.note == "description"
+
 
 
 Address
@@ -1318,6 +1324,7 @@ The following example demonstrates Address object.
 	assert addr.line == "addrgroup NAME"
 
 
+
 Port
 ----
 Port - Source or destination port object
@@ -1392,6 +1399,7 @@ The following example demonstrates Port object.
 	assert port.sport == "1-5"
 	print(port.line)
 	# range 1 5
+
 
 
 Protocol
