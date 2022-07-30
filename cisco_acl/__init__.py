@@ -21,7 +21,7 @@ __all__ = [
     "config_to_aceg",
 ]
 
-__version__ = "1.2.0"
+__version__ = "1.2.1"
 __date__ = "2022-07-30"
 __title__ = "cisco-acl"
 

@@ -339,20 +339,37 @@ class Test(Helpers):
         """Ace.range()"""
         proto = ["permit 1 any any", "permit 2 any any"]
         src_tcp_eq = ["permit tcp any eq 20 any", "permit tcp any eq 21 any"]
-        src_combo_tcp_eq = ['permit tcp any eq 20 any', 'permit tcp any eq 21 any',
-                            'permit tcp any any eq 20', 'permit tcp any any eq 21']
-        src_combo_tcp_neq = ['permit tcp any neq 20 any', 'permit tcp any neq 21 any',
-                             'permit tcp any neq 1 any eq 20', 'permit tcp any neq 1 any eq 21']
+        src_tcp_neq = ["permit tcp any neq 20 any", "permit tcp any neq 21 any"]
+        dst_tcp_eq = ["permit tcp any any eq 20", "permit tcp any any eq 21"]
+        dst_tcp_neq = ["permit tcp any any neq 20", "permit tcp any any neq 21"]
+        src_udp_eq = ["permit udp any eq 67 any", "permit udp any eq 68 any"]
+        dst_udp_eq = ["permit udp any any eq 67", "permit udp any any eq 68"]
+        src_combo_eq = ["permit tcp any eq 20 any", "permit tcp any eq 21 any",
+                        "permit tcp any any eq 20", "permit tcp any any eq 21"]
+        src_combo_neq = ["permit tcp any neq 20 any", "permit tcp any neq 21 any",
+                         "permit tcp any neq 1 any eq 20", "permit tcp any neq 1 any eq 21"]
         for kwargs, line, req in [
             ({}, "permit ip any any", []),
-            # (dict(protocol="1-2"), "permit ip any any", proto),  # TODO numerically
+            (dict(protocol="1-2"), "permit ip any any", proto),
+            (dict(protocol="1-2"), "permit 0 any any", proto),
+            # tcp
             (dict(srcport="20-21"), "permit tcp any any", src_tcp_eq),
             (dict(srcport="20-21"), "permit tcp any eq 1 any", src_tcp_eq),
-            (dict(srcport="20-21", dstport="20,21"), "permit tcp any any", src_combo_tcp_eq),
-            (dict(srcport="20-21", dstport="20,21"), "permit tcp any neq 1 any", src_combo_tcp_neq),
+            (dict(srcport="20-21"), "permit tcp any neq 1 any", src_tcp_neq),
+            (dict(dstport="20-21"), "permit tcp any any", dst_tcp_eq),
+            (dict(dstport="20-21"), "permit tcp any any eq 1 ", dst_tcp_eq),
+            (dict(dstport="20-21"), "permit tcp any any neq 1 ", dst_tcp_neq),
+            # udp
+            (dict(srcport="67-68"), "permit udp any any", src_udp_eq),
+            (dict(srcport="67-68"), "permit udp any eq 1 any", src_udp_eq),
+            (dict(dstport="67-68"), "permit udp any any", dst_udp_eq),
+            (dict(dstport="67-68"), "permit udp any any eq 1 ", dst_udp_eq),
+            # combo
+            (dict(srcport="20-21", dstport="20,21"), "permit tcp any any", src_combo_eq),
+            (dict(srcport="20-21", dstport="20,21"), "permit tcp any neq 1 any", src_combo_neq),
         ]:
-            ace_o = Ace(line=line, port_nr=True)
-            results = ace_o.range(**kwargs)
+            ace_o = Ace(line=line)
+            results = ace_o.range(protocol_nr=True, port_nr=True, **kwargs)
             result = [str(o) for o in results]
             self.assertEqual(result, req, msg=f"{line=} {kwargs=}")
 
@@ -554,8 +571,17 @@ class Test(Helpers):
             (dict(sdst="dst", range_="67,68"), "permit udp any any lt 1 ", dst_udp_lt),
             (dict(sdst="dst", range_="67,68"), "permit udp any any neq 1 ", dst_udp_neq),
         ]:
-            ace_o = Ace(line=line, port_nr=True)
-            results = ace_o._range__port(**kwargs)
+            ace_o = Ace(line=line)
+            results = ace_o._range__port(**kwargs, port_nr=True)
+            result = [str(o) for o in results]
+            self.assertEqual(result, req, msg=f"{line=} {kwargs=}")
+
+        src_tcp_eq = ["permit tcp any eq ftp-data any", "permit tcp any eq ftp any"]
+        for kwargs, line, req in [
+            (dict(sdst="src", range_="20-21"), "permit tcp any any", src_tcp_eq),
+        ]:
+            ace_o = Ace(line=line)
+            results = ace_o._range__port(**kwargs, port_nr=False)
             result = [str(o) for o in results]
             self.assertEqual(result, req, msg=f"{line=} {kwargs=}")
 
@@ -565,26 +591,31 @@ class Test(Helpers):
             (dict(sdst="src", range_="20-21"), "permit tcp any range 1 2 any", ValueError),
             (dict(sdst="dst", range_="20-21"), "permit tcp any any range 1 2", ValueError),
         ]:
-            ace_o = Ace(line=line, port_nr=True)
+            ace_o = Ace(line=line)
             with self.assertRaises(error, msg=f"{line=} {kwargs=}"):
-                ace_o._range__port(**kwargs)
+                ace_o._range__port(port_nr=True, **kwargs)
 
     def test_valid__range__protocol(self):
         """Ace._range__protocol()"""
-        req1 = ['permit icmp any any',
-                'permit 3 any any',
-                'permit ipip any any',
-                'permit 5 any any']
-        for range_, line, req in [
-            ("", "permit icmp any any", []),
-            ("1,3-5", "permit ip any any", req1),  # TODO numerically
-            ("1,3-5", "permit icmp any any", req1),
-            ("1,3-5", "permit 1 any any", req1),
+        req1 = ["permit icmp any any", "permit igmp any any", "permit 3 any any"]
+        req2 = ["permit 1 any any", "permit 3 any any", "permit 4 any any", "permit 5 any any"]
+        for kwargs, line, req in [
+            (dict(range_="", protocol_nr=False), "permit icmp any any", []),
+            (dict(range_="1-3", protocol_nr=False), "permit ip any any", req1),
+            (dict(range_="1-3", protocol_nr=False), "permit 0 any any", req1),
+            (dict(range_="1-3", protocol_nr=False), "permit icmp any any", req1),
+            (dict(range_="1-3", protocol_nr=False), "permit 1 any any", req1),
+            # protocol_nr
+            (dict(range_="", protocol_nr=True), "permit icmp any any", []),
+            (dict(range_="1,3-5", protocol_nr=True), "permit ip any any", req2),
+            (dict(range_="1,3-5", protocol_nr=True), "permit 0 any any", req2),
+            (dict(range_="1,3-5", protocol_nr=True), "permit icmp any any", req2),
+            (dict(range_="1,3-5", protocol_nr=True), "permit 1 any any", req2),
         ]:
-            ace_o = Ace(line=line, port_nr=True)
-            results = ace_o._range__protocol(range_=range_)
+            ace_o = Ace(line=line, protocol_nr=True, port_nr=True)
+            results = ace_o._range__protocol(**kwargs)
             result = [str(o) for o in results]
-            self.assertEqual(result, req, msg=f"{line=} {range_=}")
+            self.assertEqual(result, req, msg=f"{line=} {kwargs=}")
 
 
 if __name__ == "__main__":

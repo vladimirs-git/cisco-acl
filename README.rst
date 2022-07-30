@@ -49,7 +49,7 @@ or install the package from github.com release
 
 .. code:: bash
 
-    pip install https://github.com/vladimirs-git/cisco-acl/archive/refs/tags/1.2.0.tar.gz
+    pip install https://github.com/vladimirs-git/cisco-acl/archive/refs/tags/1.2.1.tar.gz
 
 or install the package from github.com repository
 
@@ -297,7 +297,8 @@ Parameter       Type         Description
 =============== ============ =======================================================================
 line            *str*        ACL config (name and following remarks and access entries)
 platform        *str*        Platform: "ios", "nxos" (default "ios")
-port_nr         *bool*       ACL prints well-known TCP/UDP ports as numbers, True  - all tcp/udp ports as numbers, False - well-known tcp/udp ports as names (default)
+protocol_nr     *bool*       Well-known ip protocols as numbers, True  - all ip protocols as numbers, False - well-known ip protocols as names (default)
+port_nr         *bool*       Well-known TCP/UDP ports as numbers, True  - all tcp/udp ports as numbers, False - well-known tcp/udp ports as names (default)
 name            *str*        ACL name. By default, parsed from line
 items           *List[str]*  List of ACE (strings or Ace, AceGroup, Remark objects). By default, parsed from line
 input           *str*        Interfaces, where Acl is used on input
@@ -320,7 +321,6 @@ items           *List[Ace]*  List of ACE items: *Ace*, *Remark*, *AceGroup*
 line            *str*        ACE lines joined to ACL line
 name            *str*        Acl name, without "ip access-list" prefix
 note            *str*        Object description
-port_nr         *bool*       ACL prints well-known TCP/UDP ports as numbers
 output          *List[str]*  Interfaces where Acl is used on output
 platform        *str*        Platform: "ios" Cisco IOS (extended ACL), "nxos" Cisco Nexus NX-OS
 =============== ============ =======================================================================
@@ -673,7 +673,8 @@ Parameter       Type         Description
 =============== ============ =======================================================================
 line            *str*        ACE config line
 platform        *str*        Platform: "ios", "nxos" (default "ios")
-port_nr         *bool*       ACL prints well-known TCP/UDP ports as numbers, True  - all tcp/udp ports as numbers, False - well-known tcp/udp ports as names (default)
+protocol_nr     *bool*       Well-known ip protocols as numbers, True  - all ip protocols as numbers, False - well-known ip protocols as names (default)
+port_nr         *bool*       Well-known TCP/UDP ports as numbers, True  - all tcp/udp ports as numbers, False - well-known tcp/udp ports as names (default)
 note            *str*        Object description. Not part of the ACE configuration, can be used for ACEs sorting
 =============== ============ =======================================================================
 
@@ -689,7 +690,6 @@ dstaddr         *Address*    ACE destination Address object
 dstport         *Port*       ACE destination Port object
 line            *str*        ACE config line
 note            *str*        Object description
-port_nr         *bool*       ACL prints well-known TCP/UDP ports as numbers
 platform        *str*        Platform: "ios" Cisco IOS (extended ACL), "nxos" Cisco Nexus NX-OS
 protocol        *Protocol*   ACE Protocol object
 sequence        *Sequence*   Sequence object. ACE sequence number in ACL
@@ -703,7 +703,23 @@ Methods
 
 copy()
 ......
-**Ace.copy** - Copies the self object
+**Ace.copy()** - Copies the self object
+
+
+range()
+.......
+**Ace.range()** - Generates range of protocols and TCP/UDP source/destination ports
+
+=============== ============ =======================================================================
+Parameter       Type         Description
+=============== ============ =======================================================================
+protocol        *str*        Range of ip protocols
+srcport         *str*        Range of source TCP/UDP ports
+dstport         *str*        Range of destination TCP/UDP ports
+=============== ============ =======================================================================
+
+Return
+	Newly generated *Ace* objects
 
 
 rule(platform, action, srcaddrs, dstaddrs, protocols, tcp_srcports, tcp_dstports, udp_srcports, udp_dstports)
@@ -725,7 +741,7 @@ udp_dstports    *List[str]*  UDP destination ports
 =============== ============ =======================================================================
 
 Return
-	List of Ace objects
+	List of *Ace* objects
 
 
 Examples - Ace
@@ -775,7 +791,7 @@ The following example creates an Ace object and demonstrate various manipulation
 	assert ace.dstport.sport == "80,443"
 	assert ace.option == "log"
 
-	# ACL prints well-known TCP/UDP ports as names or as numbers
+	# prints well-known TCP/UDP ports as names or as numbers
 	print(ace.line)
 	# 10 permit tcp host 10.0.0.1 range ftp telnet 10.0.0.0 0.0.0.3 eq www 443 log
 	ace.port_nr = True
@@ -814,6 +830,53 @@ The following example creates an Ace object and demonstrate various manipulation
 	# permit ip 10.0.0.0 0.0.0.255 any
 	# permit ip any any
 
+	# Generates range of protocols and TCP/UDP source/destination ports
+	# IP protocols as well-known names
+	ace1 = Ace("permit ip any any")
+	aces = ace1.range(protocol="1-4")
+	for ace in aces:
+		print(ace)
+	print()
+	# permit icmp any any
+	# permit igmp any any
+	# permit 3 any any
+	# permit ipip any any
+	# permit 5 any any
+
+	# IP protocols as numbers
+	ace1 = Ace("permit ip any any")
+	aces = ace1.range(protocol="1-4", protocol_nr=True)
+	for ace in aces:
+		print(ace)
+	print()
+	# permit 1 any any
+	# permit 2 any any
+	# permit 3 any any
+	# permit 4 any any
+	# permit 5 any any
+
+	# TCP ports as well-known names
+	ace1 = Ace("permit tcp any any")
+	aces = ace1.range(srcport="20-23")
+	for ace in aces:
+		print(ace)
+	print()
+	# permit tcp any eq ftp-data any
+	# permit tcp any eq ftp any
+	# permit tcp any eq 22 any
+	# permit tcp any eq telnet any
+
+	# TCP ports as numbers
+	ace1 = Ace("permit tcp any any")
+	aces = ace1.range(srcport="20-23", port_nr=True)
+	for ace in aces:
+		print(ace)
+	print()
+	# permit tcp any eq 20 any
+	# permit tcp any eq 21 any
+	# permit tcp any eq 22 any
+	# permit tcp any eq 23 any
+
 
 **Ace.copy()**
 The following example creates Ace object, copies them and changes prefix in `ace1`.
@@ -845,7 +908,8 @@ Parameter       Type         Description
 =============== ============ =======================================================================
 line            *str*        string of ACEs
 platform        *str*        Platform: "ios", "nxos" (default "ios")
-port_nr         *bool*       ACL prints well-known TCP/UDP ports as numbers, True  - all tcp/udp ports as numbers, False - well-known tcp/udp ports as names (default)
+protocol_nr     *bool*       Well-known ip protocols as numbers, True  - all ip protocols as numbers, False - well-known ip protocols as names (default)
+port_nr         *bool*       Well-known TCP/UDP ports as numbers, True  - all tcp/udp ports as numbers, False - well-known tcp/udp ports as names (default)
 note            *str*        Object description. Not part of the ACE configuration, can be used for ACEs sorting
 items           *List[Ace]*  An alternate way to create *AceGroup* object from a list of *Ace* objects. By default, an object is created from a line
 data            *dict*       An alternate way to create *AceGroup* object from a *dict*. By default, an object is created from a line
@@ -861,7 +925,6 @@ Attributes      Type         Description
 items           *List[Ace]*  List of ACE items: *Ace*, *Remark*, *AceGroup*
 line            *str*        ACE lines joined to ACL line
 note            *str*        Object description
-port_nr         *bool*       ACL prints well-known TCP/UDP ports as numbers
 platform        *str*        Platform: "ios" Cisco IOS (extended ACL), "nxos" Cisco Nexus NX-OS
 sequence        *Sequence*   ACE sequence (sequence object of the first Ace in group)
 =============== ============ =======================================================================
@@ -1242,7 +1305,7 @@ Methods
 
 copy()
 ......
-**Remark.copy** - Copies the self object
+**Remark.copy()** - Copies the self object
 
 
 Examples - Remark
@@ -1356,7 +1419,7 @@ Parameter       Type         Description
 =============== ============ =======================================================================
 line            *str*        TCP/UDP ports line
 platform        *str*        Platform: "ios", "nxos" (default "ios")
-port_nr         *bool*       ACL prints well-known TCP/UDP ports as numbers, True  - all tcp/udp ports as numbers, False - well-known tcp/udp ports as names (default)
+port_nr         *bool*       Well-known TCP/UDP ports as numbers, True  - all tcp/udp ports as numbers, False - well-known tcp/udp ports as names (default)
 note            *str*        Object description. Not part of the ACE configuration, can be used for ACEs sorting
 =============== ============ =======================================================================
 
@@ -1433,6 +1496,8 @@ Parameter       Type         Description
 =============== ============ =======================================================================
 line            *str*        IP protocol line
 platform        *str*        Platform: "ios", "nxos" (default "ios")
+protocol_nr     *bool*       Well-known ip protocols as numbers, True  - all ip protocols as numbers, False - well-known ip protocols as names (default)
+has_port        *bool*       ACL has tcp/udp src/dst ports True  - ACE has tcp/udp src/dst ports, False - ACL does not have tcp/udp src/dst ports (default)
 note            *str*        Object description. Not part of the ACE configuration, can be used for ACEs sorting
 =============== ============ =======================================================================
 

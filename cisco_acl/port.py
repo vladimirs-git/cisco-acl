@@ -22,7 +22,7 @@ class Port(Base):
         :param str line: TCP/UDP ports line
         :param str platform: Platform: "ios", "nxos" (default "ios")
         :param protocol: ACL protocol: "tcp", "udp"
-        :param bool port_nr: ACL prints well-known TCP/UDP ports as numbers
+        :param bool port_nr: Well-known TCP/UDP ports as numbers
             True  - all tcp/udp ports as numbers
             False - well-known tcp/udp ports as names (default)
         :param str note: Object description. Not part of the ACE configuration,
@@ -155,7 +155,7 @@ class Port(Base):
 
     @property
     def port_nr(self) -> bool:
-        """ACL prints well-known TCP/UDP ports as numbers
+        """Well-known TCP/UDP ports as numbers
             True  - all tcp/udp ports as numbers
             False - well-known tcp/udp ports as names (default)
         """

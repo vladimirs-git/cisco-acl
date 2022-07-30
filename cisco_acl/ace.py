@@ -29,10 +29,10 @@ class Ace(BaseAce):
         """ACE - Access Control Entry
         :param str line: ACE config line
         :param str platform: Platform: "ios", "nxos" (default "ios")
-        :param bool protocol_nr: Cisco ACL outputs well-known ip protocols as numbers
+        :param bool protocol_nr: Well-known ip protocols as numbers
             True  - all ip protocols as numbers
             False - well-known ip protocols as names (default)
-        :param bool port_nr: ACL prints well-known TCP/UDP ports as numbers
+        :param bool port_nr: Well-known TCP/UDP ports as numbers
             True  - all tcp/udp ports as numbers
             False - well-known tcp/udp ports as names (default)
         :param note: Object description. Not part of the ACE configuration,
@@ -322,27 +322,49 @@ class Ace(BaseAce):
         """
         ace = Ace(line=self.line,
                   platform=self.platform,
+                  protocol_nr=self.protocol_nr,
                   port_nr=self.port_nr,
                   note=self.note)
         return ace
 
-    def range(self, protocol: str = "", srcport: str = "", dstport: str = "") -> LAce:
+    def range(self, protocol: str = "", srcport: str = "", dstport: str = "",
+              protocol_nr: bool = False, port_nr: bool = False) -> LAce:
         """Generates range of protocols and TCP/UDP source/destination ports
         :param protocol: Range of ip protocols
         :param srcport: Range of source TCP/UDP ports
         :param dstport: Range of destination TCP/UDP ports
+        :param bool protocol_nr: Well-known ip protocols as numbers
+            True  - all ip protocols as numbers
+            False - well-known ip protocols as names (default)
+        :param bool port_nr: Well-known TCP/UDP ports as numbers
+            True  - all tcp/udp ports as numbers
+            False - well-known tcp/udp ports as names (default)
         :return: Newly generated *Ace* objects
+
+        :example: Generates range of protocols
+            protocol: "1-2,6"
+            self.line: "permit ip any any"
+            return: ["permit icmp any any",
+                     "permit igmp any any",
+                     "permit tcp any any"]
+
+        :example: Generates range of source TCP ports
+            srcport: "21-23"
+            self.line: "permit tcp host 10.0.0.1 any"
+            return: ["permit tcp host 10.0.0.1 eq ftp any",
+                     "permit tcp eq 22 host 10.0.0.1 any",
+                     "permit tcp eq telnet host 10.0.0.1 any"]
         """
         if protocol and srcport:
             raise ValueError(f"mutually exclusive {protocol=} {srcport=}")
         if protocol and dstport:
             raise ValueError(f"mutually exclusive {protocol=} {dstport=}")
         aces: LAce = []  # return
-        aces_ = self._range__protocol(protocol)
+        aces_ = self._range__protocol(range_=protocol, protocol_nr=protocol_nr)
         aces.extend(aces_)
-        aces_ = self._range__port("src", srcport)
+        aces_ = self._range__port(sdst="src", range_=srcport, port_nr=port_nr)
         aces.extend(aces_)
-        aces_ = self._range__port("dst", dstport)
+        aces_ = self._range__port(sdst="dst", range_=dstport, port_nr=port_nr)
         aces.extend(aces_)
         return aces
 
@@ -421,16 +443,19 @@ class Ace(BaseAce):
 
     # =========================== helpers ============================
 
-    def _range__port(self, sdst: str, range_: str) -> LAce:
+    def _range__port(self, sdst: str, range_: str, port_nr: bool) -> LAce:
         """Generates range of TCP/UDP source/destination ports
         :param sdst: "src", "dst"
         :param range_: Range of src/dst ports
+        :param bool port_nr: Well-known TCP/UDP ports as numbers
         :return: Newly generated *Ace* objects
         """
         aces: LAce = []  # return
         ports: LInt = netports.itcp(range_)
         for port in ports:
-            ace = self.copy()
+            ace: Ace = self.copy()
+            ace.port_nr = port_nr
+            ace.protocol.has_port = True
             port_o: Port = getattr(ace, f"{sdst}port")
             operator = port_o.operator or "eq"
             expected = ("eq", "gt", "lt", "neq")
@@ -441,16 +466,17 @@ class Ace(BaseAce):
             aces.append(ace)
         return aces
 
-    def _range__protocol(self, range_: str) -> LAce:
+    def _range__protocol(self, range_: str, protocol_nr: bool) -> LAce:
         """Generates range of protocols
         :param range_: Range of src/dst ports
+        :param bool protocol_nr: Well-known ip protocols as numbers
         :return: Newly generated *Ace* objects
         """
         aces: LAce = []  # return
         protocols: LInt = netports.iip(range_)
         for proto in protocols:
-            ace = self.copy()
-            ace.protocol = Protocol(str(proto))
+            ace: Ace = self.copy()
+            ace.protocol = Protocol(str(proto), protocol_nr=protocol_nr)
             aces.append(ace)
         return aces
 

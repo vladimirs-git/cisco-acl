@@ -20,10 +20,10 @@ class Protocol(Base):
         """ACE. IP protocol object
         :param line: IP protocol line
         :param str platform: Platform: "ios", "nxos" (default "ios")
-        :param bool protocol_nr: Cisco ACL outputs well-known ip protocols as numbers
+        :param bool protocol_nr: Well-known ip protocols as numbers
             True  - all ip protocols as numbers
             False - well-known ip protocols as names (default)
-        :param bool has_port: ACL has tcp/udp src/dst ports
+        :param bool has_port: ACE has tcp/udp src/dst ports
             True  - ACL has tcp/udp src/dst ports
             False - ACL does not have tcp/udp src/dst ports (default)
         :param note: Object description (can be used for ACEs sorting)
@@ -143,7 +143,7 @@ class Protocol(Base):
 
     @property
     def protocol_nr(self) -> bool:
-        """Cisco ACL outputs well-known ip protocols as numbers
+        """Well-known ip protocols as numbers
             True  - all ip protocols as numbers
             False - well-known ip protocols as names (default)
         """

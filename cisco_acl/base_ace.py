@@ -15,10 +15,10 @@ class BaseAce(Base):
         """BaseAce - Parent of: Ace, Remark
         :param line: ACE line, can contain index
         :param platform: Platform: "ios", "nxos" (default "ios")
-        :param bool protocol_nr: Cisco ACL outputs well-known ip protocols as numbers
+        :param bool protocol_nr: Well-known ip protocols as numbers
             True  - all ip protocols as numbers
             False - well-known ip protocols as names (default)
-        :param bool port_nr: ACL prints well-known TCP/UDP ports as numbers
+        :param bool port_nr: Well-known TCP/UDP ports as numbers
             True  - all tcp/udp ports as numbers
             False - well-known tcp/udp ports as names (default)
         :param note: Object description (can be used for ACEs sorting)
@@ -43,7 +43,7 @@ class BaseAce(Base):
 
     @property
     def port_nr(self) -> bool:
-        """ACL prints well-known TCP/UDP ports as numbers"""
+        """Well-known TCP/UDP ports as numbers"""
         return self._port_nr
 
     @port_nr.setter
@@ -53,7 +53,7 @@ class BaseAce(Base):
 
     @property
     def protocol_nr(self) -> bool:
-        """Cisco ACL outputs well-known ip protocols as numbers"""
+        """Well-known ip protocols as numbers"""
         return self._protocol_nr
 
     @protocol_nr.setter

@@ -3,6 +3,13 @@
 CHANGELOG
 =========
 
+1.2.1 (2022-07-30)
+------------------
+* [new] Ace.range()
+* [fix] protocol_nr in Ace.copy() Acl.copy()
+* [fix] README.rst protocol_nr
+
+
 1.2.0 (2022-07-30)
 ------------------
 * [delete] Ace.numerically

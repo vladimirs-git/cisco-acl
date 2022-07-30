@@ -21,10 +21,10 @@ class Acl(AceGroup):
         """ACL (Access Control List)
         :param str line: ACL config (name and following remarks and access entries)
         :param str platform: Platform: "ios", "nxos" (default "ios")
-        :param bool protocol_nr: Cisco ACL outputs well-known ip protocols as numbers
+        :param bool protocol_nr: Well-known ip protocols as numbers
             True  - all ip protocols as numbers
             False - well-known ip protocols as names (default)
-        :param bool port_nr: ACL prints well-known TCP/UDP ports as numbers
+        :param bool port_nr: Well-known TCP/UDP ports as numbers
             True  - all tcp/udp ports as numbers
             False - well-known tcp/udp ports as names (default)
         :param str name: ACL name. By default, parsed from line
@@ -305,6 +305,7 @@ class Acl(AceGroup):
             name=self.name,
             items=[o.copy() for o in self.items],
             platform=self.platform,
+            protocol_nr=self.protocol_nr,
             port_nr=self.port_nr,
             note=self.note,
             input=self.input.copy(),

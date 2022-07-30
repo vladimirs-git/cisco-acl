@@ -27,10 +27,10 @@ class AceGroup(Group, BaseAce):
         """Group of ACE (Access Control Entry)
         :param str line: string of ACEs
         :param str platform: Platform: "ios", "nxos" (default "ios")
-        :param bool protocol_nr: Cisco ACL outputs well-known ip protocols as numbers
+        :param bool protocol_nr: Well-known ip protocols as numbers
             True  - all ip protocols as numbers
             False - well-known ip protocols as names (default)
-        :param bool port_nr: ACL prints well-known TCP/UDP ports as numbers
+        :param bool port_nr: Well-known TCP/UDP ports as numbers
             True  - all tcp/udp ports as numbers
             False - well-known tcp/udp ports as names (default)
         :param str note: Object description. Not part of the ACE configuration,

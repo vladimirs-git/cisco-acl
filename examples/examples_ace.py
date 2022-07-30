@@ -78,3 +78,50 @@ print(ace2)
 print()
 # permit ip 10.0.0.0 0.0.0.255 any
 # permit ip any any
+
+# Generates range of protocols and TCP/UDP source/destination ports
+# IP protocols as well-known names
+ace1 = Ace("permit ip any any")
+aces = ace1.range(protocol="1-4")
+for ace in aces:
+    print(ace)
+print()
+# permit icmp any any
+# permit igmp any any
+# permit 3 any any
+# permit ipip any any
+# permit 5 any any
+
+# IP protocols as numbers
+ace1 = Ace("permit ip any any")
+aces = ace1.range(protocol="1-4", protocol_nr=True)
+for ace in aces:
+    print(ace)
+print()
+# permit 1 any any
+# permit 2 any any
+# permit 3 any any
+# permit 4 any any
+# permit 5 any any
+
+# TCP ports as well-known names
+ace1 = Ace("permit tcp any any")
+aces = ace1.range(srcport="20-23")
+for ace in aces:
+    print(ace)
+print()
+# permit tcp any eq ftp-data any
+# permit tcp any eq ftp any
+# permit tcp any eq 22 any
+# permit tcp any eq telnet any
+
+# TCP ports as numbers
+ace1 = Ace("permit tcp any any")
+aces = ace1.range(srcport="1-1024", port_nr=True)
+for ace in aces:
+    print(ace)
+print()
+# permit tcp any eq 20 any
+# permit tcp any eq 21 any
+# permit tcp any eq 22 any
+# permit tcp any eq 23 any
