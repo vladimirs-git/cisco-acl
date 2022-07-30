@@ -26,6 +26,7 @@ from tests.helpers_test import (
     REMARK,
     REMARK_1,
     ACL_NAM_IOS,
+    PERMIT_0,
 )
 
 REMARK_10 = Remark(f"10 {REMARK}")
@@ -99,9 +100,23 @@ class Test(Helpers):
             (dict(line=ACL_IOS, input=["port1"]), dict(line=f"{ACL_IOS}\n", input=["port1"])),
             (dict(line=ACL_IOS, output="port1"), dict(line=f"{ACL_IOS}\n", output=["port1"])),
             (dict(line=ACL_IOS, output=["port1"]), dict(line=f"{ACL_IOS}\n", output=["port1"])),
-            # numerically
-            (dict(line=ACL_NUM_IOS, platform="ios", numerically=False), dict(line=ACL_NAM_IOS)),
-            (dict(line=ACL_NAM_IOS, platform="ios", numerically=True), dict(line=ACL_NUM_IOS)),
+            # protocol_nr
+            (dict(line=PERMIT_IP, protocol_nr=False), dict(line=f"{ACL_IOS}\n  {PERMIT_IP}")),
+            (dict(line=PERMIT_0, protocol_nr=False), dict(line=f"{ACL_IOS}\n  {PERMIT_IP}")),
+            (dict(line=PERMIT_IP, protocol_nr=True), dict(line=f"{ACL_IOS}\n  {PERMIT_0}")),
+            (dict(line=PERMIT_0, protocol_nr=True), dict(line=f"{ACL_IOS}\n  {PERMIT_0}")),
+            # port_nr
+            (dict(line=ACL_NAM_IOS, port_nr=False), dict(line=ACL_NAM_IOS)),
+            (dict(line=ACL_NUM_IOS, port_nr=False), dict(line=ACL_NAM_IOS)),
+            (dict(line=ACL_NAM_IOS, port_nr=True), dict(line=ACL_NUM_IOS)),
+            (dict(line=ACL_NUM_IOS, port_nr=True), dict(line=ACL_NUM_IOS)),
+            # protocol_nr port_nr
+            (dict(line=PERMIT_IP, protocol_nr=True, port_nr=True),
+             dict(line=f"{ACL_IOS}\n  {PERMIT_0}")),
+            (dict(line=PERMIT_0, protocol_nr=True, port_nr=True),
+             dict(line=f"{ACL_IOS}\n  {PERMIT_0}")),
+            (dict(line=ACL_NAM_IOS, protocol_nr=True, port_nr=True), dict(line=ACL_NUM_IOS)),
+            (dict(line=ACL_NUM_IOS, protocol_nr=True, port_nr=True), dict(line=ACL_NUM_IOS)),
         ]:
             # getter
             acl_o = Acl(**kwargs)
@@ -294,20 +309,29 @@ class Test(Helpers):
 
     def test_valid__copy(self):
         """Acl.copy()"""
-        acl_o1 = Acl(f"{PERMIT_IP}\n{DENY_IP}", input=[ETH1, ETH2])
+        kwargs1 = dict(line=f"{PERMIT_IP}\n{DENY_IP}",
+                       platform="ios",
+                       port_nr=True,
+                       note="a",
+                       input=[ETH1],
+                       output=[ETH2])
+        kwargs2 = dict(line=f"{DENY_IP}\n{PERMIT_IP}",
+                       platform="nxos",
+                       port_nr=False,
+                       note="b",
+                       input=[ETH2],
+                       output=[ETH1])
+        acl_o1 = Acl(**kwargs1)
         acl_o2 = acl_o1.copy()
-        # mix data
-        acl_o2.items[0], acl_o2.items[1] = acl_o2.items[1], acl_o2.items[0]
-        acl_o2.input[0], acl_o2.input[1] = acl_o2.input[1], acl_o2.input[0]
+        for arg, value in kwargs2.items():
+            setattr(acl_o1, arg, value)
+        req_d1 = kwargs1.copy()
+        req_d1.update(dict(line="ip access-list extended \n  permit ip any any\n  deny ip any any"))
+        req_d2 = kwargs2.copy()
+        req_d2.update(dict(line="ip access-list \n  deny ip any any\n  permit ip any any"))
 
-        for acl_o, req, intf_req in [
-            (acl_o1, [PERMIT_IP, DENY_IP], [ETH1, ETH2]),
-            (acl_o2, [DENY_IP, PERMIT_IP], [ETH2, ETH1]),
-        ]:
-            result = [str(o) for o in acl_o]
-            self.assertEqual(result, req, msg=f"{acl_o=}")
-            result = acl_o.input
-            self.assertEqual(result, intf_req, msg=f"{acl_o=}")
+        self._test_attrs(acl_o2, req_d1, msg="acl_o1 copy of acl_o2")
+        self._test_attrs(acl_o1, req_d2, msg="acl_o1 does not depend on acl_o2")
 
     def test_valid__resequence(self):
         """Acl.resequence()"""

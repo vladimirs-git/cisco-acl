@@ -27,7 +27,10 @@ class AceGroup(Group, BaseAce):
         """Group of ACE (Access Control Entry)
         :param str line: string of ACEs
         :param str platform: Platform: "ios", "nxos" (default "ios")
-        :param bool numerically: Cisco ACL outputs well-known tcp/udp ports as names
+        :param bool protocol_nr: Cisco ACL outputs well-known ip protocols as numbers
+            True  - all ip protocols as numbers
+            False - well-known ip protocols as names (default)
+        :param bool port_nr: ACL prints well-known TCP/UDP ports as numbers
             True  - all tcp/udp ports as numbers
             False - well-known tcp/udp ports as names (default)
         :param str note: Object description. Not part of the ACE configuration,
@@ -218,7 +221,11 @@ class AceGroup(Group, BaseAce):
         except ValueError:
             return None
         if action in ["permit", "deny"]:
-            return Ace(line, platform=self.platform, numerically=self._numerically)
+            ace = Ace(line=line,
+                      platform=self.platform,
+                      protocol_nr=self._protocol_nr,
+                      port_nr=self._port_nr)
+            return ace
         if action in ["remark"]:
             return Remark(line, platform=self.platform)
         return None

@@ -4,6 +4,8 @@ from __future__ import annotations
 from functools import total_ordering
 from typing import List
 
+import netports
+
 from cisco_acl import helpers as h
 from cisco_acl.address import Address
 from cisco_acl.base_ace import BaseAce
@@ -18,8 +20,8 @@ from cisco_acl.types_ import LStr, LInt
 class Ace(BaseAce):
     """ACE - Access Control Entry"""
 
-    __slots__ = ("_platform", "_note", "_line", "_numerically"
-                                                "_sequence", "_action", "_protocol", "_srcaddr",
+    __slots__ = ("_platform", "_note", "_line", "_protocol_nr", "_port_nr",
+                 "_sequence", "_action", "_protocol", "_srcaddr",
                  "_srcport",
                  "_dstaddr", "_dstport", "option")
 
@@ -27,7 +29,10 @@ class Ace(BaseAce):
         """ACE - Access Control Entry
         :param str line: ACE config line
         :param str platform: Platform: "ios", "nxos" (default "ios")
-        :param bool numerically: Cisco ACL outputs well-known tcp/udp ports as names
+        :param bool protocol_nr: Cisco ACL outputs well-known ip protocols as numbers
+            True  - all ip protocols as numbers
+            False - well-known ip protocols as names (default)
+        :param bool port_nr: ACL prints well-known TCP/UDP ports as numbers
             True  - all tcp/udp ports as numbers
             False - well-known tcp/udp ports as names (default)
         :param note: Object description. Not part of the ACE configuration,
@@ -206,15 +211,17 @@ class Ace(BaseAce):
         ace_d = h.parse_ace(line)
         self.sequence.line = ace_d["sequence"]
         self.action = ace_d["action"]
-        self.protocol = Protocol(ace_d["protocol"], platform=self.platform)
-        self.srcaddr = Address(ace_d["srcaddr"], platform=self.platform,
-                               protocol=str(self.protocol))
-        port_kwargs = dict(platform=self.platform,
-                           protocol=str(self.protocol),
-                           numerically=self.numerically)
-        self.srcport = Port(ace_d["srcport"], **port_kwargs)
+        self.srcaddr = Address(ace_d["srcaddr"], platform=self.platform)
         self.dstaddr = Address(ace_d["dstaddr"], platform=self.platform)
-        self.dstport = Port(ace_d["dstport"], **port_kwargs)
+        protocol = Protocol(line=ace_d["protocol"],
+                            platform=self.platform,
+                            port_nr=self.port_nr,
+                            protocol_nr=self.protocol_nr)
+        kwargs_port = dict(platform=self.platform, protocol=protocol.name, port_nr=self.port_nr)
+        self.srcport = Port(ace_d["srcport"], **kwargs_port)
+        self.dstport = Port(ace_d["dstport"], **kwargs_port)
+        protocol.has_port = bool(self.srcport.line or self.dstport.line)
+        self.protocol = protocol
         self.option = ace_d["option"]
 
     @property
@@ -313,7 +320,31 @@ class Ace(BaseAce):
         """Copies the self object
         :return: A shallow copy of self
         """
-        return Ace(self.line, platform=self.platform, note=self.note)
+        ace = Ace(line=self.line,
+                  platform=self.platform,
+                  port_nr=self.port_nr,
+                  note=self.note)
+        return ace
+
+    def range(self, protocol: str = "", srcport: str = "", dstport: str = "") -> LAce:
+        """Generates range of protocols and TCP/UDP source/destination ports
+        :param protocol: Range of ip protocols
+        :param srcport: Range of source TCP/UDP ports
+        :param dstport: Range of destination TCP/UDP ports
+        :return: Newly generated *Ace* objects
+        """
+        if protocol and srcport:
+            raise ValueError(f"mutually exclusive {protocol=} {srcport=}")
+        if protocol and dstport:
+            raise ValueError(f"mutually exclusive {protocol=} {dstport=}")
+        aces: LAce = []  # return
+        aces_ = self._range__protocol(protocol)
+        aces.extend(aces_)
+        aces_ = self._range__port("src", srcport)
+        aces.extend(aces_)
+        aces_ = self._range__port("dst", dstport)
+        aces.extend(aces_)
+        return aces
 
     # noinspection PyIncorrectDocstring
     @classmethod
@@ -388,9 +419,43 @@ class Ace(BaseAce):
                     aces.extend(aces_)
         return sorted([Ace(s, platform=platform) for s in aces])
 
+    # =========================== helpers ============================
+
+    def _range__port(self, sdst: str, range_: str) -> LAce:
+        """Generates range of TCP/UDP source/destination ports
+        :param sdst: "src", "dst"
+        :param range_: Range of src/dst ports
+        :return: Newly generated *Ace* objects
+        """
+        aces: LAce = []  # return
+        ports: LInt = netports.itcp(range_)
+        for port in ports:
+            ace = self.copy()
+            port_o: Port = getattr(ace, f"{sdst}port")
+            operator = port_o.operator or "eq"
+            expected = ("eq", "gt", "lt", "neq")
+            if operator not in expected:
+                raise ValueError(f"invalid {operator=}, {expected=}")
+            port_o._operator = operator
+            port_o._items = [port]
+            aces.append(ace)
+        return aces
+
+    def _range__protocol(self, range_: str) -> LAce:
+        """Generates range of protocols
+        :param range_: Range of src/dst ports
+        :return: Newly generated *Ace* objects
+        """
+        aces: LAce = []  # return
+        protocols: LInt = netports.iip(range_)
+        for proto in protocols:
+            ace = self.copy()
+            ace.protocol = Protocol(str(proto))
+            aces.append(ace)
+        return aces
+
 
 # =========================== helpers ============================
-
 
 def _split_by_ports(aces: LStr, ports: LInt, platform: str) -> LStr:
     """If platform="ios", join ports to string and append to aces lines

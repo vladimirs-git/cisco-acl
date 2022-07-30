@@ -30,14 +30,15 @@ print()
 #   permit tcp host 1.1.1.1 eq 1 2 2.2.2.0 0.0.0.255 eq 3 4
 #   deny tcp any any eq domain
 
-# TCP/UDP ports represented numerically.
-acl1.numerically = True
+# prints well-known IP-protocols and TCP/UDP ports as names or as numbers
+acl1.protocol_nr = True
+acl1.port_nr = True
 print(acl1.line)
-acl1.numerically = False
+acl1.port_nr = False
 print()
 # ip access-list extended ACL1
-#   permit icmp any any
-#   permit ip object-group A object-group B log
+#   permit 1 any any
+#   permit 0 object-group A object-group B log
 #   permit tcp host 1.1.1.1 eq 1 2 2.2.2.0 0.0.0.255 eq 3 4
 #   deny tcp any any eq 53
 

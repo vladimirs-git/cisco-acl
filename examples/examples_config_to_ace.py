@@ -23,14 +23,15 @@ print()
 #   10 deny tcp any any eq domain
 #   15 permit ip any any
 
-# TCP/UDP ports represented numerically
-acl.numerically = True
+# prints well-known IP-protocols and TCP/UDP ports as names or as numbers
+acl.protocol_nr = True
+acl.port_nr = True
 print(acl)
 print()
 # ip access-list extended ACL_NAME
 #   5 permit tcp host 10.0.0.1 10.0.0.0 0.0.0.255 eq 21 22 23
 #   10 deny tcp any any eq 53
-#   15 permit ip any any
+#   15 permit 0 any any
 
 # Insert new ACEs to ACL
 # Note, ACEs has invalid sequence numbers

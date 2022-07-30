@@ -104,7 +104,7 @@ class PortName:
         :param platform: Platform: "ios", "nxos"
         :param version: Software version (not implemented, planned for compatability)
         """
-        self.protocol = str(protocol).lower()
+        self.protocol = self._init_protocol(protocol)
         self.platform = str(platform).lower()
         self.version = str(version).lower()
 
@@ -118,15 +118,28 @@ class PortName:
         params_s = ", ".join(params)
         return f"{name}({params_s})"
 
+    @staticmethod
+    def _init_protocol(protocol: str) -> str:
+        """Init protocol, converts tcp, udp numbers to names"""
+        protocol = str(protocol).lower()
+        expected = ["tcp", "udp"]
+        if protocol in expected:
+            return protocol
+        if str(protocol) == "6":
+            return "tcp"
+        if str(protocol) == "17":
+            return "udp"
+        raise ValueError(f"invalid {protocol=}, {expected=}")
+
     def names(self) -> DInt:
         """Returns TCP/UDP names and ports based on Cisco platform and software version"""
-        if self.protocol == "tcp":
+        if self.protocol in ["tcp", "6"]:
             if self.platform == "ios":
                 return TCP_NAME_PORT__IOS
             if self.platform == "nxos":
                 return TCP_NAME_PORT__NXOS
             return {}
-        if self.protocol == "udp":
+        if self.protocol in ["udp", "17"]:
             if self.platform == "ios":
                 return UDP_NAME_PORT__IOS
             if self.platform == "nxos":
@@ -136,7 +149,7 @@ class PortName:
 
     def ports(self) -> DiStr:
         """Returns TCP/UDP ports and names based on Cisco platform and software version"""
-        if self.protocol == "tcp":
+        if self.protocol in ["tcp", "6"]:
             if self.platform == "ios":
                 name_port = {**TCP_NAME_PORT__BASE, **TCP_NAME_PORT__IOS}
                 return self._swap(name_port)
@@ -144,7 +157,7 @@ class PortName:
                 name_port = {**TCP_NAME_PORT__BASE, **TCP_NAME_PORT__NXOS}
                 return self._swap(name_port)
             return {}
-        if self.protocol == "udp":
+        if self.protocol in ["udp", "17"]:
             if self.platform == "ios":
                 name_port = {**UDP_NAME_PORT__BASE, **UDP_NAME_PORT__IOS}
                 return self._swap(name_port)

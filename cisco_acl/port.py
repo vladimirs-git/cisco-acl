@@ -15,14 +15,14 @@ class Port(Base):
     """ACE. TCP/UDP Port"""
 
     __slots__ = ("_platform", "_note", "_line",
-                 "_numerically", "protocol", "_items", "_operator", "_ports", "_sport")
+                 "_port_nr", "protocol", "_items", "_operator", "_ports", "_sport")
 
     def __init__(self, line: str = "", **kwargs):
         """ACE. TCP/UDP Port
         :param str line: TCP/UDP ports line
         :param str platform: Platform: "ios", "nxos" (default "ios")
         :param protocol: ACL protocol: "tcp", "udp"
-        :param bool numerically: Cisco ACL outputs well-known tcp/udp ports as names
+        :param bool port_nr: ACL prints well-known TCP/UDP ports as numbers
             True  - all tcp/udp ports as numbers
             False - well-known tcp/udp ports as names (default)
         :param str note: Object description. Not part of the ACE configuration,
@@ -58,8 +58,8 @@ class Port(Base):
                 self.sport = "1-3"
         """
         super().__init__(**kwargs)
-        self.protocol = str(kwargs.get("protocol") or "")
-        self.numerically = bool(kwargs.get("numerically"))
+        self.protocol = self._init_protocol(**kwargs)
+        self._port_nr = bool(kwargs.get("port_nr"))
         self.line = line
 
     # ========================== redefined ===========================
@@ -83,6 +83,21 @@ class Port(Base):
                     return self.items[-1] < other.items[-1]
         return False
 
+    # ============================= init =============================
+
+    @staticmethod
+    def _init_protocol(**kwargs) -> str:
+        """Init protocol, converts tcp, udp numbers to names"""
+        protocol = str(kwargs.get("protocol") or "")
+        expected = ["tcp", "udp", ""]
+        if protocol in expected:
+            return protocol
+        if protocol == "6":
+            return "tcp"
+        if protocol == "17":
+            return "udp"
+        return ""
+
     # =========================== property ===========================
 
     @property
@@ -90,12 +105,12 @@ class Port(Base):
         """ACE source or destination TCP/UDP ports"""
         if not (self.operator and self._items and self.protocol in ["tcp", "udp"]):
             return ""
-        if self.numerically:
+        if self.port_nr:
             items_s = " ".join([str(i) for i in self._items])
-        else:
-            port_name = PortName(protocol=self.protocol, platform=self.platform)
-            data = port_name.ports()
-            items_s = " ".join([str(data.get(i) or i) for i in self._items])
+            return f"{self._operator} {items_s}"
+        port_name = PortName(protocol=self.protocol, platform=self.platform)
+        data = port_name.ports()
+        items_s = " ".join([str(data.get(i) or i) for i in self._items])
         return f"{self._operator} {items_s}"
 
     @line.setter
@@ -139,20 +154,16 @@ class Port(Base):
         self.line = " ".join(items_)
 
     @property
-    def numerically(self) -> bool:
-        """Cisco ACL outputs well-known tcp/udp ports as names
+    def port_nr(self) -> bool:
+        """ACL prints well-known TCP/UDP ports as numbers
             True  - all tcp/udp ports as numbers
             False - well-known tcp/udp ports as names (default)
         """
-        return self._numerically
+        return self._port_nr
 
-    @numerically.setter
-    def numerically(self, numerically: bool) -> None:
-        self._numerically = bool(numerically)
-
-    @numerically.deleter
-    def numerically(self) -> None:
-        self._numerically = False
+    @port_nr.setter
+    def port_nr(self, port_nr: bool) -> None:
+        self._port_nr = bool(port_nr)
 
     @property
     def operator(self) -> str:
@@ -261,8 +272,10 @@ class Port(Base):
             if port_nr := data.get(item):
                 ports.append(port_nr)
                 continue
-            expected = sorted(data)
-            raise ValueError(f"invalid {item=}, {expected=}")
+            msg = f"invalid {item=}"
+            if expected := sorted(data):
+                msg = f"{msg}, {expected=}"
+            raise ValueError(msg)
 
         # validation
         platform = self.platform

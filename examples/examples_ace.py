@@ -40,13 +40,14 @@ assert ace.dstport.ports == [80, 443]
 assert ace.dstport.sport == "80,443"
 assert ace.option == "log"
 
+# prints well-known TCP/UDP ports as names or as numbers
 print(ace.line)
 # 10 permit tcp host 10.0.0.1 range ftp telnet 10.0.0.0 0.0.0.3 eq www 443 log
-ace.numerically = True
+ace.port_nr = True
 print(ace.line)
 # 10 permit tcp host 10.0.0.1 range 21 23 10.0.0.0 0.0.0.3 eq 80 443 log
 
-ace.numerically = False
+ace.port_nr = False
 ace.sequence = 20
 ace.protocol.name = "udp"
 ace.srcaddr.prefix = "10.0.0.0/24"

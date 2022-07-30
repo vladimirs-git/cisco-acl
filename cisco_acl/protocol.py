@@ -14,12 +14,18 @@ class Protocol(Base):
 
     _default: int = 0  # ip="0"
 
-    __slots__ = ("_platform", "_note", "_line", "_name", "_number")
+    __slots__ = ("_platform", "_note", "_line", "_name", "_number", "_protocol_nr")
 
     def __init__(self, line: str = "", **kwargs):
         """ACE. IP protocol object
         :param line: IP protocol line
-        :param platform: Platform: "ios", "nxos" (default "ios")
+        :param str platform: Platform: "ios", "nxos" (default "ios")
+        :param bool protocol_nr: Cisco ACL outputs well-known ip protocols as numbers
+            True  - all ip protocols as numbers
+            False - well-known ip protocols as names (default)
+        :param bool has_port: ACL has tcp/udp src/dst ports
+            True  - ACL has tcp/udp src/dst ports
+            False - ACL does not have tcp/udp src/dst ports (default)
         :param note: Object description (can be used for ACEs sorting)
 
         :example:
@@ -36,6 +42,8 @@ class Protocol(Base):
                 self.number = 255
         """
         super().__init__(**kwargs)
+        self._protocol_nr = bool(kwargs.get("protocol_nr"))
+        self.has_port = bool(kwargs.get("has_port"))
         self.line = line
 
     # ========================== redefined ===========================
@@ -59,7 +67,12 @@ class Protocol(Base):
     @property
     def line(self) -> str:
         """ACE protocol name: "ip", "icmp", "tcp", etc."""
-        return self._line
+        number = self._number
+        if self.protocol_nr and not self.has_port:
+            return str(number)
+        if name := NR_TO_PROTOCOL[self.platform].get(number):
+            return str(name)
+        return str(number)
 
     @line.setter
     def line(self, line: str) -> None:
@@ -77,19 +90,14 @@ class Protocol(Base):
             number: int = int(line)
             if not 0 <= number <= 255:
                 raise ValueError(f"invalid protocol {number=}, expected 0..255")
-            name: str = NR_TO_PROTOCOL[self.platform].get(number) or ""
 
-        # permit icmp any any
+        # permit ip any any
         else:
             number_ = ANY_PROTOCOLS.get(line)
             if number_ is None:
                 raise ValueError(f"invalid protocol {line=}, expected={list(ANY_PROTOCOLS)}")
-
-            name = NR_TO_PROTOCOL[self.platform].get(number_) or str(number_)
             number = int(number_)
 
-        self._line: str = name or str(number)
-        self._name = name
         self._number = number
 
     @line.deleter
@@ -99,7 +107,10 @@ class Protocol(Base):
     @property
     def name(self) -> str:
         """ACE protocol name: "ip", "icmp", "tcp", etc."""
-        return self._name
+        number = self._number
+        if name := NR_TO_PROTOCOL[self.platform].get(number):
+            return str(name)
+        return ""
 
     @name.setter
     def name(self, name: str) -> None:
@@ -130,15 +141,23 @@ class Protocol(Base):
         self._platform = self._init_platform(platform=platform)
         self.line = self.line
 
+    @property
+    def protocol_nr(self) -> bool:
+        """Cisco ACL outputs well-known ip protocols as numbers
+            True  - all ip protocols as numbers
+            False - well-known ip protocols as names (default)
+        """
+        return self._protocol_nr
+
+    @protocol_nr.setter
+    def protocol_nr(self, protocol_nr: bool) -> None:
+        self._protocol_nr = bool(protocol_nr)
+
     # =========================== helpers ============================
 
     def _set_default(self) -> None:
         """Sets protocol="ip" (default value)"""
-        number: int = self._default
-        name: str = NR_TO_PROTOCOL[self.platform][number]
-        self._line = name
-        self._name = name
-        self._number = number
+        self._number = self._default
 
 
 LProtocol = List[Protocol]

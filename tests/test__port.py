@@ -107,69 +107,87 @@ class Test(Helpers):
             result = port_o.__ge__(other_o)
             self.assertEqual(result, req_ge, msg=f"{port_o=} {other_o=}")
 
+    # ============================= init =============================
+
+    def test_valid__init_protocol(self):
+        """PortName._init_protocol()"""
+        for protocol, req in [
+            ("", ""),
+            ("icmp", ""),
+            ("tcp", "tcp"),
+            ("udp", "udp"),
+            ("6", "tcp"),
+            ("17", "udp"),
+            (6, "tcp"),
+            (17, "udp"),
+        ]:
+            obj = Port()
+            result = obj._init_protocol(protocol=protocol)
+            self.assertEqual(result, req, msg=f"{protocol=}")
+
     # =========================== property ===========================
 
     def test_valid__line(self):
         """Port.line"""
         for kwargs, req_d in [
-            (dict(line=EQ1, platform="ios", protocol="", numerically=False), dict(line="")),
+            (dict(line=EQ1, platform="ios", protocol="", port_nr=False), dict(line="")),
             # range ios
-            (dict(line="", platform="ios", protocol="tcp", numerically=False), EQ0_D),
-            (dict(line=EQ1, platform="ios", protocol="tcp", numerically=False), EQ1_D),
-            (dict(line=EQ12, platform="ios", protocol="tcp", numerically=False), EQ12_D),
-            (dict(line=EQ13, platform="ios", protocol="tcp", numerically=False), EQ13_D),
-            (dict(line=EQ123, platform="ios", protocol="tcp", numerically=False), EQ123_D),
-            (dict(line=EQ2456, platform="ios", protocol="tcp", numerically=False), EQ2456_D),
-            (dict(line=NEQ1, platform="ios", protocol="tcp", numerically=False), NEQ1_D),
-            (dict(line=NEQ13, platform="ios", protocol="tcp", numerically=False), NEQ13_D),
-            (dict(line=GT, platform="ios", protocol="tcp", numerically=False), GT_D),
-            (dict(line=LT3, platform="ios", protocol="tcp", numerically=False), LT3_D),
-            (dict(line=R24, platform="ios", protocol="tcp", numerically=False), R24_D),
+            (dict(line="", platform="ios", protocol="tcp", port_nr=False), EQ0_D),
+            (dict(line=EQ1, platform="ios", protocol="tcp", port_nr=False), EQ1_D),
+            (dict(line=EQ12, platform="ios", protocol="tcp", port_nr=False), EQ12_D),
+            (dict(line=EQ13, platform="ios", protocol="tcp", port_nr=False), EQ13_D),
+            (dict(line=EQ123, platform="ios", protocol="tcp", port_nr=False), EQ123_D),
+            (dict(line=EQ2456, platform="ios", protocol="tcp", port_nr=False), EQ2456_D),
+            (dict(line=NEQ1, platform="ios", protocol="tcp", port_nr=False), NEQ1_D),
+            (dict(line=NEQ13, platform="ios", protocol="tcp", port_nr=False), NEQ13_D),
+            (dict(line=GT, platform="ios", protocol="tcp", port_nr=False), GT_D),
+            (dict(line=LT3, platform="ios", protocol="tcp", port_nr=False), LT3_D),
+            (dict(line=R24, platform="ios", protocol="tcp", port_nr=False), R24_D),
             # range nxos
-            (dict(line="", platform="nxos", protocol="tcp", numerically=False), EQ0_D),
-            (dict(line=EQ1, platform="nxos", protocol="tcp", numerically=False), EQ1_D),
-            (dict(line=NEQ1, platform="nxos", protocol="tcp", numerically=False), NEQ1_D),
-            (dict(line=GT, platform="nxos", protocol="tcp", numerically=False), GT_D),
-            (dict(line=LT3, platform="nxos", protocol="tcp", numerically=False), LT3_D),
-            (dict(line=R24, platform="nxos", protocol="tcp", numerically=False), R24_D),
+            (dict(line="", platform="nxos", protocol="tcp", port_nr=False), EQ0_D),
+            (dict(line=EQ1, platform="nxos", protocol="tcp", port_nr=False), EQ1_D),
+            (dict(line=NEQ1, platform="nxos", protocol="tcp", port_nr=False), NEQ1_D),
+            (dict(line=GT, platform="nxos", protocol="tcp", port_nr=False), GT_D),
+            (dict(line=LT3, platform="nxos", protocol="tcp", port_nr=False), LT3_D),
+            (dict(line=R24, platform="nxos", protocol="tcp", port_nr=False), R24_D),
 
-            # numerically ios
-            (dict(line=EQ_21, platform="ios", protocol="tcp", numerically=False), EQ_FTP_D),
-            (dict(line=EQ_FTP, platform="ios", protocol="tcp", numerically=False), EQ_FTP_D),
-            (dict(line=EQ_21_23, platform="ios", protocol="tcp", numerically=False), EQ_FTP_T_D),
-            (dict(line=EQ_FTP_T, platform="ios", protocol="tcp", numerically=False), EQ_FTP_T_D),
-            (dict(line=R_21_23, platform="ios", protocol="tcp", numerically=False), R_FTP_T_D),
-            (dict(line=R_FTP_T, platform="ios", protocol="tcp", numerically=False), R_FTP_T_D),
+            # port_nr ios
+            (dict(line=EQ_21, platform="ios", protocol="tcp", port_nr=False), EQ_FTP_D),
+            (dict(line=EQ_FTP, platform="ios", protocol="tcp", port_nr=False), EQ_FTP_D),
+            (dict(line=EQ_21_23, platform="ios", protocol="tcp", port_nr=False), EQ_FTP_T_D),
+            (dict(line=EQ_FTP_T, platform="ios", protocol="tcp", port_nr=False), EQ_FTP_T_D),
+            (dict(line=R_21_23, platform="ios", protocol="tcp", port_nr=False), R_FTP_T_D),
+            (dict(line=R_FTP_T, platform="ios", protocol="tcp", port_nr=False), R_FTP_T_D),
 
-            (dict(line=EQ_21, platform="ios", protocol="tcp", numerically=True), EQ_21_D),
-            (dict(line=EQ_FTP, platform="ios", protocol="tcp", numerically=True), EQ_21_D),
-            (dict(line=EQ_21_23, platform="ios", protocol="tcp", numerically=True), EQ_21_23_D),
-            (dict(line=EQ_FTP_T, platform="ios", protocol="tcp", numerically=True), EQ_21_23_D),
-            (dict(line=R_21_23, platform="ios", protocol="tcp", numerically=True), R_21_23_D),
-            (dict(line=R_FTP_T, platform="ios", protocol="tcp", numerically=True), R_21_23_D),
+            (dict(line=EQ_21, platform="ios", protocol="tcp", port_nr=True), EQ_21_D),
+            (dict(line=EQ_FTP, platform="ios", protocol="tcp", port_nr=True), EQ_21_D),
+            (dict(line=EQ_21_23, platform="ios", protocol="tcp", port_nr=True), EQ_21_23_D),
+            (dict(line=EQ_FTP_T, platform="ios", protocol="tcp", port_nr=True), EQ_21_23_D),
+            (dict(line=R_21_23, platform="ios", protocol="tcp", port_nr=True), R_21_23_D),
+            (dict(line=R_FTP_T, platform="ios", protocol="tcp", port_nr=True), R_21_23_D),
 
-            # numerically nxos
-            (dict(line=EQ_21, platform="nxos", protocol="tcp", numerically=False), EQ_FTP_D),
-            (dict(line=EQ_FTP, platform="nxos", protocol="tcp", numerically=False), EQ_FTP_D),
-            (dict(line=R_21_23, platform="nxos", protocol="tcp", numerically=False), R_FTP_T_D),
-            (dict(line=R_FTP_T, platform="nxos", protocol="tcp", numerically=False), R_FTP_T_D),
+            # port_nr nxos
+            (dict(line=EQ_21, platform="nxos", protocol="tcp", port_nr=False), EQ_FTP_D),
+            (dict(line=EQ_FTP, platform="nxos", protocol="tcp", port_nr=False), EQ_FTP_D),
+            (dict(line=R_21_23, platform="nxos", protocol="tcp", port_nr=False), R_FTP_T_D),
+            (dict(line=R_FTP_T, platform="nxos", protocol="tcp", port_nr=False), R_FTP_T_D),
 
-            (dict(line=EQ_21, platform="nxos", protocol="tcp", numerically=True), EQ_21_D),
-            (dict(line=EQ_FTP, platform="nxos", protocol="tcp", numerically=True), EQ_21_D),
-            (dict(line=R_21_23, platform="nxos", protocol="tcp", numerically=True), R_21_23_D),
-            (dict(line=R_FTP_T, platform="nxos", protocol="tcp", numerically=True), R_21_23_D),
+            (dict(line=EQ_21, platform="nxos", protocol="tcp", port_nr=True), EQ_21_D),
+            (dict(line=EQ_FTP, platform="nxos", protocol="tcp", port_nr=True), EQ_21_D),
+            (dict(line=R_21_23, platform="nxos", protocol="tcp", port_nr=True), R_21_23_D),
+            (dict(line=R_FTP_T, platform="nxos", protocol="tcp", port_nr=True), R_21_23_D),
 
             # tcp/udp 514 cmd/syslog ios
-            (dict(line="eq 514", platform="ios", protocol="tcp", numerically=False), EQ_CMD_D),
-            (dict(line="eq cmd", platform="ios", protocol="tcp", numerically=False), EQ_CMD_D),
-            (dict(line="eq syslog", platform="ios", protocol="tcp", numerically=False), EQ_CMD_D),
-            (dict(line="eq 514", platform="ios", protocol="udp", numerically=False), EQ_SYSL_D),
-            (dict(line="eq syslog", platform="ios", protocol="udp", numerically=False), EQ_SYSL_D),
+            (dict(line="eq 514", platform="ios", protocol="tcp", port_nr=False), EQ_CMD_D),
+            (dict(line="eq cmd", platform="ios", protocol="tcp", port_nr=False), EQ_CMD_D),
+            (dict(line="eq syslog", platform="ios", protocol="tcp", port_nr=False), EQ_CMD_D),
+            (dict(line="eq 514", platform="ios", protocol="udp", port_nr=False), EQ_SYSL_D),
+            (dict(line="eq syslog", platform="ios", protocol="udp", port_nr=False), EQ_SYSL_D),
             # tcp/udp 514 cmd/syslog nxos
-            (dict(line="eq 514", platform="nxos", protocol="tcp", numerically=False), EQ_CMD_D),
-            (dict(line="eq cmd", platform="nxos", protocol="tcp", numerically=False), EQ_CMD_D),
-            (dict(line="eq 514", platform="nxos", protocol="udp", numerically=False), EQ_SYSL_D),
-            (dict(line="eq syslog", platform="nxos", protocol="udp", numerically=False), EQ_SYSL_D),
+            (dict(line="eq 514", platform="nxos", protocol="tcp", port_nr=False), EQ_CMD_D),
+            (dict(line="eq cmd", platform="nxos", protocol="tcp", port_nr=False), EQ_CMD_D),
+            (dict(line="eq 514", platform="nxos", protocol="udp", port_nr=False), EQ_SYSL_D),
+            (dict(line="eq syslog", platform="nxos", protocol="udp", port_nr=False), EQ_SYSL_D),
         ]:
             # getter
             port_o = Port(**kwargs)
@@ -202,7 +220,7 @@ class Test(Helpers):
             (dict(line=EQ123, platform="nxos"), ValueError),
             (dict(line=EQ2456, platform="nxos"), ValueError),
             (dict(line=NEQ13, platform="nxos"), ValueError),
-            (dict(line="eq syslog", platform="nxos", protocol="tcp", numerically=False),
+            (dict(line="eq syslog", platform="nxos", protocol="tcp", port_nr=False),
              ValueError),
         ]:
             with self.assertRaises(error, msg=f"{kwargs=}"):
@@ -367,6 +385,29 @@ class Test(Helpers):
             port_o = Port(EQ1, platform=platform)
             with self.assertRaises(error, msg=f"{ports=}"):
                 port_o.ports = ports
+
+    def test_valid__port_nr(self):
+        """Port.port_nr"""
+        for port_nr, protocol, line, req_d in [
+            (True, "tcp", "eq 21", dict(line="eq 21", port_nr=True, ports=[21])),
+            (True, "tcp", "eq ftp", dict(line="eq 21", port_nr=True, ports=[21])),
+            (True, "udp", "eq 67", dict(line="eq 67", port_nr=True, ports=[67])),
+            (True, "udp", "eq bootps", dict(line="eq 67", port_nr=True, ports=[67])),
+            (False, "tcp", "eq 21", dict(line="eq ftp", port_nr=False, ports=[21])),
+            (False, "tcp", "eq ftp", dict(line="eq ftp", port_nr=False, ports=[21])),
+            (False, "udp", "eq 67", dict(line="eq bootps", port_nr=False, ports=[67])),
+            (False, "udp", "eq bootps", dict(line="eq bootps", port_nr=False, ports=[67])),
+        ]:
+            port_o = Port(line=line, protocol=protocol)
+            # setter
+            port_o.port_nr = port_nr
+            self._test_attrs(obj=port_o, req_d=req_d, msg=f"setter {line=}")
+
+        # deleter
+        port_o = Port(EQ1)
+        with self.assertRaises(AttributeError, msg=f"{port_nr=}"):
+            # noinspection PyPropertyAccess
+            del port_o.ports
 
     def test_valid__protocol(self):
         """Port.protocol"""

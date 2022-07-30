@@ -53,9 +53,8 @@ class Test(Helpers):
 
     def test_valid__line(self):
         """Protocol.line()"""
-        ip_d = dict(line="ip", name="ip", number=0)
         for line, req_d in [
-            ("", ip_d),
+            ("", dict(line="ip", name="ip", number=0)),
             ("ahp", dict(line="ahp", name="ahp", number=51)),
             ("egp", dict(line="egp", name="egp", number=8)),
             ("eigrp", dict(line="eigrp", name="eigrp", number=88)),
@@ -63,7 +62,7 @@ class Test(Helpers):
             ("gre", dict(line="gre", name="gre", number=47)),
             ("icmp", dict(line="icmp", name="icmp", number=1)),
             ("igmp", dict(line="igmp", name="igmp", number=2)),
-            ("ip", ip_d),
+            ("ip", dict(line="ip", name="ip", number=0)),
             ("ipip", dict(line="ipip", name="ipip", number=4)),
             ("ipv6", dict(line="ipv6", name="ipv6", number=41)),
             ("nos", dict(line="nos", name="nos", number=94)),
@@ -73,12 +72,14 @@ class Test(Helpers):
             ("tcp", dict(line="tcp", name="tcp", number=6)),
             ("udp", dict(line="udp", name="udp", number=17)),
 
-            ("0", ip_d),
+            ("0", dict(line="ip", name="ip", number=0)),
             ("1", dict(line="icmp", name="icmp", number=1)),
+            ("3", dict(line="3", name="", number=3)),
             ("255", dict(line="255", name="", number=255)),
 
-            (0, ip_d),
+            (0, dict(line="ip", name="ip", number=0)),
             (1, dict(line="icmp", name="icmp", number=1)),
+            (3, dict(line="3", name="", number=3)),
             (255, dict(line="255", name="", number=255)),
         ]:
             # getter
@@ -93,7 +94,8 @@ class Test(Helpers):
         proto_o = Protocol(line="ahp")
         # noinspection PyPropertyAccess
         del proto_o.line
-        self._test_attrs(obj=proto_o, req_d=ip_d, msg="deleter line")
+        req_d = dict(line="ip", name="ip", number=0)
+        self._test_attrs(obj=proto_o, req_d=req_d, msg="deleter line")
 
     def test_invalid__line(self):
         """Protocol.line()"""
@@ -111,9 +113,13 @@ class Test(Helpers):
         """Protocol.name()"""
         for name, req_d in [
             ("", dict(line="ip", name="ip", number=0)),
+            ("ip", dict(line="ip", name="ip", number=0)),
             ("0", dict(line="ip", name="ip", number=0)),
+            ("icmp", dict(line="icmp", name="icmp", number=1)),
+            ("1", dict(line="icmp", name="icmp", number=1)),
             ("ahp", dict(line="ahp", name="ahp", number=51)),
             ("51", dict(line="ahp", name="ahp", number=51)),
+            ("255", dict(line="255", name="", number=255)),
         ]:
             # getter
             proto_o = Protocol(req_d["line"])
@@ -178,6 +184,56 @@ class Test(Helpers):
         ]:
             with self.assertRaises(error, msg=f"{number=}"):
                 proto_o.number = number
+
+    def test_valid__protocol_nr(self):
+        """Protocol.protocol_nr"""
+        for protocol_nr, line, req_d in [
+            # number
+            (True, "", dict(line="0", name="ip", number=0)),
+            (True, "ip", dict(line="0", name="ip", number=0)),
+            (True, "0", dict(line="0", name="ip", number=0)),
+            (True, 0, dict(line="0", name="ip", number=0)),
+            (True, "icmp", dict(line="1", name="icmp", number=1)),
+            (True, "1", dict(line="1", name="icmp", number=1)),
+            (True, 1, dict(line="1", name="icmp", number=1)),
+            (True, "3", dict(line="3", name="", number=3)),
+            (True, 3, dict(line="3", name="", number=3)),
+            (True, "tcp", dict(line="6", name="tcp", number=6)),
+            (True, "6", dict(line="6", name="tcp", number=6)),
+            (True, 6, dict(line="6", name="tcp", number=6)),
+            (True, "255", dict(line="255", name="", number=255)),
+            (True, 255, dict(line="255", name="", number=255)),
+            # name
+            (False, "", dict(line="ip", name="ip", number=0)),
+            (False, "ip", dict(line="ip", name="ip", number=0)),
+            (False, "0", dict(line="ip", name="ip", number=0)),
+            (False, 0, dict(line="ip", name="ip", number=0)),
+            (False, "icmp", dict(line="icmp", name="icmp", number=1)),
+            (False, "1", dict(line="icmp", name="icmp", number=1)),
+            (False, 1, dict(line="icmp", name="icmp", number=1)),
+            (False, "3", dict(line="3", name="", number=3)),
+            (False, 3, dict(line="3", name="", number=3)),
+            (False, "tcp", dict(line="tcp", name="tcp", number=6)),
+            (False, "6", dict(line="tcp", name="tcp", number=6)),
+            (False, 6, dict(line="tcp", name="tcp", number=6)),
+            (False, "255", dict(line="255", name="", number=255)),
+            (False, 255, dict(line="255", name="", number=255)),
+        ]:
+            # getter
+            proto_o = Protocol(line=line, protocol_nr=protocol_nr)
+            self._test_attrs(obj=proto_o, req_d=req_d, msg=f"getter {line=}")
+
+            # setter
+            proto_o = Protocol(line=line)
+            proto_o.protocol_nr = protocol_nr
+            self._test_attrs(obj=proto_o, req_d=req_d, msg=f"setter {line=}")
+
+        # deleter
+        proto_o = Protocol(line="ahp", protocol_nr=True)
+        # noinspection PyPropertyAccess
+        del proto_o.line
+        req_d = dict(line="0", name="ip", number=0)
+        self._test_attrs(obj=proto_o, req_d=req_d, msg="deleter line")
 
     def test_valid__platform(self):
         """Protocol.platform()"""

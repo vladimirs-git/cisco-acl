@@ -3,6 +3,16 @@
 CHANGELOG
 =========
 
+1.2.0 (2022-07-30)
+------------------
+* [delete] Ace.numerically
+* [delete] Acl.numerically
+* [delete] Protocol._line, Protocol._name
+* [new] Ace.numerically_protocol, Ace.numerically_port
+* [new] Acl.numerically_protocol, Ace.numerically_port
+* [new] Protocol.numerically
+
+
 1.1.0 (2022-07-17)
 ------------------
 * [new] cisco_acl.config_to_ace() cisco_acl.config_to_aceg()
@@ -11,7 +21,7 @@ CHANGELOG
 
 1.0.0 (2022-07-16)
 ------------------
-* [new] numerically: Cisco ACL outputs some tcp/udp ports as names
+* [new] numerically: Cisco ACL outputs some tcp/udp ports as numbers
 * [change] "cnx" to "nxos"
 
 

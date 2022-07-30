@@ -113,9 +113,9 @@ class Test(Helpers):
             (dict(line=acl1), dict(line=group1, sequence="")),
             (dict(line=acl1_name), dict(line=group1, sequence="")),
             (dict(line=acl2), dict(line=group2, sequence="2")),
-            # numerically
-            (dict(line=PERMIT_NUM, numerically=False), dict(line=PERMIT_NAM)),
-            (dict(line=PERMIT_NAM, numerically=True), dict(line=PERMIT_NUM)),
+            # port_nr
+            (dict(line=PERMIT_NUM, port_nr=False), dict(line=PERMIT_NAM)),
+            (dict(line=PERMIT_NAM, port_nr=True), dict(line=PERMIT_NUM)),
         ]:
             # getter
             aceg_o = AceGroup(**kwargs)
@@ -159,15 +159,15 @@ class Test(Helpers):
                 diff = list(dictdiffer.diff(first=result, second=req_d))
                 self.assertEqual(diff, [], msg=f"{line=}")
 
-    def test_valid__numerically(self):
-        """AceGroup.numerically"""
-        for kwargs, numerically, req_d, in [
-            (dict(line=PERMIT_NUM, numerically=True), False, dict(line=PERMIT_NAM)),
-            (dict(line=PERMIT_NAM, numerically=False), True, dict(line=PERMIT_NUM)),
+    def test_valid__port_nr(self):
+        """AceGroup.port_nr"""
+        for kwargs, port_nr, req_d, in [
+            (dict(line=PERMIT_NUM, port_nr=True), False, dict(line=PERMIT_NAM)),
+            (dict(line=PERMIT_NAM, port_nr=False), True, dict(line=PERMIT_NUM)),
         ]:
             # setter
             aceg_o = AceGroup(**kwargs)
-            aceg_o.numerically = numerically
+            aceg_o.port_nr = port_nr
             self._test_attrs(obj=aceg_o, req_d=req_d, msg=f"setter {kwargs=}")
 
     # =========================== helpers ============================

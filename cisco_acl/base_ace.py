@@ -9,16 +9,23 @@ from cisco_acl.types_ import StrInt
 class BaseAce(Base):
     """BaseAce - Parent of: Ace, Remark"""
 
-    __slots__ = ("_platform", "_note", "_line", "_sequence", "_numerically")
+    __slots__ = ("_platform", "_note", "_line", "_sequence", "_protocol_nr", "_port_nr")
 
     def __init__(self, line, **kwargs):
         """BaseAce - Parent of: Ace, Remark
         :param line: ACE line, can contain index
         :param platform: Platform: "ios", "nxos" (default "ios")
+        :param bool protocol_nr: Cisco ACL outputs well-known ip protocols as numbers
+            True  - all ip protocols as numbers
+            False - well-known ip protocols as names (default)
+        :param bool port_nr: ACL prints well-known TCP/UDP ports as numbers
+            True  - all tcp/udp ports as numbers
+            False - well-known tcp/udp ports as names (default)
         :param note: Object description (can be used for ACEs sorting)
         """
         super().__init__(**kwargs)
-        self._numerically = bool(kwargs.get("numerically"))
+        self._protocol_nr = bool(kwargs.get("protocol_nr"))
+        self._port_nr = bool(kwargs.get("port_nr"))
         self.sequence = 0
         self.line = line
 
@@ -35,13 +42,23 @@ class BaseAce(Base):
         return
 
     @property
-    def numerically(self) -> bool:
-        """Cisco ACL outputs well-known tcp/udp ports as names"""
-        return self._numerically
+    def port_nr(self) -> bool:
+        """ACL prints well-known TCP/UDP ports as numbers"""
+        return self._port_nr
 
-    @numerically.setter
-    def numerically(self, numerically: bool):
-        self._numerically = bool(numerically)
+    @port_nr.setter
+    def port_nr(self, port_nr: bool):
+        self._port_nr = bool(port_nr)
+        self.line = self.line
+
+    @property
+    def protocol_nr(self) -> bool:
+        """Cisco ACL outputs well-known ip protocols as numbers"""
+        return self._protocol_nr
+
+    @protocol_nr.setter
+    def protocol_nr(self, protocol_nr: bool):
+        self._protocol_nr = bool(protocol_nr)
         self.line = self.line
 
     @property

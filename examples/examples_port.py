@@ -4,7 +4,7 @@ The following example demonstrates Port object.
 
 from cisco_acl import Port
 
-port = Port("eq 20 21 22 23", platform="ios", protocol="tcp", numerically=False)
+port = Port("eq 20 21 22 23", platform="ios", protocol="tcp", port_nr=False)
 assert port.line == "eq ftp-data ftp 22 telnet"
 assert port.platform == "ios"
 assert port.operator == "eq"
@@ -13,7 +13,7 @@ assert port.ports == [20, 21, 22, 23]
 assert port.sport == "20-23"
 print(port.line)
 # eq ftp-data ftp 22 telnet
-port.numerically = True
+port.port_nr = True
 print(port.line)
 # eq 20 21 22 23
 print()

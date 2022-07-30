@@ -21,8 +21,8 @@ __all__ = [
     "config_to_aceg",
 ]
 
-__version__ = "1.1.0"
-__date__ = "2022-07-17"
+__version__ = "1.2.0"
+__date__ = "2022-07-30"
 __title__ = "cisco-acl"
 
 __summary__ = "Python package to parse and manage Cisco ACL (Access Control List)"

@@ -137,67 +137,89 @@ class Test(Helpers):
 
     def test_valid__line(self):
         """Ace.line"""
-        permit_tcp_0 = "permit tcp any eq ftp 443 object-group NAME neq cmd ack log"
-        permit_tcp_0_dirty = "  " + "\t".join(permit_tcp_0.split()) + "\n"
-        permit_tcp_0_d = dict(line=permit_tcp_0,
-                              sequence="",
-                              action="permit",
-                              protocol="tcp",
-                              srcaddr="any",
-                              srcport="eq ftp 443",
-                              dstaddr="object-group NAME",
-                              dstport="neq cmd",
-                              option="ack log")
-        permit_tcp_10 = f"10 {permit_tcp_0}"
-        permit_tcp_10_d = {**permit_tcp_0_d, **{"line": permit_tcp_10, "sequence": "10"}}
+        icmp = "permit icmp any any"
+        icmp_pr = "permit 1 any any"
+        icmp_d = dict(line=icmp,
+                      sequence="",
+                      action="permit",
+                      protocol="icmp",
+                      srcaddr="any",
+                      srcport="",
+                      dstaddr="any",
+                      dstport="",
+                      option="")
+        icmp_pr_d = {**icmp_d, **{"line": icmp_pr, "protocol": "1"}}
 
-        permit_tcp_n_0 = "permit tcp any eq 21 443 object-group NAME neq 514 ack log"
-        permit_tcp_n_0_d = {**permit_tcp_0_d, **{"line": permit_tcp_n_0,
-                                                 "srcport": "eq 21 443",
-                                                 "dstport": "neq 514"}}
-        permit_tcp_n_10_d = {**permit_tcp_n_0_d, **{"line": f"10 {permit_tcp_n_0}",
-                                                    "sequence": "10"}}
+        tcp = "permit tcp any eq ftp 443 object-group NAME neq cmd ack log"
+        tcp_10 = f"10 {tcp}"
+        tcp_dirty = "  " + "\t".join(tcp.split()) + "\n"
+        tcp_n = "permit tcp any eq 21 443 object-group NAME neq 514 ack log"
 
-        deny_udp_0 = "deny udp host 1.1.1.1 lt syslog 2.2.2.0 0.0.0.3 range bootps tftp"
-        deny_udp_10 = f"10 {deny_udp_0}"
-        deny_udp_0_d = dict(line=deny_udp_0,
-                            sequence="",
-                            action="deny",
-                            protocol="udp",
-                            srcaddr="host 1.1.1.1",
-                            srcport="lt syslog",
-                            dstaddr="2.2.2.0 0.0.0.3",
-                            dstport="range bootps tftp",
-                            option="")
-        deny_udp_n_0 = "deny udp host 1.1.1.1 lt 514 2.2.2.0 0.0.0.3 range 67 69"
-        deny_udp_n_0_d = {**deny_udp_0_d, **{"line": deny_udp_n_0,
-                                             "srcport": "lt 514",
-                                             "dstport": "range 67 69"}}
-        deny_udp_10_d = {**deny_udp_0_d, **{"line": deny_udp_10, "sequence": "10"}}
+        tcp_d = dict(line=tcp,
+                     sequence="",
+                     action="permit",
+                     protocol="tcp",
+                     srcaddr="any",
+                     srcport="eq ftp 443",
+                     dstaddr="object-group NAME",
+                     dstport="neq cmd",
+                     option="ack log")
+        tcp_10_d = {**tcp_d, **{"line": tcp_10, "sequence": "10"}}
+        tcp_n_d = {**tcp_d,
+                   **{"line": tcp_n, "srcport": "eq 21 443", "dstport": "neq 514"}}
 
-        for numerically, line, req_d in [
+        udp = "deny udp host 1.1.1.1 lt syslog 2.2.2.0 0.0.0.3 range bootps tftp"
+        udp_n = "deny udp host 1.1.1.1 lt 514 2.2.2.0 0.0.0.3 range 67 69"
+        udp_d = dict(line=udp,
+                     sequence="",
+                     action="deny",
+                     protocol="udp",
+                     srcaddr="host 1.1.1.1",
+                     srcport="lt syslog",
+                     dstaddr="2.2.2.0 0.0.0.3",
+                     dstport="range bootps tftp",
+                     option="")
+        udp_n_d = {**udp_d,
+                   **{"line": udp_n, "srcport": "lt 514", "dstport": "range 67 69"}}
+
+        for kwargs, req_d in [
             # indexes
-            (False, permit_tcp_0, permit_tcp_0_d),
-            (False, permit_tcp_0_dirty, permit_tcp_0_d),
-            (False, permit_tcp_n_0, permit_tcp_0_d),
-            (False, permit_tcp_10, permit_tcp_10_d),
-            (False, deny_udp_0, deny_udp_0_d),
-            (False, deny_udp_n_0, deny_udp_0_d),
-            (False, deny_udp_10, deny_udp_10_d),
-
-            # numerically
-            (True, permit_tcp_0, permit_tcp_n_0_d),
-            (True, permit_tcp_0_dirty, permit_tcp_n_0_d),
-            (True, permit_tcp_n_0, permit_tcp_n_0_d),
-            (True, permit_tcp_10, permit_tcp_n_10_d),
-            (True, deny_udp_0, deny_udp_n_0_d),
-            (True, deny_udp_n_0, deny_udp_n_0_d),
+            (dict(line=icmp), icmp_d),
+            (dict(line=icmp_pr), icmp_d),
+            (dict(line=tcp), tcp_d),
+            (dict(line=tcp_10), tcp_10_d),
+            (dict(line=tcp_dirty), tcp_d),
+            (dict(line=tcp_n), tcp_d),
+            (dict(line=udp), udp_d),
+            (dict(line=udp_n), udp_d),
+            # protocol_nr
+            (dict(line=icmp, protocol_nr=True), icmp_pr_d),
+            (dict(line=icmp_pr, protocol_nr=True), icmp_pr_d),
+            (dict(line=tcp, protocol_nr=True), tcp_d),
+            (dict(line=tcp_n, protocol_nr=True), tcp_d),
+            (dict(line=udp, protocol_nr=True), udp_d),
+            (dict(line=udp_n, protocol_nr=True), udp_d),
+            # port_nr
+            (dict(line=icmp, port_nr=True), icmp_d),
+            (dict(line=icmp_pr, port_nr=True), icmp_d),
+            (dict(line=tcp, port_nr=True), tcp_n_d),
+            (dict(line=tcp_n, port_nr=True), tcp_n_d),
+            (dict(line=udp, port_nr=True), udp_n_d),
+            (dict(line=udp_n, port_nr=True), udp_n_d),
+            # protocol_nr port_nr
+            (dict(line=icmp, protocol_nr=True, port_nr=True), icmp_pr_d),
+            (dict(line=icmp_pr, protocol_nr=True, port_nr=True), icmp_pr_d),
+            (dict(line=tcp, protocol_nr=True, port_nr=True), tcp_n_d),
+            (dict(line=tcp_n, protocol_nr=True, port_nr=True), tcp_n_d),
+            (dict(line=udp, protocol_nr=True, port_nr=True), udp_n_d),
+            (dict(line=udp_n, protocol_nr=True, port_nr=True), udp_n_d),
         ]:
             # getter
-            ace_o = Ace(line=line, numerically=numerically)
-            self._test_attrs(obj=ace_o, req_d=req_d, msg=f"getter {line=}")
+            ace_o = Ace(**kwargs)
+            self._test_attrs(obj=ace_o, req_d=req_d, msg=f"getter {kwargs=}")
 
             # setter
+            line = kwargs["line"]
             ace_o.line = line
             self._test_attrs(obj=ace_o, req_d=req_d, msg=f"setter {line=}")
 
@@ -218,18 +240,18 @@ class Test(Helpers):
             with self.assertRaises(error, msg=f"{line=}"):
                 Ace(line)
 
-    def test_valid__numerically(self):
-        """Ace.numerically"""
+    def test_valid__port_nr(self):
+        """Ace.port_nr"""
         line_num = "10 permit tcp host 10.0.0.1 range 21 23 10.0.0.0 0.0.0.3 eq 80 443 log"
         line_name = "10 permit tcp host 10.0.0.1 range ftp telnet 10.0.0.0 0.0.0.3 eq www 443 log"
         ace_o = Ace(line_name)
-        for numerically, req in [
+        for port_nr, req in [
             (True, line_num),
             (False, line_name),
         ]:
-            ace_o.numerically = numerically
+            ace_o.port_nr = port_nr
             result = ace_o.line
-            self.assertEqual(result, req, msg=f"{numerically=}")
+            self.assertEqual(result, req, msg=f"{port_nr=}")
 
     def test_valid__platform(self):
         """Ace.platform"""
@@ -303,19 +325,46 @@ class Test(Helpers):
     # =========================== methods ============================
 
     def test_valid__copy(self):
-        """Acl.copy()"""
-        ace_o1 = Ace(PERMIT_IP, platform="ios", note="a")
+        """Ace.copy()"""
+        kwargs1 = dict(line=PERMIT_IP, platform="ios", port_nr=True, note="a")
+        kwargs2 = dict(line=DENY_IP, platform="nxos", port_nr=False, note="b")
+        ace_o1 = Ace(**kwargs1)
         ace_o2 = ace_o1.copy()
-        ace_o2.line = DENY_IP
-        ace_o2.note = "b"
-        for attr, req, req2 in [
-            ("line", PERMIT_IP, DENY_IP),
-            ("note", "a", "b"),
+        for arg, value in kwargs2.items():
+            setattr(ace_o1, arg, value)
+        self._test_attrs(ace_o2, kwargs1, msg="ace_o2 copy of ace_o1")
+        self._test_attrs(ace_o1, kwargs2, msg="ace_o1 does not depend on ace_o2")
+
+    def test_valid__range(self):
+        """Ace.range()"""
+        proto = ["permit 1 any any", "permit 2 any any"]
+        src_tcp_eq = ["permit tcp any eq 20 any", "permit tcp any eq 21 any"]
+        src_combo_tcp_eq = ['permit tcp any eq 20 any', 'permit tcp any eq 21 any',
+                            'permit tcp any any eq 20', 'permit tcp any any eq 21']
+        src_combo_tcp_neq = ['permit tcp any neq 20 any', 'permit tcp any neq 21 any',
+                             'permit tcp any neq 1 any eq 20', 'permit tcp any neq 1 any eq 21']
+        for kwargs, line, req in [
+            ({}, "permit ip any any", []),
+            # (dict(protocol="1-2"), "permit ip any any", proto),  # TODO numerically
+            (dict(srcport="20-21"), "permit tcp any any", src_tcp_eq),
+            (dict(srcport="20-21"), "permit tcp any eq 1 any", src_tcp_eq),
+            (dict(srcport="20-21", dstport="20,21"), "permit tcp any any", src_combo_tcp_eq),
+            (dict(srcport="20-21", dstport="20,21"), "permit tcp any neq 1 any", src_combo_tcp_neq),
         ]:
-            result = getattr(ace_o1, attr)
-            self.assertEqual(result, req, msg="copy")
-            result2 = getattr(ace_o2, attr)
-            self.assertEqual(result2, req2, msg="copy")
+            ace_o = Ace(line=line, port_nr=True)
+            results = ace_o.range(**kwargs)
+            result = [str(o) for o in results]
+            self.assertEqual(result, req, msg=f"{line=} {kwargs=}")
+
+    def test_invalid__range(self):
+        """Ace.range()"""
+        for line, kwargs, error in [
+            ("permit icmp any any", dict(protocol="1-2", srcport="1-2"), ValueError),
+            ("permit icmp any any", dict(protocol="1-2", dstport="1-2"), ValueError),
+        ]:
+            ace_o = Ace(line=line, port_nr=True)
+            with self.assertRaises(error, msg=f"{line=} {kwargs=}"):
+                ace_o.range(**kwargs)
 
     def test_valid__rule(self):
         """Ace.rule()"""
@@ -454,6 +503,88 @@ class Test(Helpers):
         ]:
             with self.assertRaises(error, msg=f"{kwargs=}"):
                 Ace.rule(**kwargs)
+
+    # =========================== helpers ============================
+
+    def test_valid__range__port(self):
+        """Ace._range__port()"""
+        src_tcp_eq = ["permit tcp any eq 20 any", "permit tcp any eq 21 any"]
+        src_tcp_gt = ["permit tcp any gt 20 any", "permit tcp any gt 21 any"]
+        src_tcp_lt = ["permit tcp any lt 20 any", "permit tcp any lt 21 any"]
+        src_tcp_neq = ["permit tcp any neq 20 any", "permit tcp any neq 21 any"]
+        src_udp_eq = ["permit udp any eq 67 any", "permit udp any eq 68 any"]
+        src_udp_gt = ["permit udp any gt 67 any", "permit udp any gt 68 any"]
+        src_udp_lt = ["permit udp any lt 67 any", "permit udp any lt 68 any"]
+        src_udp_neq = ["permit udp any neq 67 any", "permit udp any neq 68 any"]
+        dst_tcp_eq = ["permit tcp any any eq 20", "permit tcp any any eq 21"]
+        dst_tcp_gt = ["permit tcp any any gt 20", "permit tcp any any gt 21"]
+        dst_tcp_lt = ["permit tcp any any lt 20", "permit tcp any any lt 21"]
+        dst_tcp_neq = ["permit tcp any any neq 20", "permit tcp any any neq 21"]
+        dst_udp_eq = ["permit udp any any eq 67", "permit udp any any eq 68"]
+        dst_udp_gt = ["permit udp any any gt 67", "permit udp any any gt 68"]
+        dst_udp_lt = ["permit udp any any lt 67", "permit udp any any lt 68"]
+        dst_udp_neq = ["permit udp any any neq 67", "permit udp any any neq 68"]
+        for kwargs, line, req in [
+            # src tcp
+            (dict(sdst="src", range_=""), "permit tcp any any", []),
+            (dict(sdst="src", range_="20-21"), "permit tcp any any", src_tcp_eq),
+            (dict(sdst="src", range_="20-21"), "permit tcp any eq 1 any", src_tcp_eq),
+            (dict(sdst="src", range_="20-21"), "permit tcp any gt 1 any", src_tcp_gt),
+            (dict(sdst="src", range_="20-21"), "permit tcp any lt 1 any", src_tcp_lt),
+            (dict(sdst="src", range_="20-21"), "permit tcp any neq 1 any", src_tcp_neq),
+            # src udp
+            (dict(sdst="src", range_=""), "permit udp any any", []),
+            (dict(sdst="src", range_="67-68"), "permit udp any any", src_udp_eq),
+            (dict(sdst="src", range_="67-68"), "permit udp any eq 1 any", src_udp_eq),
+            (dict(sdst="src", range_="67-68"), "permit udp any gt 1 any", src_udp_gt),
+            (dict(sdst="src", range_="67-68"), "permit udp any lt 1 any", src_udp_lt),
+            (dict(sdst="src", range_="67-68"), "permit udp any neq 1 any", src_udp_neq),
+            # dst tcp
+            (dict(sdst="src", range_=""), "permit tcp any any", []),
+            (dict(sdst="dst", range_="20,21"), "permit tcp any any", dst_tcp_eq),
+            (dict(sdst="dst", range_="20,21"), "permit tcp any any eq 1 ", dst_tcp_eq),
+            (dict(sdst="dst", range_="20,21"), "permit tcp any any gt 1 ", dst_tcp_gt),
+            (dict(sdst="dst", range_="20,21"), "permit tcp any any lt 1 ", dst_tcp_lt),
+            (dict(sdst="dst", range_="20,21"), "permit tcp any any neq 1 ", dst_tcp_neq),
+            # dst udp
+            (dict(sdst="src", range_=""), "permit udp any any", []),
+            (dict(sdst="dst", range_="67,68"), "permit udp any any", dst_udp_eq),
+            (dict(sdst="dst", range_="67,68"), "permit udp any any eq 1 ", dst_udp_eq),
+            (dict(sdst="dst", range_="67,68"), "permit udp any any gt 1 ", dst_udp_gt),
+            (dict(sdst="dst", range_="67,68"), "permit udp any any lt 1 ", dst_udp_lt),
+            (dict(sdst="dst", range_="67,68"), "permit udp any any neq 1 ", dst_udp_neq),
+        ]:
+            ace_o = Ace(line=line, port_nr=True)
+            results = ace_o._range__port(**kwargs)
+            result = [str(o) for o in results]
+            self.assertEqual(result, req, msg=f"{line=} {kwargs=}")
+
+    def test_invalid__range__port(self):
+        """Ace._range__port()"""
+        for kwargs, line, error in [
+            (dict(sdst="src", range_="20-21"), "permit tcp any range 1 2 any", ValueError),
+            (dict(sdst="dst", range_="20-21"), "permit tcp any any range 1 2", ValueError),
+        ]:
+            ace_o = Ace(line=line, port_nr=True)
+            with self.assertRaises(error, msg=f"{line=} {kwargs=}"):
+                ace_o._range__port(**kwargs)
+
+    def test_valid__range__protocol(self):
+        """Ace._range__protocol()"""
+        req1 = ['permit icmp any any',
+                'permit 3 any any',
+                'permit ipip any any',
+                'permit 5 any any']
+        for range_, line, req in [
+            ("", "permit icmp any any", []),
+            ("1,3-5", "permit ip any any", req1),  # TODO numerically
+            ("1,3-5", "permit icmp any any", req1),
+            ("1,3-5", "permit 1 any any", req1),
+        ]:
+            ace_o = Ace(line=line, port_nr=True)
+            results = ace_o._range__protocol(range_=range_)
+            result = [str(o) for o in results]
+            self.assertEqual(result, req, msg=f"{line=} {range_=}")
 
 
 if __name__ == "__main__":
