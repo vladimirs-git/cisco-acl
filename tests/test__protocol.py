@@ -253,6 +253,14 @@ class Test(Helpers):
             ("nxos", "nxos", "icmp", dict(line="icmp")),
             ("nxos", "nxos", "8", dict(line="8")),
             ("nxos", "nxos", "255", dict(line="255")),
+
+            ("cnx", "ios", "icmp", dict(line="icmp")),
+            ("cnx", "ios", "8", dict(line="egp")),
+            ("cnx", "ios", "255", dict(line="255")),
+
+            ("cnx", "nxos", "icmp", dict(line="icmp")),
+            ("cnx", "nxos", "8", dict(line="8")),
+            ("cnx", "nxos", "255", dict(line="255")),
         ]:
             # getter
             proto_o = Protocol(line, platform=platform)

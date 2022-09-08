@@ -265,7 +265,7 @@ class Test(Helpers):
         any_eq = "permit tcp any eq 1 any neq 3 log"
         any_gt = "permit tcp any gt 65533 any lt 3 log"
 
-        for platform, to_platform, line, req in [
+        for platform, to_platform, line, req_line in [
             ("ios", "ios", ios_grp, ios_grp),
             ("ios", "ios", ios_host, ios_host),
             ("ios", "ios", ios_prefix, ios_prefix),
@@ -293,11 +293,27 @@ class Test(Helpers):
             ("nxos", "nxos", any_wild, any_wild),
             ("nxos", "nxos", any_eq, any_eq),
             ("nxos", "nxos", any_gt, any_gt),
+
+            ("cnx", "ios", nxos_grp, ios_grp),
+            ("cnx", "ios", nxos_host, ios_host),
+            ("cnx", "ios", nxos_prefix, ios_prefix),
+            ("cnx", "ios", any_wild, any_wild),
+            ("cnx", "ios", any_eq, any_eq),
+            ("cnx", "ios", any_gt, any_gt),
+
+            ("cnx", "nxos", nxos_grp, nxos_grp),
+            ("cnx", "nxos", nxos_host, nxos_host),
+            ("cnx", "nxos", nxos_prefix, nxos_prefix),
+            ("cnx", "nxos", any_wild, any_wild),
+            ("cnx", "nxos", any_eq, any_eq),
+            ("cnx", "nxos", any_gt, any_gt),
         ]:
             # getter
             ace_o = Ace(line, platform=platform)
             result = ace_o.platform
             req_ = platform
+            if platform == "cnx":
+                req_ = "nxos"
             self.assertEqual(result, req_, msg=f"{platform=} {line=}")
 
             # setter
@@ -306,7 +322,7 @@ class Test(Helpers):
             req_ = to_platform
             self.assertEqual(result, req_, msg=f"{platform=} {to_platform=} {line=}")
             result = ace_o.line
-            self.assertEqual(result, req, msg=f"{platform=} {to_platform=} {line=}")
+            self.assertEqual(result, req_line, msg=f"{platform=} {to_platform=} {line=}")
 
         # deleter
         ace_o = Ace(PERMIT_IP)
@@ -489,12 +505,16 @@ class Test(Helpers):
         for kwargs, platform, req in [
             (allow_ip, "ios", permit_ip),
             (allow_ip, "nxos", permit_ip),
+            (allow_ip, "cnx", permit_ip),
             (allow_tcp, "ios", permit_tcp_ios),
             (allow_tcp, "nxos", permit_tcp_nxos),
+            (allow_tcp, "cnx", permit_tcp_nxos),
             (deny_udp, "ios", deny_udp_),
             (deny_udp, "nxos", deny_udp_),
+            (deny_udp, "cnx", deny_udp_),
             (allow_group, "ios", permit_group_ios),
             (allow_group, "nxos", permit_group_nxos),
+            (allow_group, "cnx", permit_group_nxos),
         ]:
             result_lo = Ace.rule(platform=platform, **kwargs)
             result = [o.line for o in result_lo]

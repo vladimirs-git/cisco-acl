@@ -150,6 +150,13 @@ class Test(Helpers):
             (dict(line=GT, platform="nxos", protocol="tcp", port_nr=False), GT_D),
             (dict(line=LT3, platform="nxos", protocol="tcp", port_nr=False), LT3_D),
             (dict(line=R24, platform="nxos", protocol="tcp", port_nr=False), R24_D),
+            # range cnx
+            (dict(line="", platform="cnx", protocol="tcp", port_nr=False), EQ0_D),
+            (dict(line=EQ1, platform="cnx", protocol="tcp", port_nr=False), EQ1_D),
+            (dict(line=NEQ1, platform="cnx", protocol="tcp", port_nr=False), NEQ1_D),
+            (dict(line=GT, platform="cnx", protocol="tcp", port_nr=False), GT_D),
+            (dict(line=LT3, platform="cnx", protocol="tcp", port_nr=False), LT3_D),
+            (dict(line=R24, platform="cnx", protocol="tcp", port_nr=False), R24_D),
 
             # port_nr ios
             (dict(line=EQ_21, platform="ios", protocol="tcp", port_nr=False), EQ_FTP_D),
@@ -177,6 +184,17 @@ class Test(Helpers):
             (dict(line=R_21_23, platform="nxos", protocol="tcp", port_nr=True), R_21_23_D),
             (dict(line=R_FTP_T, platform="nxos", protocol="tcp", port_nr=True), R_21_23_D),
 
+            # port_nr cnx
+            (dict(line=EQ_21, platform="cnx", protocol="tcp", port_nr=False), EQ_FTP_D),
+            (dict(line=EQ_FTP, platform="cnx", protocol="tcp", port_nr=False), EQ_FTP_D),
+            (dict(line=R_21_23, platform="cnx", protocol="tcp", port_nr=False), R_FTP_T_D),
+            (dict(line=R_FTP_T, platform="cnx", protocol="tcp", port_nr=False), R_FTP_T_D),
+
+            (dict(line=EQ_21, platform="cnx", protocol="tcp", port_nr=True), EQ_21_D),
+            (dict(line=EQ_FTP, platform="cnx", protocol="tcp", port_nr=True), EQ_21_D),
+            (dict(line=R_21_23, platform="cnx", protocol="tcp", port_nr=True), R_21_23_D),
+            (dict(line=R_FTP_T, platform="cnx", protocol="tcp", port_nr=True), R_21_23_D),
+
             # tcp/udp 514 cmd/syslog ios
             (dict(line="eq 514", platform="ios", protocol="tcp", port_nr=False), EQ_CMD_D),
             (dict(line="eq cmd", platform="ios", protocol="tcp", port_nr=False), EQ_CMD_D),
@@ -188,6 +206,11 @@ class Test(Helpers):
             (dict(line="eq cmd", platform="nxos", protocol="tcp", port_nr=False), EQ_CMD_D),
             (dict(line="eq 514", platform="nxos", protocol="udp", port_nr=False), EQ_SYSL_D),
             (dict(line="eq syslog", platform="nxos", protocol="udp", port_nr=False), EQ_SYSL_D),
+            # tcp/udp 514 cmd/syslog cnx
+            (dict(line="eq 514", platform="cnx", protocol="tcp", port_nr=False), EQ_CMD_D),
+            (dict(line="eq cmd", platform="cnx", protocol="tcp", port_nr=False), EQ_CMD_D),
+            (dict(line="eq 514", platform="cnx", protocol="udp", port_nr=False), EQ_SYSL_D),
+            (dict(line="eq syslog", platform="cnx", protocol="udp", port_nr=False), EQ_SYSL_D),
         ]:
             # getter
             port_o = Port(**kwargs)
@@ -220,8 +243,14 @@ class Test(Helpers):
             (dict(line=EQ123, platform="nxos"), ValueError),
             (dict(line=EQ2456, platform="nxos"), ValueError),
             (dict(line=NEQ13, platform="nxos"), ValueError),
-            (dict(line="eq syslog", platform="nxos", protocol="tcp", port_nr=False),
-             ValueError),
+            (dict(line="eq syslog", platform="nxos", protocol="tcp", port_nr=False), ValueError),
+            # cnx
+            (dict(line=EQ12, platform="cnx"), ValueError),
+            (dict(line=EQ13, platform="cnx"), ValueError),
+            (dict(line=EQ123, platform="cnx"), ValueError),
+            (dict(line=EQ2456, platform="cnx"), ValueError),
+            (dict(line=NEQ13, platform="cnx"), ValueError),
+            (dict(line="eq syslog", platform="cnx", protocol="tcp", port_nr=False), ValueError),
         ]:
             with self.assertRaises(error, msg=f"{kwargs=}"):
                 Port(**kwargs)
@@ -229,18 +258,24 @@ class Test(Helpers):
     def test_valid__items(self):
         """Port.items"""
         for platform, line, items, req_d in [
+            # ios
             ("ios", EQ2, [1, 2, 3], EQ123_D),
             ("ios", NEQ2, [1, 3], NEQ13_D),
             ("ios", GT1, [65532], GT_D),
             ("ios", LT1, [3], LT3_D),
             ("ios", R13, [2, 4], R24_D),
-
+            # nxos
             ("nxos", EQ2, [1], EQ1_D),
             ("nxos", NEQ2, [1], NEQ1_D),
             ("nxos", GT1, [65532], GT_D),
             ("nxos", LT1, [3], LT3_D),
             ("nxos", R13, [2, 4], R24_D),
-
+            # cnx
+            ("cnx", EQ2, [1], EQ1_D),
+            ("cnx", NEQ2, [1], NEQ1_D),
+            ("cnx", GT1, [65532], GT_D),
+            ("cnx", LT1, [3], LT3_D),
+            ("cnx", R13, [2, 4], R24_D),
         ]:
             # setter
             port_o = Port(line=line, platform=platform, protocol="tcp")
@@ -262,6 +297,8 @@ class Test(Helpers):
             ("ios", LT1, [1, 2], ValueError),
             ("nxos", R13, [1, 2, 3], ValueError),
             ("nxos", NEQ2, [1, 2], ValueError),
+            ("cnx", R13, [1, 2, 3], ValueError),
+            ("cnx", NEQ2, [1, 2], ValueError),
         ]:
             port_o = Port(line, platform=platform)
             with self.assertRaises(error, msg=f"{items=}"):
@@ -270,6 +307,7 @@ class Test(Helpers):
     def test_valid__operator(self):
         """Port.operator"""
         for platform, line, operator, req_d in [
+            # ios
             ("ios", EQ1, "eq", EQ1_D),
             ("ios", EQ1, "neq", NEQ1_D),
             ("ios", EQ1, "gt", GT1_D),
@@ -291,7 +329,7 @@ class Test(Helpers):
             ("ios", LT1, "gt", GT1_D),
             ("ios", LT1, "lt", LT1_D),
             ("ios", R24, "range", R24_D),
-
+            # nxos
             ("nxos", EQ1, "eq", EQ1_D),
             ("nxos", EQ1, "neq", NEQ1_D),
             ("nxos", EQ1, "gt", GT1_D),
@@ -309,7 +347,24 @@ class Test(Helpers):
             ("nxos", LT1, "gt", GT1_D),
             ("nxos", LT1, "lt", LT1_D),
             ("nxos", R24, "range", R24_D),
-
+            # cnx
+            ("cnx", EQ1, "eq", EQ1_D),
+            ("cnx", EQ1, "neq", NEQ1_D),
+            ("cnx", EQ1, "gt", GT1_D),
+            ("cnx", EQ1, "lt", LT1_D),
+            ("cnx", NEQ1, "eq", EQ1_D),
+            ("cnx", NEQ1, "neq", NEQ1_D),
+            ("cnx", NEQ1, "gt", GT1_D),
+            ("cnx", NEQ1, "lt", LT1_D),
+            ("cnx", GT1, "eq", EQ1_D),
+            ("cnx", GT1, "neq", NEQ1_D),
+            ("cnx", GT1, "gt", GT1_D),
+            ("cnx", GT1, "lt", LT1_D),
+            ("cnx", LT1, "eq", EQ1_D),
+            ("cnx", LT1, "neq", NEQ1_D),
+            ("cnx", LT1, "gt", GT1_D),
+            ("cnx", LT1, "lt", LT1_D),
+            ("cnx", R24, "range", R24_D),
         ]:
             # setter
             port_o = Port(line=line, platform=platform, protocol="tcp")
@@ -351,18 +406,24 @@ class Test(Helpers):
     def test_valid__ports(self):
         """Port.ports"""
         for platform, line, ports, req_d in [
+            # ios
             ("ios", EQ2, [1, 2, 3], EQ123_D),
             ("ios", NEQ2, WO_13, NEQ13_D),
             ("ios", GT1, GT_65532, GT_D),
             ("ios", LT1, [1, 2], LT3_D),
             ("ios", R13, [2, 3, 4], R24_D),
-
+            # nxos
             ("nxos", EQ2, [1], EQ1_D),
             ("nxos", NEQ2, WO_1, NEQ1_D),
             ("nxos", GT1, GT_65532, GT_D),
             ("nxos", LT1, [1, 2], LT3_D),
             ("nxos", R13, [2, 3, 4], R24_D),
-
+            # cnx
+            ("cnx", EQ2, [1], EQ1_D),
+            ("cnx", NEQ2, WO_1, NEQ1_D),
+            ("cnx", GT1, GT_65532, GT_D),
+            ("cnx", LT1, [1, 2], LT3_D),
+            ("cnx", R13, [2, 3, 4], R24_D),
         ]:
             # setter
             port_o = Port(line=line, platform=platform, protocol="tcp")
@@ -381,6 +442,8 @@ class Test(Helpers):
             ("ios", EQ2, [], ValueError),
             ("nxos", EQ2, [1, 2, 3], ValueError),
             ("nxos", NEQ2, WO_13, ValueError),
+            ("cnx", EQ2, [1, 2, 3], ValueError),
+            ("cnx", NEQ2, WO_13, ValueError),
         ]:
             port_o = Port(EQ1, platform=platform)
             with self.assertRaises(error, msg=f"{ports=}"):
@@ -425,18 +488,24 @@ class Test(Helpers):
     def test_valid__sport(self):
         """Port.sport"""
         for platform, line, sport, req_d in [
+            # ios
             ("ios", EQ2, "1-3", EQ123_D),
             ("ios", NEQ2, "2,4-65535", NEQ13_D),
             ("ios", GT1, "65533-65535", GT_D),
             ("ios", LT1, "1-2", LT3_D),
             ("ios", R13, "2-4", R24_D),
-
+            # nxos
             ("nxos", EQ2, "1", EQ1_D),
             ("nxos", NEQ2, "2-65535", NEQ1_D),
             ("nxos", GT1, "65533-65535", GT_D),
             ("nxos", LT1, "1-2", LT3_D),
             ("nxos", R13, "2-4", R24_D),
-
+            # cnx
+            ("cnx", EQ2, "1", EQ1_D),
+            ("cnx", NEQ2, "2-65535", NEQ1_D),
+            ("cnx", GT1, "65533-65535", GT_D),
+            ("cnx", LT1, "1-2", LT3_D),
+            ("cnx", R13, "2-4", R24_D),
         ]:
             # setter
             port_o = Port(line=line, platform=platform, protocol="tcp")
@@ -455,6 +524,8 @@ class Test(Helpers):
             ("ios", EQ2, "", ValueError),
             ("nxos", EQ2, "1-3", ValueError),
             ("nxos", NEQ2, "2,4-65535", ValueError),
+            ("cnx", EQ2, "1-3", ValueError),
+            ("cnx", NEQ2, "2,4-65535", ValueError),
         ]:
             port_o = Port(EQ1, platform=platform)
             with self.assertRaises(error, msg=f"{sport=}"):
@@ -488,6 +559,7 @@ class Test(Helpers):
     def test_valid__line__items_to_ints(self):
         """Port._line__items_to_ints()"""
         for platform, line, items, req in [
+            # ios
             ("ios", EQ1, ["1"], [1]),
             ("ios", EQ1, ["1", "2"], [1, 2]),
             ("ios", NEQ1, ["1"], [1]),
@@ -495,12 +567,18 @@ class Test(Helpers):
             ("ios", LT1, ["1"], [1]),
             ("ios", GT1, ["1"], [1]),
             ("ios", R24, ["1", "3"], [1, 3]),
-
+            # nxos
             ("nxos", EQ1, ["1"], [1]),
             ("nxos", NEQ1, ["1"], [1]),
             ("nxos", LT1, ["1"], [1]),
             ("nxos", GT1, ["1"], [1]),
             ("nxos", R24, ["1", "3"], [1, 3]),
+            # cnx
+            ("cnx", EQ1, ["1"], [1]),
+            ("cnx", NEQ1, ["1"], [1]),
+            ("cnx", LT1, ["1"], [1]),
+            ("cnx", GT1, ["1"], [1]),
+            ("cnx", R24, ["1", "3"], [1, 3]),
         ]:
             port_o = Port(line, platform=platform)
             result = port_o._line__items_to_ints(items)
@@ -509,14 +587,18 @@ class Test(Helpers):
     def test_invalid__line__items_to_ints(self):
         """Port._line__items_to_ints()"""
         for platform, line, ports, error in [
+            # ios
             ("ios", EQ1, [], ValueError),
             ("ios", LT1, ["1", "2"], ValueError),
             ("ios", GT1, ["1", "2"], ValueError),
             ("ios", R24, ["1"], ValueError),
             ("ios", R24, ["1", "2", "3"], ValueError),
-
+            # nxos
             ("nxos", EQ1, ["1", "2"], ValueError),
             ("nxos", NEQ1, ["1", "2"], ValueError),
+            # cnx
+            ("cnx", EQ1, ["1", "2"], ValueError),
+            ("cnx", NEQ1, ["1", "2"], ValueError),
         ]:
             port_o = Port(line, platform=platform)
             with self.assertRaises(error, msg=f"{platform=} {line=} {ports=}"):

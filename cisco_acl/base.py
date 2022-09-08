@@ -40,6 +40,8 @@ class Base(ABC):
     def _init_platform(**kwargs) -> str:
         """Init device platform type: "ios", "nxos" """
         platform = kwargs.get("platform") or DEFAULT_PLATFORM
+        if platform == "cnx":
+            platform = "nxos"
         if platform not in PLATFORMS:
             raise ValueError(f"invalid {platform=}, expected={PLATFORMS}")
         return platform

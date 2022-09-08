@@ -230,6 +230,9 @@ class Test(Helpers):
         for platform, ace_o, req in [
             ("ios", Ace(PERMIT_IP, platform="ios"), True),
             ("nxos", Ace(PERMIT_IP, platform="nxos"), True),
+            ("nxos", Ace(PERMIT_IP, platform="cnx"), True),
+            ("cnx", Ace(PERMIT_IP, platform="nxos"), True),
+            ("cnx", Ace(PERMIT_IP, platform="cnx"), True),
         ]:
             aceg_o = AceGroup(platform=platform)
             result = aceg_o._check_platform(ace_o)
@@ -240,6 +243,7 @@ class Test(Helpers):
         for platform, ace_o, error in [
             ("ios", Ace(PERMIT_IP, platform="nxos"), ValueError),
             ("nxos", Ace(PERMIT_IP, platform="ios"), ValueError),
+            ("cnx", Ace(PERMIT_IP, platform="ios"), ValueError),
         ]:
             aceg_o = AceGroup(platform=platform)
             with self.assertRaises(error, msg=f"{platform=} {ace_o=}"):

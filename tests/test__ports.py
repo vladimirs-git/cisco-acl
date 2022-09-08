@@ -44,14 +44,18 @@ class Test(Helpers):
             (dict(protocol="tcp", platform="ios"),
              dict(cmd=514, syslog=514, msrpc=135), ["drip", "ripv6"]),
             (dict(protocol="tcp", platform="nxos"), dict(cmd=514, drip=3949), ["syslog", "ripv6"]),
+            (dict(protocol="tcp", platform="cnx"), dict(cmd=514, drip=3949), ["syslog", "ripv6"]),
             (dict(protocol="udp", platform="ios"), dict(syslog=514, ripv6=521), ["cmd", "drip"]),
             (dict(protocol="udp", platform="nxos"), dict(syslog=514), ["cmd", "ripv6", "drip"]),
+            (dict(protocol="udp", platform="cnx"), dict(syslog=514), ["cmd", "ripv6", "drip"]),
             # int
             (dict(protocol=6, platform="ios"),
              dict(cmd=514, syslog=514, msrpc=135), ["drip", "ripv6"]),
             (dict(protocol=6, platform="nxos"), dict(cmd=514, drip=3949), ["syslog", "ripv6"]),
+            (dict(protocol=6, platform="cnx"), dict(cmd=514, drip=3949), ["syslog", "ripv6"]),
             (dict(protocol=17, platform="ios"), dict(syslog=514, ripv6=521), ["cmd", "drip"]),
             (dict(protocol=17, platform="nxos"), dict(syslog=514), ["cmd", "ripv6", "drip"]),
+            (dict(protocol=17, platform="cnx"), dict(syslog=514), ["cmd", "ripv6", "drip"]),
         ]:
             obj = PortName(**kwargs)
             result = obj.names()
@@ -65,13 +69,17 @@ class Test(Helpers):
             # name
             (dict(protocol="tcp", platform="ios"), {514: "cmd", 135: "msrpc"}, [3949, 521]),
             (dict(protocol="tcp", platform="nxos"), {514: "cmd", 3949: "drip"}, [135, 521]),
+            (dict(protocol="tcp", platform="cnx"), {514: "cmd", 3949: "drip"}, [135, 521]),
             (dict(protocol="udp", platform="ios"), {514: "syslog", 521: "ripv6"}, [135, 3949]),
             (dict(protocol="udp", platform="nxos"), {514: "syslog"}, [135, 521, 3949]),
+            (dict(protocol="udp", platform="cnx"), {514: "syslog"}, [135, 521, 3949]),
             # int
             (dict(protocol=6, platform="ios"), {514: "cmd", 135: "msrpc"}, [3949, 521]),
             (dict(protocol=6, platform="nxos"), {514: "cmd", 3949: "drip"}, [135, 521]),
+            (dict(protocol=6, platform="cnx"), {514: "cmd", 3949: "drip"}, [135, 521]),
             (dict(protocol=17, platform="ios"), {514: "syslog", 521: "ripv6"}, [135, 3949]),
             (dict(protocol=17, platform="nxos"), {514: "syslog"}, [135, 521, 3949]),
+            (dict(protocol=17, platform="cnx"), {514: "syslog"}, [135, 521, 3949]),
         ]:
             obj = PortName(**kwargs)
             result = obj.ports()

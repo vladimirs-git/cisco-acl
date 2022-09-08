@@ -12,7 +12,6 @@ from cisco_acl.base_ace import BaseAce
 from cisco_acl.port import Port
 from cisco_acl.protocol import Protocol
 from cisco_acl.sequence import Sequence
-from cisco_acl.static import DEFAULT_PLATFORM
 from cisco_acl.types_ import LStr, LInt
 
 
@@ -396,7 +395,7 @@ class Ace(BaseAce):
             options: ["log"]
             return: [Ace("permit tcp host 10.0.0.1 10.0.0.0 0.0.0.3 eq www 443 log")]
         """
-        platform: str = kwargs.get("platform") or DEFAULT_PLATFORM
+        platform: str = BaseAce._init_platform(**kwargs)
         action: str = kwargs["action"]
         action = dict(allow="permit", deny="deny")[action]
         options: LStr = kwargs.get("options") or []

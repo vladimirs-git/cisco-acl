@@ -95,6 +95,14 @@ class Test(Helpers):
              dict(line=f"{ACL_NXOS}\n  {PERMIT_IP}", name="")),
             (dict(line=ACL_RP_NXOS, platform="nxos"), dict(line=ACL_RP_NXOS, name="")),
             (dict(line=ACL_NAME_RP_NXOS, platform="nxos"), dict(line=ACL_NAME_RP_NXOS, name="A")),
+            # cnx
+            (dict(line="\n", platform="cnx"), dict(line=f"{ACL_NXOS}\n", name="")),
+            (dict(line=ACL_NXOS, platform="cnx"), dict(line=f"{ACL_NXOS}\n", name="")),
+            (dict(line=ACL_NAME_NXOS, platform="cnx"), dict(line=f"{ACL_NAME_NXOS}\n", name="A")),
+            (dict(line=PERMIT_IP, platform="cnx"),
+             dict(line=f"{ACL_NXOS}\n  {PERMIT_IP}", name="")),
+            (dict(line=ACL_RP_NXOS, platform="cnx"), dict(line=ACL_RP_NXOS, name="")),
+            (dict(line=ACL_NAME_RP_NXOS, platform="cnx"), dict(line=ACL_NAME_RP_NXOS, name="A")),
             # input output
             (dict(line=ACL_IOS, input="port1"), dict(line=f"{ACL_IOS}\n", input=["port1"])),
             (dict(line=ACL_IOS, input=["port1"]), dict(line=f"{ACL_IOS}\n", input=["port1"])),
@@ -178,6 +186,7 @@ class Test(Helpers):
         for platform, req in [
             ("ios", "ip access-list extended NAME"),
             ("nxos", "ip access-list NAME"),
+            ("cnx", "ip access-list NAME"),
         ]:
             # getter
             acl_o = Acl(name="NAME", platform=platform)
@@ -287,6 +296,8 @@ class Test(Helpers):
             ("ios", "nxos", acl1_ios, acl1_nxos),
             ("nxos", "ios", acl1_nxos, acl2_ios),
             ("nxos", "nxos", acl1_nxos, acl1_nxos),
+            ("cnx", "ios", acl1_nxos, acl2_ios),
+            ("cnx", "nxos", acl1_nxos, acl1_nxos),
 
             ("ios", "nxos", acl3_ios, acl3_nxos),
         ]:
