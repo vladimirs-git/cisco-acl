@@ -1,5 +1,5 @@
 """Unittest ace.py"""
-
+# pylint: disable=too-many-lines
 import unittest
 from ipaddress import IPv4Network
 
@@ -533,6 +533,7 @@ class Test(Helpers):
             ("permit ip 0.0.0.0/0 any", "permit ip host 10.0.0.1 any", True),
             ("permit ip 0.0.0.0/0 any", "permit ip host 10.0.1.1 any", True),
             ("permit ip 0.0.0.0/0 any", "permit ip addrgroup NAME00 any", True),
+            ("permit ip 0.0.0.0/0 any", "permit ip addrgroup NAME24_2 any", True),
             ("permit ip 0.0.0.0/0 any", "permit ip addrgroup NAME24 any", True),
             ("permit ip 0.0.0.0/0 any", "permit ip addrgroup NAME30 any", True),
             ("permit ip 0.0.0.0/0 any", "permit ip addrgroup NAME32 any", True),
@@ -551,6 +552,7 @@ class Test(Helpers):
             ("permit ip 10.0.0.0/24 any", "permit ip host 10.0.0.1 any", True),
             ("permit ip 10.0.0.0/24 any", "permit ip host 10.0.1.1 any", False),
             ("permit ip 10.0.0.0/24 any", "permit ip addrgroup NAME00 any", False),
+            ("permit ip 10.0.0.0/24 any", "permit ip addrgroup NAME24_2 any", False),
             ("permit ip 10.0.0.0/24 any", "permit ip addrgroup NAME24 any", True),
             ("permit ip 10.0.0.0/24 any", "permit ip addrgroup NAME30 any", True),
             ("permit ip 10.0.0.0/24 any", "permit ip addrgroup NAME32 any", True),
@@ -569,6 +571,7 @@ class Test(Helpers):
             ("permit ip 10.0.0.0/30 any", "permit ip host 10.0.0.1 any", True),
             ("permit ip 10.0.0.0/30 any", "permit ip host 10.0.1.1 any", False),
             ("permit ip 10.0.0.0/30 any", "permit ip addrgroup NAME00 any", False),
+            ("permit ip 10.0.0.0/30 any", "permit ip addrgroup NAME24_2 any", False),
             ("permit ip 10.0.0.0/30 any", "permit ip addrgroup NAME24 any", False),
             ("permit ip 10.0.0.0/30 any", "permit ip addrgroup NAME30 any", True),
             ("permit ip 10.0.0.0/30 any", "permit ip addrgroup NAME32 any", True),
@@ -587,6 +590,7 @@ class Test(Helpers):
             ("permit ip 10.0.0.1/32 any", "permit ip host 10.0.0.1 any", True),
             ("permit ip 10.0.0.1/32 any", "permit ip host 10.0.1.1 any", False),
             ("permit ip 10.0.0.1/32 any", "permit ip addrgroup NAME00 any", False),
+            ("permit ip 10.0.0.1/32 any", "permit ip addrgroup NAME24_2 any", False),
             ("permit ip 10.0.0.1/32 any", "permit ip addrgroup NAME24 any", False),
             ("permit ip 10.0.0.1/32 any", "permit ip addrgroup NAME30 any", False),
             ("permit ip 10.0.0.1/32 any", "permit ip addrgroup NAME32 any", True),
@@ -605,6 +609,7 @@ class Test(Helpers):
             ("permit ip any any", "permit ip host 10.0.0.1 any", True),
             ("permit ip any any", "permit ip host 10.0.1.1 any", True),
             ("permit ip any any", "permit ip addrgroup NAME00 any", True),
+            ("permit ip any any", "permit ip addrgroup NAME24_2 any", True),
             ("permit ip any any", "permit ip addrgroup NAME24 any", True),
             ("permit ip any any", "permit ip addrgroup NAME30 any", True),
             ("permit ip any any", "permit ip addrgroup NAME32 any", True),
@@ -623,9 +628,48 @@ class Test(Helpers):
             ("permit ip host 10.0.0.1 any", "permit ip host 10.0.0.1 any", True),
             ("permit ip host 10.0.0.1 any", "permit ip host 10.0.1.1 any", False),
             ("permit ip host 10.0.0.1 any", "permit ip addrgroup NAME00 any", False),
+            ("permit ip host 10.0.0.1 any", "permit ip addrgroup NAME24_2 any", False),
             ("permit ip host 10.0.0.1 any", "permit ip addrgroup NAME24 any", False),
             ("permit ip host 10.0.0.1 any", "permit ip addrgroup NAME30 any", False),
             ("permit ip host 10.0.0.1 any", "permit ip addrgroup NAME32 any", True),
+            # addrgroup 10.0.0.0/24
+            ("permit ip addrgroup NAME24 any", "permit ip 0.0.0.0/0 any", False),
+            ("permit ip addrgroup NAME24 any", "permit ip 10.0.0.0/24 any", True),
+            ("permit ip addrgroup NAME24 any", "permit ip 10.0.1.0/24 any", False),
+            ("permit ip addrgroup NAME24 any", "permit ip 0.0.0.0 255.255.255.255 any", False),
+            ("permit ip addrgroup NAME24 any", "permit ip 10.0.0.0 0.0.0.255 any", True),
+            ("permit ip addrgroup NAME24 any", "permit ip 10.0.1.0 0.0.0.255 any", False),
+            ("permit ip addrgroup NAME24 any", "permit ip 10.0.0.0 0.0.0.3 any", True),
+            ("permit ip addrgroup NAME24 any", "permit ip 10.0.1.0 0.0.0.3 any", False),
+            ("permit ip addrgroup NAME24 any", "permit ip 10.0.0.1 0.0.0.0 any", True),
+            ("permit ip addrgroup NAME24 any", "permit ip 10.0.1.1 0.0.0.0 any", False),
+            ("permit ip addrgroup NAME24 any", "permit ip any any", False),
+            ("permit ip addrgroup NAME24 any", "permit ip host 10.0.0.1 any", True),
+            ("permit ip addrgroup NAME24 any", "permit ip host 10.0.1.1 any", False),
+            ("permit ip addrgroup NAME24 any", "permit ip addrgroup NAME00 any", False),
+            ("permit ip addrgroup NAME24 any", "permit ip addrgroup NAME24_2 any", False),
+            ("permit ip addrgroup NAME24 any", "permit ip addrgroup NAME24 any", True),
+            ("permit ip addrgroup NAME24 any", "permit ip addrgroup NAME30 any", True),
+            ("permit ip addrgroup NAME24 any", "permit ip addrgroup NAME32 any", True),
+            # # addrgroup 10.0.0.0/24
+            ("permit ip addrgroup NAME24_2 any", "permit ip 0.0.0.0/0 any", False),
+            ("permit ip addrgroup NAME24_2 any", "permit ip 10.0.0.0/24 any", True),
+            ("permit ip addrgroup NAME24_2 any", "permit ip 10.0.1.0/24 any", True),
+            ("permit ip addrgroup NAME24_2 any", "permit ip 0.0.0.0 255.255.255.255 any", False),
+            ("permit ip addrgroup NAME24_2 any", "permit ip 10.0.0.0 0.0.0.255 any", True),
+            ("permit ip addrgroup NAME24_2 any", "permit ip 10.0.1.0 0.0.0.255 any", True),
+            ("permit ip addrgroup NAME24_2 any", "permit ip 10.0.0.0 0.0.0.3 any", True),
+            ("permit ip addrgroup NAME24_2 any", "permit ip 10.0.1.0 0.0.0.3 any", True),
+            ("permit ip addrgroup NAME24_2 any", "permit ip 10.0.0.1 0.0.0.0 any", True),
+            ("permit ip addrgroup NAME24_2 any", "permit ip 10.0.1.1 0.0.0.0 any", True),
+            ("permit ip addrgroup NAME24_2 any", "permit ip any any", False),
+            ("permit ip addrgroup NAME24_2 any", "permit ip host 10.0.0.1 any", True),
+            ("permit ip addrgroup NAME24_2 any", "permit ip host 10.0.1.1 any", True),
+            ("permit ip addrgroup NAME24_2 any", "permit ip addrgroup NAME00 any", False),
+            ("permit ip addrgroup NAME24_2 any", "permit ip addrgroup NAME24_2 any", True),
+            ("permit ip addrgroup NAME24_2 any", "permit ip addrgroup NAME24 any", True),
+            ("permit ip addrgroup NAME24_2 any", "permit ip addrgroup NAME30 any", True),
+            ("permit ip addrgroup NAME24_2 any", "permit ip addrgroup NAME32 any", True),
             # dstaddr prefix 0.0.0.0/0
             ("permit ip any 0.0.0.0/0", "permit ip any 0.0.0.0/0", True),
             ("permit ip any 0.0.0.0/0", "permit ip any 10.0.0.0/24", True),
@@ -641,6 +685,7 @@ class Test(Helpers):
             ("permit ip any 0.0.0.0/0", "permit ip any host 10.0.0.1", True),
             ("permit ip any 0.0.0.0/0", "permit ip any host 10.0.1.1", True),
             ("permit ip any 0.0.0.0/0", "permit ip any addrgroup NAME00", True),
+            ("permit ip any 0.0.0.0/0", "permit ip any addrgroup NAME24_2", True),
             ("permit ip any 0.0.0.0/0", "permit ip any addrgroup NAME24", True),
             ("permit ip any 0.0.0.0/0", "permit ip any addrgroup NAME30", True),
             ("permit ip any 0.0.0.0/0", "permit ip any addrgroup NAME32", True),
@@ -659,6 +704,7 @@ class Test(Helpers):
             ("permit ip any 10.0.0.0/24", "permit ip any host 10.0.0.1", True),
             ("permit ip any 10.0.0.0/24", "permit ip any host 10.0.1.1", False),
             ("permit ip any 10.0.0.0/24", "permit ip any addrgroup NAME00", False),
+            ("permit ip any 10.0.0.0/24", "permit ip any addrgroup NAME24_2", False),
             ("permit ip any 10.0.0.0/24", "permit ip any addrgroup NAME24", True),
             ("permit ip any 10.0.0.0/24", "permit ip any addrgroup NAME30", True),
             ("permit ip any 10.0.0.0/24", "permit ip any addrgroup NAME32", True),
@@ -677,6 +723,7 @@ class Test(Helpers):
             ("permit ip any 10.0.0.0/30", "permit ip any host 10.0.0.1", True),
             ("permit ip any 10.0.0.0/30", "permit ip any host 10.0.1.1", False),
             ("permit ip any 10.0.0.0/30", "permit ip any addrgroup NAME00", False),
+            ("permit ip any 10.0.0.0/30", "permit ip any addrgroup NAME24_2", False),
             ("permit ip any 10.0.0.0/30", "permit ip any addrgroup NAME24", False),
             ("permit ip any 10.0.0.0/30", "permit ip any addrgroup NAME30", True),
             ("permit ip any 10.0.0.0/30", "permit ip any addrgroup NAME32", True),
@@ -695,6 +742,7 @@ class Test(Helpers):
             ("permit ip any 10.0.0.1/32", "permit ip any host 10.0.0.1", True),
             ("permit ip any 10.0.0.1/32", "permit ip any host 10.0.1.1", False),
             ("permit ip any 10.0.0.1/32", "permit ip any addrgroup NAME00", False),
+            ("permit ip any 10.0.0.1/32", "permit ip any addrgroup NAME24_2", False),
             ("permit ip any 10.0.0.1/32", "permit ip any addrgroup NAME24", False),
             ("permit ip any 10.0.0.1/32", "permit ip any addrgroup NAME30", False),
             ("permit ip any 10.0.0.1/32", "permit ip any addrgroup NAME32", True),
@@ -713,6 +761,7 @@ class Test(Helpers):
             ("permit ip any any", "permit ip any host 10.0.0.1", True),
             ("permit ip any any", "permit ip any host 10.0.1.1", True),
             ("permit ip any any", "permit ip any addrgroup NAME00", True),
+            ("permit ip any any", "permit ip any addrgroup NAME24_2", True),
             ("permit ip any any", "permit ip any addrgroup NAME24", True),
             ("permit ip any any", "permit ip any addrgroup NAME30", True),
             ("permit ip any any", "permit ip any addrgroup NAME32", True),
@@ -731,6 +780,7 @@ class Test(Helpers):
             ("permit ip any host 10.0.0.1", "permit ip any host 10.0.0.1", True),
             ("permit ip any host 10.0.0.1", "permit ip any host 10.0.1.1", False),
             ("permit ip any host 10.0.0.1", "permit ip any addrgroup NAME00", False),
+            ("permit ip any host 10.0.0.1", "permit ip any addrgroup NAME24_2", False),
             ("permit ip any host 10.0.0.1", "permit ip any addrgroup NAME24", False),
             ("permit ip any host 10.0.0.1", "permit ip any addrgroup NAME30", False),
             ("permit ip any host 10.0.0.1", "permit ip any addrgroup NAME32", True),
@@ -806,6 +856,7 @@ class Test(Helpers):
             ("permit tcp any range 1 2 any", "permit tcp any lt 3 any", True),
             ("permit tcp any range 1 2 any", "permit tcp any range 1 2 any", True),
             ("permit tcp any range 1 2 any", "permit tcp any range 3 4 any", False),
+            ("permit tcp any range 1 2 any", "permit tcp any range 2 3 any", False),
             # dstport any
             ("permit tcp any any", "permit tcp any any", True),
             ("permit tcp any any", "permit tcp any any eq 1", True),
@@ -878,6 +929,7 @@ class Test(Helpers):
             ("permit tcp any any range 1 2", "permit tcp any any lt 3", True),
             ("permit tcp any any range 1 2", "permit tcp any any range 1 2", True),
             ("permit tcp any any range 1 2", "permit tcp any any range 3 4", False),
+            ("permit tcp any any range 1 2", "permit tcp any any range 2 3", False),
             # option
             ("permit tcp any any", "permit tcp any any", True),
             ("permit tcp any any", "permit tcp any any syn", True),
@@ -898,14 +950,16 @@ class Test(Helpers):
             ("permit tcp any any ack", "permit tcp any any syn", False),
             ("permit tcp any any ack", "permit tcp any any syn log", False),
             ("permit tcp any any ack", "permit tcp any any ack", True),
-
-            # # todo not contiguous wildcard "10.0.0.0 0.0.3.3"
+            # todo not contiguous wildcard "10.0.0.0 0.0.3.3"
         ]:
             top_o = Ace(top, platform="nxos")
             bottom_o = Ace(bottom, platform="nxos")
             for addr_o in [top_o.srcaddr, top_o.dstaddr, bottom_o.srcaddr, bottom_o.dstaddr]:
                 if addr_o.addrgroup == "NAME00":
                     addr_o.items.append(Address("0.0.0.0/0", platform="nxos"))
+                elif addr_o.addrgroup == "NAME24_2":
+                    addr_o.items.extend([Address("10.0.0.0/24", platform="nxos"),
+                                         Address("10.0.1.0/24", platform="nxos")])
                 elif addr_o.addrgroup == "NAME24":
                     addr_o.items.append(Address("10.0.0.0/24", platform="nxos"))
                 elif addr_o.addrgroup == "NAME30":

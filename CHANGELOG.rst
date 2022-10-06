@@ -4,6 +4,11 @@
 CHANGELOG
 =========
 
+2.0.1 (2022-10-06)
+------------------
+* [fix] Ace.is_shadowed_by() for addrgroup
+
+
 2.0.0 (2022-10-06)
 ------------------
 * [change] AceGroup.resequence()

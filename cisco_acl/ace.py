@@ -10,7 +10,7 @@ from cisco_acl.base_ace import BaseAce
 from cisco_acl.option import Option
 from cisco_acl.port import Port
 from cisco_acl.protocol import Protocol
-from cisco_acl.types_ import DAny, OBool, DStr
+from cisco_acl.types_ import DAny, OBool, DStr, LBool
 
 
 @total_ordering
@@ -479,12 +479,11 @@ class Ace(BaseAce):
                 msg = f"absent ipnets in {self._srcaddr.line=}"
                 raise TypeError(msg)
 
-        is_shadowed = False
-        for top_ipnet in tops:
-            for bottom_ipnet in bottoms:
-                if bottom_ipnet.subnet_of(top_ipnet):
-                    is_shadowed = True
-        return is_shadowed
+        results: LBool = []
+        for bottom_ipnet in bottoms:
+            result = any(bottom_ipnet.subnet_of(top) for top in tops)
+            results.append(result)
+        return all(results)
 
     def _is_shadowed_by_protocol(self, other: Ace) -> bool:
         """True if self.protocol is shadowed by other.protocol"""
