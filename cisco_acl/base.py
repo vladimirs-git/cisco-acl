@@ -1,82 +1,63 @@
-"""Base - Parent of: AceBase, Address, Port, Protocol
-BaseAce - Parent of: Ace, Remark"""
+"""Base - Parent of: Address, Port, Protocol, BaseAce"""
 
 import uuid
-from abc import ABC, abstractmethod
 from typing import Any
 
 from cisco_acl import helpers as h
-from cisco_acl.static import PLATFORMS, DEFAULT_PLATFORM
-from cisco_acl.types_ import StrInt, LStr
+from cisco_acl.static import IOS
+from cisco_acl.types_ import LStr
 
 
-class Base(ABC):
-    """Base - Parent of: AceBase, Address, Port, Protocol"""
+class Base:
+    """Base - Parent of: Address, Port, Protocol, BaseAce"""
 
     def __init__(self, **kwargs):
-        """Base - Parent of: AceBase, Address, Port, Protocol
+        """Base
         :param platform: Platform: "ios", "nxos" (default "ios")
-        :param note: Object description (can be used for ACEs sorting)
+
+        Helpers
+        :param note: Object description
         """
-        self._uuid = str(uuid.uuid1())
-        self._platform = self._init_platform(**kwargs)
-        self.note: Any = kwargs.get("note") or ""
+        self._uuid: str = str(uuid.uuid1())
+        self._platform: str = h.init_platform(**kwargs)
+        note = kwargs.get("note")
+        if note is None:
+            note = ""
+        self.note: Any = note
 
     def __repr__(self):
-        params = [f"{self.line!r}"]
-        if self.platform != DEFAULT_PLATFORM:
-            params.append(f"platform={self.platform!r}")
-        if self.note:
-            params.append(f"note={self.note!r}")
+        params = self._repr__parameters()
         kwargs = ", ".join(params)
-        return f"{self.__class__.__name__}({kwargs})"
+        name = self.__class__.__name__
+        return f"{name}({kwargs})"
 
     def __str__(self):
         return self.line
 
-    # ============================= init =============================
-
-    @staticmethod
-    def _init_platform(**kwargs) -> str:
-        """Init device platform type: "ios", "nxos" """
-        platform = kwargs.get("platform") or DEFAULT_PLATFORM
-        if platform not in PLATFORMS:
-            raise ValueError(f"invalid {platform=}, expected={PLATFORMS}")
-        return platform
-
-    @staticmethod
-    def _init_line(line: str) -> str:
-        """Init line, replace spaces"""
-        return h.line_wo_spaces(line)
-
-    @staticmethod
-    def _init_lines(line: str) -> LStr:
-        """Init multiple lines, replace spaces"""
-        return h.lines_wo_spaces(line)
-
-    @staticmethod
-    def _init_line_int(line: StrInt) -> str:
-        """Init line, int convert to str, replace spaces"""
-        if isinstance(line, int):
-            if line < 0:
-                raise ValueError(f"{line=} positive expected")
-            line = str(line)
-        if not isinstance(line, str):
-            raise TypeError(f"{line=} {str} expected")
-        return h.replace_spaces(line)
-
     # =========================== property ===========================
 
-    @property  # type:ignore
-    @abstractmethod
+    @property
     def line(self) -> str:
-        """ACE line"""
+        """Stub"""
         return ""
 
-    @line.setter  # type:ignore
-    @abstractmethod
-    def line(self, line: str):
+    @line.setter
+    def line(self, line: str) -> None:  # pylint: disable=no-self-use
+        """Stub"""
         return
+
+    @property
+    def platform(self) -> str:
+        """Platform: "ios" Cisco IOS, "nxos" Cisco Nexus NX-OS"""
+        return self._platform
+
+    @platform.setter
+    def platform(self, platform: str) -> None:
+        """Changes platform
+        :param str platform: Platform: "ios", "nxos" (default "ios")
+        """
+        self._platform = h.init_platform(platform=platform)
+        self.line = self.line
 
     @property
     def uuid(self) -> str:
@@ -89,15 +70,18 @@ class Base(ABC):
             raise TypeError(f"{uuid_=} {str} expected")
         self._uuid = uuid_
 
-    @uuid.deleter
-    def uuid(self) -> None:
-        self.uuid = ""
+    # =========================== helpers ============================
 
-    @property
-    def platform(self) -> str:
-        """Device platform type: "ios", "nxos" """
-        return self._platform
+    def _repr__add_param(self, param: str, params: LStr) -> LStr:
+        """Adds param to list of params"""
+        if value := getattr(self, param):
+            params.append(f"{param}={value!r}")
+        return params
 
-    @platform.setter
-    def platform(self, platform: str) -> None:
-        self._platform = self._init_platform(platform=platform)
+    def _repr__parameters(self) -> LStr:
+        """Returns parameters for __repr__"""
+        params: LStr = [f"{self.line!r}"]
+        if self._platform != IOS:
+            params.append(f"platform={self._platform!r}")
+        params = self._repr__add_param("note", params)
+        return params

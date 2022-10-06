@@ -2,6 +2,8 @@
 
 import unittest
 
+import dictdiffer  # type: ignore
+
 from cisco_acl import Protocol
 from tests.helpers_test import Helpers
 
@@ -15,39 +17,51 @@ class Test(Helpers):
     def test_valid__hash__(self):
         """Protocol.__hash__()"""
         tcp = "tcp"
-        proto_o = Protocol(tcp)
-        result = proto_o.__hash__()
+        obj = Protocol(tcp)
+        result = obj.__hash__()
         req = tcp.__hash__()
         self.assertEqual(result, req, msg=f"{tcp=}")
 
     def test_valid__eq__(self):
         """Protocol.__eq__() __ne__()"""
-        proto_o = Protocol("tcp")
-        for other_o, req, in [
+        obj1 = Protocol("tcp")
+        for obj2, req, in [
             ("tcp", True),
             (Protocol("tcp"), True),
             (Protocol("udp"), False),
         ]:
-            result = proto_o.__eq__(other_o)
-            self.assertEqual(result, req, msg=f"{proto_o=} {other_o=}")
-            result = proto_o.__ne__(other_o)
-            self.assertEqual(result, not req, msg=f"{proto_o=} {other_o=}")
+            result = obj1.__eq__(obj2)
+            self.assertEqual(result, req, msg=f"{obj1=} {obj2=}")
+            result = obj1.__ne__(obj2)
+            self.assertEqual(result, not req, msg=f"{obj1=} {obj2=}")
 
     def test_valid__lt__(self):
         """Protocol.__lt__() __le__() __gt__() __ge__()"""
         tcp, udp = "tcp", "udp"
-        for proto_o, other_o, req_lt, req_le, req_gt, req_ge in [
+        for obj1, obj2, req_lt, req_le, req_gt, req_ge in [
             (Protocol(tcp), Protocol(tcp), False, True, False, True),
             (Protocol(tcp), Protocol(udp), True, True, False, False),
         ]:
-            result = proto_o.__lt__(other_o)
-            self.assertEqual(result, req_lt, msg=f"{proto_o=} {other_o=}")
-            result = proto_o.__le__(other_o)
-            self.assertEqual(result, req_le, msg=f"{proto_o=} {other_o=}")
-            result = proto_o.__gt__(other_o)
-            self.assertEqual(result, req_gt, msg=f"{proto_o=} {other_o=}")
-            result = proto_o.__ge__(other_o)
-            self.assertEqual(result, req_ge, msg=f"{proto_o=} {other_o=}")
+            result = obj1.__lt__(obj2)
+            self.assertEqual(result, req_lt, msg=f"{obj1=} {obj2=}")
+            result = obj1.__le__(obj2)
+            self.assertEqual(result, req_le, msg=f"{obj1=} {obj2=}")
+            result = obj1.__gt__(obj2)
+            self.assertEqual(result, req_gt, msg=f"{obj1=} {obj2=}")
+            result = obj1.__ge__(obj2)
+            self.assertEqual(result, req_ge, msg=f"{obj1=} {obj2=}")
+
+    def test_valid__repr__(self):
+        """Protocol.__repr__()"""
+        for kwargs, req in [
+            (dict(line="tcp", platform="ios", note=""), "Protocol(\"tcp\")"),
+            (dict(line="tcp", platform="nxos", note="a", protocol_nr=True, has_port=True, typo="b"),
+             "Protocol(\"tcp\", platform=\"nxos\", note=\"a\", protocol_nr=True, has_port=True)"),
+        ]:
+            obj = Protocol(**kwargs)
+            result = obj.__repr__()
+            result = self._quotation(result)
+            self.assertEqual(result, req, msg=f"{result=}")
 
     # =========================== property ===========================
 
@@ -82,20 +96,11 @@ class Test(Helpers):
             (3, dict(line="3", name="", number=3)),
             (255, dict(line="255", name="", number=255)),
         ]:
-            # getter
-            proto_o = Protocol(line)
-            self._test_attrs(obj=proto_o, req_d=req_d, msg=f"getter {line=}")
-
+            obj1 = Protocol(line)
+            self._test_attrs(obj=obj1, req_d=req_d, msg=f"{line=}")
             # setter
-            proto_o.line = line
-            self._test_attrs(obj=proto_o, req_d=req_d, msg=f"setter {line=}")
-
-        # deleter
-        proto_o = Protocol(line="ahp")
-        # noinspection PyPropertyAccess
-        del proto_o.line
-        req_d = dict(line="ip", name="ip", number=0)
-        self._test_attrs(obj=proto_o, req_d=req_d, msg="deleter line")
+            obj1.line = line
+            self._test_attrs(obj=obj1, req_d=req_d, msg=f"{line=}")
 
     def test_invalid__line(self):
         """Protocol.line()"""
@@ -121,23 +126,15 @@ class Test(Helpers):
             ("51", dict(line="ahp", name="ahp", number=51)),
             ("255", dict(line="255", name="", number=255)),
         ]:
-            # getter
-            proto_o = Protocol(req_d["line"])
-            self._test_attrs(obj=proto_o, req_d=req_d, msg=f"getter {name=}")
-
+            obj = Protocol(req_d["line"])
+            self._test_attrs(obj=obj, req_d=req_d, msg=f"{name=}")
             # setter
-            proto_o.name = name
-            self._test_attrs(obj=proto_o, req_d=req_d, msg=f"setter {name=}")
-
-        # deleter
-        proto_o = Protocol("ip")
-        with self.assertRaises(AttributeError, msg="deleter name"):
-            # noinspection PyPropertyAccess
-            del proto_o.name
+            obj.name = name
+            self._test_attrs(obj=obj, req_d=req_d, msg=f"{name=}")
 
     def test_invalid__name(self):
         """Protocol.name()"""
-        proto_o = Protocol("icmp")
+        obj = Protocol("icmp")
         for name, error in [
             ("typo", ValueError),
             (-1, TypeError),
@@ -146,7 +143,7 @@ class Test(Helpers):
             ("256", ValueError),
         ]:
             with self.assertRaises(error, msg=f"{name=}"):
-                proto_o.name = name
+                obj.name = name
 
     def test_valid__number(self):
         """Protocol.number()"""
@@ -158,32 +155,24 @@ class Test(Helpers):
             ("255", dict(line="255", name="", number=255)),
             (255, dict(line="255", name="", number=255)),
         ]:
-            # getter
-            proto_o = Protocol(req_d["line"])
-            self._test_attrs(obj=proto_o, req_d=req_d, msg=f"getter {number=}")
-
+            obj = Protocol(req_d["line"])
+            self._test_attrs(obj=obj, req_d=req_d, msg=f"{number=}")
             # setter
-            proto_o.number = number
-            self._test_attrs(obj=proto_o, req_d=req_d, msg=f"setter {number=}")
-
-            # deleter
-        proto_o = Protocol("ip")
-        with self.assertRaises(AttributeError, msg="deleter number"):
-            # noinspection PyPropertyAccess
-            del proto_o.number
+            obj.number = number
+            self._test_attrs(obj=obj, req_d=req_d, msg=f"{number=}")
 
     def test_invalid__number(self):
         """Protocol.number()"""
-        proto_o = Protocol("icmp")
+        obj = Protocol("icmp")
         for number, error in [
-            ("ip", TypeError),
+            ("ip", ValueError),
             (-1, ValueError),
             (256, ValueError),
-            ("-1", TypeError),
+            ("-1", ValueError),
             ("256", ValueError),
         ]:
             with self.assertRaises(error, msg=f"{number=}"):
-                proto_o.number = number
+                obj.number = number
 
     def test_valid__protocol_nr(self):
         """Protocol.protocol_nr"""
@@ -219,25 +208,16 @@ class Test(Helpers):
             (False, "255", dict(line="255", name="", number=255)),
             (False, 255, dict(line="255", name="", number=255)),
         ]:
-            # getter
-            proto_o = Protocol(line=line, protocol_nr=protocol_nr)
-            self._test_attrs(obj=proto_o, req_d=req_d, msg=f"getter {line=}")
-
+            obj = Protocol(line=line, protocol_nr=protocol_nr)
+            self._test_attrs(obj=obj, req_d=req_d, msg=f"{line=}")
             # setter
-            proto_o = Protocol(line=line)
-            proto_o.protocol_nr = protocol_nr
-            self._test_attrs(obj=proto_o, req_d=req_d, msg=f"setter {line=}")
-
-        # deleter
-        proto_o = Protocol(line="ahp", protocol_nr=True)
-        # noinspection PyPropertyAccess
-        del proto_o.line
-        req_d = dict(line="0", name="ip", number=0)
-        self._test_attrs(obj=proto_o, req_d=req_d, msg="deleter line")
+            obj = Protocol(line=line)
+            obj.protocol_nr = protocol_nr
+            self._test_attrs(obj=obj, req_d=req_d, msg=f"{line=}")
 
     def test_valid__platform(self):
         """Protocol.platform()"""
-        for platform, to_platform, line, req_d in [
+        for platform, platform_new, line, req_d in [
             ("ios", "ios", "icmp", dict(line="icmp")),
             ("ios", "ios", "egp", dict(line="egp")),
             ("ios", "ios", "255", dict(line="255")),
@@ -254,28 +234,57 @@ class Test(Helpers):
             ("nxos", "nxos", "8", dict(line="8")),
             ("nxos", "nxos", "255", dict(line="255")),
         ]:
-            # getter
-            proto_o = Protocol(line, platform=platform)
+            obj = Protocol(line, platform=platform)
             req_d_ = dict(line=line)
-            self._test_attrs(obj=proto_o, req_d=req_d_, msg=f"getter {platform=}")
-
+            self._test_attrs(obj=obj, req_d=req_d_, msg=f"{platform=}")
             # setter
-            proto_o.platform = to_platform
-            self._test_attrs(obj=proto_o, req_d=req_d, msg=f"setter {platform=}")
-
-            # deleter
-        proto_o = Protocol("ip")
-        with self.assertRaises(AttributeError, msg="deleter platform"):
-            # noinspection PyPropertyAccess
-            del proto_o.platform
+            obj.platform = platform_new
+            self._test_attrs(obj=obj, req_d=req_d, msg=f"{platform=}")
 
     def test_invalid__platform(self):
-        """Ace.platform"""
-        proto_o = Protocol("ip")
+        """Protocol.platform"""
+        obj = Protocol("ip")
         with self.assertRaises(ValueError, msg="platform"):
-            proto_o.platform = "typo"
+            obj.platform = "typo"
         with self.assertRaises(ValueError, msg="platform"):
             Protocol("ip", platform="typo")
+
+    # =========================== methods ============================
+
+    def test_valid__copy(self):
+        """Protocol.copy()"""
+        obj1 = Protocol(line="tcp", platform="ios", note="a", protocol_nr=True, has_port=True)
+        obj2 = obj1.copy()
+
+        # change obj1 to check obj1 does not depend on obj2
+        new_obj1_kwargs = dict(line="udp", platform="nxos", note="b",
+                               protocol_nr=False, has_port=False)
+        for arg, value in new_obj1_kwargs.items():
+            setattr(obj1, arg, value)
+
+        req1_d = dict(line="udp", platform="nxos", note="b", protocol_nr=False, has_port=False)
+        req2_d = dict(line="tcp", platform="ios", note="a", protocol_nr=True, has_port=True)
+        self._test_attrs(obj1, req1_d, msg="obj1 does not depend on obj2")
+        self._test_attrs(obj2, req2_d, msg="obj2 copied from obj1")
+
+    def test_valid__data(self):
+        """Protocol.data()"""
+        kwargs1 = dict(line="tcp", platform="ios", note="a")
+        req1 = dict(line="tcp",
+                    platform="ios",
+                    note="a",
+                    protocol_nr=False,
+                    has_port=False,
+                    name="tcp",
+                    number=6)
+
+        for kwargs, req_d in [
+            (kwargs1, req1),
+        ]:
+            obj = Protocol(**kwargs)
+            result = obj.data()
+            diff = list(dictdiffer.diff(first=result, second=req_d))
+            self.assertEqual(diff, [], msg=f"{kwargs=}")
 
 
 if __name__ == "__main__":

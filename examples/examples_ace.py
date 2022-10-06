@@ -2,7 +2,7 @@
 The following example creates an Ace object and demonstrate various manipulation approaches.
 """
 
-from ipaddress import ip_network
+from ipaddress import IPv4Network
 
 from cisco_acl import Ace
 
@@ -20,7 +20,7 @@ assert ace.protocol.name == "tcp"
 assert ace.protocol.number == 6
 assert ace.srcaddr.line == "host 10.0.0.1"
 assert ace.srcaddr.addrgroup == ""
-assert ace.srcaddr.ipnet == ip_network("10.0.0.1/32")
+assert ace.srcaddr.ipnet == IPv4Network("10.0.0.1/32")
 assert ace.srcaddr.prefix == "10.0.0.1/32"
 assert ace.srcaddr.subnet == "10.0.0.1 255.255.255.255"
 assert ace.srcaddr.wildcard == "10.0.0.1 0.0.0.0"
@@ -30,7 +30,7 @@ assert ace.srcport.ports == [21, 22, 23]
 assert ace.srcport.sport == "21-23"
 assert ace.dstaddr.line == "10.0.0.0 0.0.0.3"
 assert ace.dstaddr.addrgroup == ""
-assert ace.dstaddr.ipnet == ip_network("10.0.0.0/30")
+assert ace.dstaddr.ipnet == IPv4Network("10.0.0.0/30")
 assert ace.dstaddr.prefix == "10.0.0.0/30"
 assert ace.dstaddr.subnet == "10.0.0.0 255.255.255.252"
 assert ace.dstaddr.wildcard == "10.0.0.0 0.0.0.3"
@@ -38,7 +38,7 @@ assert ace.dstport.line == "eq www 443"
 assert ace.dstport.operator == "eq"
 assert ace.dstport.ports == [80, 443]
 assert ace.dstport.sport == "80,443"
-assert ace.option == "log"
+assert ace.option.line == "log"
 
 # prints well-known TCP/UDP ports as names or as numbers
 print(ace.line)
@@ -50,17 +50,17 @@ print(ace.line)
 ace.port_nr = False
 ace.sequence = 20
 ace.protocol.name = "udp"
-ace.srcaddr.prefix = "10.0.0.0/24"
-ace.dstaddr.addrgroup = "NAME"
+# ace.srcaddr.prefix = "10.0.0.0/24"
+# ace.dstaddr.addrgroup = "NAME"
 ace.srcport.line = "eq 179"
 ace.dstport.ports = [80]
-ace.option = ""
+ace.option.line = ""
 print(ace.line)
 # 20 permit udp 10.0.0.0 0.0.0.255 eq 179 object-group NAME eq 80
 
 ace.sequence = 0
 ace.protocol.number = 1
-ace.srcaddr.prefix = "0.0.0.0/0"
+# ace.srcaddr.prefix = "0.0.0.0/0"
 ace.dstaddr.line = "any"
 ace.srcport.line = ""
 ace.dstport.line = ""
@@ -72,56 +72,9 @@ print()
 # copy
 ace1 = Ace("permit ip any any")
 ace2 = ace1.copy()
-ace1.srcaddr.prefix = "10.0.0.0/24"
+# ace1.srcaddr.prefix = "10.0.0.0/24"
 print(ace1)
 print(ace2)
 print()
 # permit ip 10.0.0.0 0.0.0.255 any
 # permit ip any any
-
-# Generates range of protocols and TCP/UDP source/destination ports
-# IP protocols as well-known names
-ace1 = Ace("permit ip any any")
-aces = ace1.range(protocol="1-4")
-for ace in aces:
-    print(ace)
-print()
-# permit icmp any any
-# permit igmp any any
-# permit 3 any any
-# permit ipip any any
-# permit 5 any any
-
-# IP protocols as numbers
-ace1 = Ace("permit ip any any")
-aces = ace1.range(protocol="1-4", protocol_nr=True)
-for ace in aces:
-    print(ace)
-print()
-# permit 1 any any
-# permit 2 any any
-# permit 3 any any
-# permit 4 any any
-# permit 5 any any
-
-# TCP ports as well-known names
-ace1 = Ace("permit tcp any any")
-aces = ace1.range(srcport="20-23")
-for ace in aces:
-    print(ace)
-print()
-# permit tcp any eq ftp-data any
-# permit tcp any eq ftp any
-# permit tcp any eq 22 any
-# permit tcp any eq telnet any
-
-# TCP ports as numbers
-ace1 = Ace("permit tcp any any")
-aces = ace1.range(srcport="1-1024", port_nr=True)
-for ace in aces:
-    print(ace)
-print()
-# permit tcp any eq 20 any
-# permit tcp any eq 21 any
-# permit tcp any eq 22 any
-# permit tcp any eq 23 any

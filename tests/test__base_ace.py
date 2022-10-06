@@ -6,59 +6,43 @@ from cisco_acl import Ace, AceGroup, Remark
 from tests.helpers_test import Helpers, PERMIT_IP, REMARK
 
 
-# noinspection DuplicatedCode
 class Test(Helpers):
     """BaseAce"""
 
     # =========================== property ===========================
 
     def test_valid__sequence(self):
-        """Ace.sequence"""
-        for sequence, req, req_ in [
-            ("", "", 0),
-            ("0", "", 0),
-            ("1", "1", 1),
-            (0, "", 0),
-            (1, "1", 1),
+        """BaseAce.sequence"""
+        for sequence, req in [
+            ("", 0),
+            ("0", 0),
+            ("1", 1),
+            (0, 0),
+            (1, 1),
         ]:
-            for ace_o in [
+            for obj in [
                 Remark(f"{sequence} {REMARK}"),
                 Ace(f"{sequence} {PERMIT_IP}"),
                 AceGroup(f"{sequence} {REMARK}\nPERMIT_IP"),
             ]:
-                # getter
-                result = str(ace_o.sequence)
-                # noinspection PyUnboundLocalVariable
-                self.assertEqual(result, req, msg=f"{sequence=} str")
-                result_ = int(ace_o.sequence)
-                self.assertEqual(result_, req_, msg=f"{sequence=} str")
-
+                result = obj.sequence
+                self.assertEqual(result, req, msg=f"{sequence=}")
                 # setter
-                ace_o.sequence = sequence
-                result = str(ace_o.sequence)
-                self.assertEqual(result, req, msg=f"{sequence=} str")
-                result_ = int(ace_o.sequence)
-                self.assertEqual(result_, req_, msg=f"{sequence=} str")
-
-                # deleter
-                del ace_o.sequence
-                result = str(ace_o.sequence)
-                # noinspection PyUnboundLocalVariable
-                self.assertEqual(result, "", msg=f"{sequence=} str")
-                result_ = int(ace_o.sequence)
-                self.assertEqual(result_, 0, msg=f"{sequence=} str")
+                obj.sequence = sequence
+                result = obj.sequence
+                self.assertEqual(result, req, msg=f"{sequence=}")
 
     def test_invalid__sequence(self):
-        """Ace.sequence"""
-        base_o = Ace(PERMIT_IP)
+        """BaseAce.sequence"""
         for sequence, error in [
-            ({}, ValueError),
+            ({}, TypeError),
             (-1, ValueError),
             ("a", ValueError),
             ("-1", ValueError),
         ]:
+            obj = Ace(PERMIT_IP)
             with self.assertRaises(error, msg=f"deleted {sequence=}"):
-                base_o.sequence = sequence
+                obj.sequence = sequence
             with self.assertRaises(ValueError, msg=f"{sequence=}"):
                 Ace(f"{sequence} {PERMIT_IP}")
 

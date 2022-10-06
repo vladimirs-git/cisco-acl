@@ -1,4 +1,4 @@
-"""ACL Remark"""
+"""Remark - comments in ACL"""
 from __future__ import annotations
 
 from functools import total_ordering
@@ -6,51 +6,48 @@ from typing import List
 
 from cisco_acl import helpers as h
 from cisco_acl.base_ace import BaseAce
+from cisco_acl.types_ import DAny
 
 
 @total_ordering
 class Remark(BaseAce):
-    """ACL Remark"""
+    """Remark - comments in ACL"""
 
-    __slots__ = ("_platform", "_note", "_line", "_sequence", "_action", "_text")
-
-    def __init__(self, line: str, **kwargs):
-        """ACL Remark
+    def __init__(self, line: str = "", **kwargs):
+        """Remark
         :param str line: string of ACEs
         :param platform: Platform: "ios", "nxos" (default "ios")
-        :param str note: Object description. Not part of the ACE configuration,
-            can be used for ACEs sorting
+
+        Helpers
+        :param str note: Object description
 
         :example:
             line: "10 remark text"
-            note: "description"
             result:
-                self.line = "10 remark text"
-                self.sequence = 10
-                self.action = "remark"
-                self.text = "text"
-                self.note = "description"
+                self.line: "10 remark text"
+                self.sequence: 10
+                self.action: "remark"
+                self.text: "text"
         """
-        super().__init__(line, **kwargs)
-        self._uuid = self._uuid  # hold docstring and suppress pylint W0235
-
-    def __hash__(self) -> int:
-        return self.line.__hash__()
-
-    def __eq__(self, other) -> bool:
-        """== equality"""
-        if self.__class__ == other.__class__:
-            return self.__hash__() == other.__hash__()
-        return False
+        self._action = "remark"
+        self._sequence = 0
+        self._text = ""
+        super().__init__(**kwargs)
+        if sequence := h.init_int(kwargs.get("sequence") or 0):
+            self._sequence = sequence
+        if kwargs.get("text"):
+            self._text = h.init_remark_text(kwargs.get("text") or "")
+        if line:
+            self.line = line
 
     def __lt__(self, other) -> bool:
         """< less than"""
         if hasattr(other, "sequence"):
-            if self.sequence == other.sequence:
+            if self._sequence == other.sequence:
                 if isinstance(other, Remark):
-                    return self.text < other.text
+                    return self._text < other.text
                 return True
-            return self.sequence < other.sequence
+            return self._sequence < other.sequence
         if isinstance(other, str):
             return False
         return True
@@ -74,21 +71,21 @@ class Remark(BaseAce):
         :example:
             Remark("10 remark text")
             return: "10 remark text" """
-        items = [self._sequence.line, self.action, self.text]
+        items = [self._sequence_s(), self._action, self._text]
         return " ".join([s for s in items if s])
 
     @line.setter
     def line(self, line) -> None:
-        line = self._init_line(line)
-        h.check_line_length(line)
+        line = h.init_line(line)
         ace_d = h.parse_action(line)
+
         action = ace_d["action"]
-        if action != "remark":
-            expected = "remark"
+        expected = "remark"
+        if action != expected:
             raise ValueError(f"invalid {action=}, {expected=}")
-        self.sequence.line = ace_d["sequence"]
-        self._action = action
-        self._text = ace_d["text"]
+
+        self._sequence = h.init_int(ace_d["sequence"])
+        self._text = h.init_remark_text(ace_d["text"])
 
     @property
     def text(self) -> str:
@@ -102,18 +99,30 @@ class Remark(BaseAce):
 
     @text.setter
     def text(self, text: str) -> None:
-        if not isinstance(text, str):
-            raise TypeError(f"{text=} {str} expected")
-        text = str(text).strip()
-        if not text:
-            raise ValueError(f"{text=} value required")
-        self._text = text
+        self._text = h.init_remark_text(text)
 
     # =========================== methods ============================
 
     def copy(self) -> Remark:
-        """Returns a shallow copy of self"""
-        return Remark(self.line, platform=self.platform, note=self.note)
+        """Copies the self object"""
+        kwargs = self.data()
+        return Remark(**kwargs)
+
+    def data(self) -> DAny:
+        """Converts *Remark* object to *dict*
+        :return: Remark data
+        """
+        data = dict(
+            # init
+            line=self.line,
+            platform=self._platform,
+            note=self.note,
+            # property
+            sequence=self._sequence,
+            action=self._action,
+            text=self._text,
+        )
+        return data
 
 
 LRemark = List[Remark]

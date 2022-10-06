@@ -1,5 +1,6 @@
 """TCP/UDP ports and names mapping for Cisco ACL"""
 
+from cisco_acl import helpers as h
 from cisco_acl.types_ import DInt, DiStr, LStr
 
 # cisco Nexus 3172T, NXOS: version 9.3(8)
@@ -98,15 +99,15 @@ UDP_NAME_PORT__IOS = {**UDP_NAME_PORT__BASE, **UDP_NAME_PORT__IOS}
 class PortName:
     """TCP/UDP ports and names mapping for Cisco ACL"""
 
-    def __init__(self, protocol: str = "tcp", platform: str = "ios", version: str = ""):
+    def __init__(self, protocol: str = "tcp", **kwargs):
         """TCP/UDP ports and names
         :param protocol: Protocol: "tcp", "udp"
         :param platform: Platform: "ios", "nxos"
         :param version: Software version (not implemented, planned for compatability)
         """
         self.protocol = self._init_protocol(protocol)
-        self.platform = str(platform).lower()
-        self.version = str(version).lower()
+        self.platform = h.init_platform(**kwargs)
+        self.version = str(kwargs.get("version") or "").lower()
 
     def __repr__(self):
         name = self.__class__.__name__

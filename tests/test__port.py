@@ -2,6 +2,8 @@
 
 import unittest
 
+import dictdiffer  # type: ignore
+
 from cisco_acl import Port
 from tests.helpers_test import Helpers
 
@@ -69,61 +71,57 @@ class Test(Helpers):
     def test_valid__hash__(self):
         """Port.__hash__()"""
         line = EQ1
-        port_o = Port(line, protocol="tcp")
-        result = port_o.__hash__()
+        obj = Port(line, protocol="tcp")
+        result = obj.__hash__()
         req = EQ1.__hash__()
         self.assertEqual(result, req, msg=f"{line=}")
 
     def test_valid__eq__(self):
         """Port.__eq__() __ne__()"""
-        port_o = Port(EQ1, protocol="tcp")
-        for other_o, req, in [
+        obj1 = Port(EQ1, protocol="tcp")
+        for obj2, req, in [
             (EQ1, True),
             (Port(EQ1, protocol="tcp"), True),
             (Port(EQ1, protocol="udp"), True),
             (Port(EQ2, protocol="tcp"), False),
             (Port(R13, protocol="tcp"), False),
         ]:
-            result = port_o.__eq__(other_o)
-            self.assertEqual(result, req, msg=f"{port_o=} {other_o=}")
-            result = port_o.__ne__(other_o)
-            self.assertEqual(result, not req, msg=f"{port_o=} {other_o=}")
+            result = obj1.__eq__(obj2)
+            self.assertEqual(result, req, msg=f"{obj1=} {obj2=}")
+            result = obj1.__ne__(obj2)
+            self.assertEqual(result, not req, msg=f"{obj1=} {obj2=}")
 
     def test_valid__lt__(self):
         """Port.__lt__() __le__() __gt__() __ge__()"""
-        for port_o, other_o, req_lt, req_le, req_gt, req_ge in [
+        for obj1, obj2, req_lt, req_le, req_gt, req_ge in [
             (Port(EQ1), Port(EQ1), False, True, False, True),
             (Port(EQ1), Port(EQ2), True, True, False, False),
             (Port(EQ1), Port(R13), True, True, False, False),
             (Port(EQ13), Port(R13), True, True, False, False),
             (Port(R13), Port(R24), True, True, False, False),
         ]:
-            result = port_o.__lt__(other_o)
-            self.assertEqual(result, req_lt, msg=f"{port_o=} {other_o=}")
-            result = port_o.__le__(other_o)
-            self.assertEqual(result, req_le, msg=f"{port_o=} {other_o=}")
-            result = port_o.__gt__(other_o)
-            self.assertEqual(result, req_gt, msg=f"{port_o=} {other_o=}")
-            result = port_o.__ge__(other_o)
-            self.assertEqual(result, req_ge, msg=f"{port_o=} {other_o=}")
+            result = obj1.__lt__(obj2)
+            self.assertEqual(result, req_lt, msg=f"{obj1=} {obj2=}")
+            result = obj1.__le__(obj2)
+            self.assertEqual(result, req_le, msg=f"{obj1=} {obj2=}")
+            result = obj1.__gt__(obj2)
+            self.assertEqual(result, req_gt, msg=f"{obj1=} {obj2=}")
+            result = obj1.__ge__(obj2)
+            self.assertEqual(result, req_ge, msg=f"{obj1=} {obj2=}")
 
-    # ============================= init =============================
-
-    def test_valid__init_protocol(self):
-        """PortName._init_protocol()"""
-        for protocol, req in [
-            ("", ""),
-            ("icmp", ""),
-            ("tcp", "tcp"),
-            ("udp", "udp"),
-            ("6", "tcp"),
-            ("17", "udp"),
-            (6, "tcp"),
-            (17, "udp"),
+    def test_valid__repr__(self):
+        """Port.__repr__()"""
+        for kwargs, req in [
+            (dict(line="eq 80", platform="ios", protocol="", note=""), "Port(\"\")"),
+            (dict(line="eq 80 443", platform="ios", protocol="tcp", note=""),
+             "Port(\"eq www 443\", protocol=\"tcp\")"),
+            (dict(line="eq 80", platform="nxos", protocol="tcp", note="a"),
+             "Port(\"eq www\", platform=\"nxos\", note=\"a\", protocol=\"tcp\")"),
         ]:
-            obj = Port()
-            result = obj._init_protocol(protocol=protocol)
-            self.assertEqual(result, req, msg=f"{protocol=}")
+            obj = Port(**kwargs)
+            result = obj.__repr__()
+            result = self._quotation(result)
+            self.assertEqual(result, req, msg=f"{result=}")
 
     # =========================== property ===========================
 
@@ -189,19 +187,11 @@ class Test(Helpers):
             (dict(line="eq 514", platform="nxos", protocol="udp", port_nr=False), EQ_SYSL_D),
             (dict(line="eq syslog", platform="nxos", protocol="udp", port_nr=False), EQ_SYSL_D),
         ]:
-            # getter
-            port_o = Port(**kwargs)
-            self._test_attrs(obj=port_o, req_d=req_d, msg=f"getter {kwargs=}")
-
+            obj = Port(**kwargs)
+            self._test_attrs(obj=obj, req_d=req_d, msg=f"{kwargs=}")
             # setter
-            port_o.line = kwargs["line"]
-            self._test_attrs(obj=port_o, req_d=req_d, msg=f"setter {kwargs=}")
-
-        # deleter
-        port_o = Port(EQ1)
-        # noinspection PyPropertyAccess
-        del port_o.line
-        self._test_attrs(obj=port_o, req_d=EQ0_D, msg="deleter line")
+            obj.line = kwargs["line"]
+            self._test_attrs(obj=obj, req_d=req_d, msg=f"{kwargs=}")
 
     def test_invalid__line(self):
         """Port.line"""
@@ -220,8 +210,7 @@ class Test(Helpers):
             (dict(line=EQ123, platform="nxos"), ValueError),
             (dict(line=EQ2456, platform="nxos"), ValueError),
             (dict(line=NEQ13, platform="nxos"), ValueError),
-            (dict(line="eq syslog", platform="nxos", protocol="tcp", port_nr=False),
-             ValueError),
+            (dict(line="eq syslog", platform="nxos", protocol="tcp", port_nr=False), ValueError),
         ]:
             with self.assertRaises(error, msg=f"{kwargs=}"):
                 Port(**kwargs)
@@ -229,33 +218,28 @@ class Test(Helpers):
     def test_valid__items(self):
         """Port.items"""
         for platform, line, items, req_d in [
+            # ios
             ("ios", EQ2, [1, 2, 3], EQ123_D),
             ("ios", NEQ2, [1, 3], NEQ13_D),
             ("ios", GT1, [65532], GT_D),
             ("ios", LT1, [3], LT3_D),
             ("ios", R13, [2, 4], R24_D),
-
+            # nxos
             ("nxos", EQ2, [1], EQ1_D),
             ("nxos", NEQ2, [1], NEQ1_D),
             ("nxos", GT1, [65532], GT_D),
             ("nxos", LT1, [3], LT3_D),
             ("nxos", R13, [2, 4], R24_D),
-
         ]:
             # setter
-            port_o = Port(line=line, platform=platform, protocol="tcp")
-            port_o.items = items
-            self._test_attrs(obj=port_o, req_d=req_d, msg=f"setter {line=}")
-
-        # deleter
-        port_o = Port(EQ1)
-        with self.assertRaises(AttributeError, msg=f"{items=}"):
-            # noinspection PyPropertyAccess
-            del port_o.items
+            obj = Port(line=line, platform=platform, protocol="tcp")
+            obj.items = items
+            self._test_attrs(obj=obj, req_d=req_d, msg=f"{line=}")
 
     def test_invalid__items(self):
         """Port.items"""
         for platform, line, items, error in [
+            ("ios", EQ2, 1, TypeError),
             ("ios", EQ2, [], ValueError),
             ("ios", GT1, [1, 2], ValueError),
             ("ios", LT1, [1, 2], ValueError),
@@ -263,86 +247,39 @@ class Test(Helpers):
             ("nxos", R13, [1, 2, 3], ValueError),
             ("nxos", NEQ2, [1, 2], ValueError),
         ]:
-            port_o = Port(line, platform=platform)
+            obj = Port(line, platform=platform)
             with self.assertRaises(error, msg=f"{items=}"):
-                port_o.items = items
+                obj.items = items
 
     def test_valid__operator(self):
         """Port.operator"""
-        for platform, line, operator, req_d in [
-            ("ios", EQ1, "eq", EQ1_D),
-            ("ios", EQ1, "neq", NEQ1_D),
-            ("ios", EQ1, "gt", GT1_D),
-            ("ios", EQ1, "lt", LT1_D),
-            ("ios", EQ13, "eq", EQ13_D),
-            ("ios", EQ13, "neq", NEQ13_D),
-            ("ios", NEQ1, "eq", EQ1_D),
-            ("ios", NEQ1, "neq", NEQ1_D),
-            ("ios", NEQ1, "gt", GT1_D),
-            ("ios", NEQ1, "lt", LT1_D),
-            ("ios", NEQ13, "eq", EQ13_D),
-            ("ios", NEQ13, "neq", NEQ13_D),
-            ("ios", GT1, "eq", EQ1_D),
-            ("ios", GT1, "neq", NEQ1_D),
-            ("ios", GT1, "gt", GT1_D),
-            ("ios", GT1, "lt", LT1_D),
-            ("ios", LT1, "eq", EQ1_D),
-            ("ios", LT1, "neq", NEQ1_D),
-            ("ios", LT1, "gt", GT1_D),
-            ("ios", LT1, "lt", LT1_D),
-            ("ios", R24, "range", R24_D),
-
-            ("nxos", EQ1, "eq", EQ1_D),
-            ("nxos", EQ1, "neq", NEQ1_D),
-            ("nxos", EQ1, "gt", GT1_D),
-            ("nxos", EQ1, "lt", LT1_D),
-            ("nxos", NEQ1, "eq", EQ1_D),
-            ("nxos", NEQ1, "neq", NEQ1_D),
-            ("nxos", NEQ1, "gt", GT1_D),
-            ("nxos", NEQ1, "lt", LT1_D),
-            ("nxos", GT1, "eq", EQ1_D),
-            ("nxos", GT1, "neq", NEQ1_D),
-            ("nxos", GT1, "gt", GT1_D),
-            ("nxos", GT1, "lt", LT1_D),
-            ("nxos", LT1, "eq", EQ1_D),
-            ("nxos", LT1, "neq", NEQ1_D),
-            ("nxos", LT1, "gt", GT1_D),
-            ("nxos", LT1, "lt", LT1_D),
-            ("nxos", R24, "range", R24_D),
-
+        for platform, line, req_d in [
+            # ios
+            ("ios", EQ1, EQ1_D),
+            ("ios", EQ13, EQ13_D),
+            ("ios", NEQ1, NEQ1_D),
+            ("ios", NEQ13, NEQ13_D),
+            ("ios", GT1, GT1_D),
+            ("ios", LT1, LT1_D),
+            ("ios", R24, R24_D),
+            # nxos
+            ("nxos", EQ1, EQ1_D),
+            ("nxos", NEQ1, NEQ1_D),
+            ("nxos", GT1, GT1_D),
+            ("nxos", LT1, LT1_D),
+            ("nxos", R24, R24_D),
         ]:
-            # setter
-            port_o = Port(line=line, platform=platform, protocol="tcp")
-            port_o.operator = operator
-            self._test_attrs(obj=port_o, req_d=req_d, msg=f"setter {line=}")
-
-        # deleter
-        port_o = Port(EQ1)
-        # noinspection PyPropertyAccess
-        del port_o.operator
-        self._test_attrs(obj=port_o, req_d=EQ0_D, msg="deleter line")
+            obj = Port(line=line, platform=platform, protocol="tcp")
+            self._test_attrs(obj=obj, req_d=req_d, msg=f"{line=}")
 
     def test_invalid__operator(self):
         """Port.operator"""
-        for platform, line, operator, error in [
-            ("ios", EQ1, "range", ValueError),
-            ("ios", EQ13, "gt", ValueError),
-            ("ios", EQ13, "lt", ValueError),
-            ("ios", EQ13, "range", ValueError),
-            ("ios", NEQ1, "range", ValueError),
-            ("ios", NEQ13, "gt", ValueError),
-            ("ios", NEQ13, "lt", ValueError),
-            ("ios", NEQ13, "range", ValueError),
-            ("ios", GT1, "range", ValueError),
-            ("ios", LT1, "range", ValueError),
-            ("ios", R24, "eq", ValueError),
-            ("ios", R24, "neq", ValueError),
-            ("ios", R24, "gt", ValueError),
-            ("ios", R24, "lt", ValueError),
+        for line, error in [
+            ("typo", ValueError),
+            ("eq typo", ValueError),
         ]:
-            port_o = Port(line, platform=platform)
             with self.assertRaises(error, msg=f"{line=}"):
-                port_o.operator = operator
+                Port(line, platform="ios")
 
         with self.assertRaises(TypeError):
             # noinspection PyTypeChecker
@@ -351,40 +288,38 @@ class Test(Helpers):
     def test_valid__ports(self):
         """Port.ports"""
         for platform, line, ports, req_d in [
+            # ios
             ("ios", EQ2, [1, 2, 3], EQ123_D),
             ("ios", NEQ2, WO_13, NEQ13_D),
             ("ios", GT1, GT_65532, GT_D),
             ("ios", LT1, [1, 2], LT3_D),
             ("ios", R13, [2, 3, 4], R24_D),
-
+            # nxos
             ("nxos", EQ2, [1], EQ1_D),
             ("nxos", NEQ2, WO_1, NEQ1_D),
             ("nxos", GT1, GT_65532, GT_D),
             ("nxos", LT1, [1, 2], LT3_D),
             ("nxos", R13, [2, 3, 4], R24_D),
-
+            # type
+            ("ios", EQ2, (1, 2, 3), EQ123_D),
+            ("ios", EQ2, {1, 2, 3}, EQ123_D),
         ]:
             # setter
-            port_o = Port(line=line, platform=platform, protocol="tcp")
-            port_o.ports = ports
-            self._test_attrs(obj=port_o, req_d=req_d, msg=f"setter {line=}")
-
-        # deleter
-        port_o = Port(EQ1)
-        with self.assertRaises(AttributeError, msg=f"{ports=}"):
-            # noinspection PyPropertyAccess
-            del port_o.ports
+            obj = Port(line=line, platform=platform, protocol="tcp")
+            obj.ports = ports
+            self._test_attrs(obj=obj, req_d=req_d, msg=f"{line=}")
 
     def test_invalid__ports(self):
         """Port.ports"""
-        for platform, line, ports, error in [
-            ("ios", EQ2, [], ValueError),
-            ("nxos", EQ2, [1, 2, 3], ValueError),
-            ("nxos", NEQ2, WO_13, ValueError),
+        for platform, ports, error in [
+            ("ios", 1, TypeError),
+            ("ios", [], ValueError),
+            ("nxos", [1, 2, 3], ValueError),
+            ("nxos", WO_13, ValueError),
         ]:
-            port_o = Port(EQ1, platform=platform)
+            obj = Port(EQ1, platform=platform)
             with self.assertRaises(error, msg=f"{ports=}"):
-                port_o.ports = ports
+                obj.ports = ports
 
     def test_valid__port_nr(self):
         """Port.port_nr"""
@@ -398,73 +333,93 @@ class Test(Helpers):
             (False, "udp", "eq 67", dict(line="eq bootps", port_nr=False, ports=[67])),
             (False, "udp", "eq bootps", dict(line="eq bootps", port_nr=False, ports=[67])),
         ]:
-            port_o = Port(line=line, protocol=protocol)
+            obj = Port(line=line, protocol=protocol)
             # setter
-            port_o.port_nr = port_nr
-            self._test_attrs(obj=port_o, req_d=req_d, msg=f"setter {line=}")
-
-        # deleter
-        port_o = Port(EQ1)
-        with self.assertRaises(AttributeError, msg=f"{port_nr=}"):
-            # noinspection PyPropertyAccess
-            del port_o.ports
+            obj.port_nr = port_nr
+            self._test_attrs(obj=obj, req_d=req_d, msg=f"{line=}")
 
     def test_valid__protocol(self):
         """Port.protocol"""
         for protocol, req_d in [
             ("", dict(line="", protocol="")),
-            ("ip", dict(line="", protocol="ip")),
-            ("tcp", dict(line=EQ1, protocol="tcp")),
-            ("udp", dict(line=EQ1, protocol="udp")),
+            ("ip", dict(line="", protocol="")),
+            ("tcp", dict(line="eq 1", protocol="tcp")),
+            ("udp", dict(line="eq 1", protocol="udp")),
         ]:
             # setter
-            port_o = Port(line=EQ1, protocol="tcp")
-            port_o.protocol = protocol
-            self._test_attrs(obj=port_o, req_d=req_d, msg=f"setter {protocol=}")
+            obj = Port(line="eq 1", protocol="tcp")
+            obj.protocol = protocol
+            self._test_attrs(obj=obj, req_d=req_d, msg=f"{protocol=}")
 
     def test_valid__sport(self):
         """Port.sport"""
         for platform, line, sport, req_d in [
+            # ios
             ("ios", EQ2, "1-3", EQ123_D),
             ("ios", NEQ2, "2,4-65535", NEQ13_D),
             ("ios", GT1, "65533-65535", GT_D),
             ("ios", LT1, "1-2", LT3_D),
             ("ios", R13, "2-4", R24_D),
-
+            # nxos
             ("nxos", EQ2, "1", EQ1_D),
             ("nxos", NEQ2, "2-65535", NEQ1_D),
             ("nxos", GT1, "65533-65535", GT_D),
             ("nxos", LT1, "1-2", LT3_D),
             ("nxos", R13, "2-4", R24_D),
-
         ]:
             # setter
-            port_o = Port(line=line, platform=platform, protocol="tcp")
-            port_o.sport = sport
-            self._test_attrs(obj=port_o, req_d=req_d, msg=f"setter {line=}")
-
-        # deleter
-        port_o = Port(EQ1)
-        with self.assertRaises(AttributeError, msg=f"{sport=}"):
-            # noinspection PyPropertyAccess
-            del port_o.sport
+            obj = Port(line=line, platform=platform, protocol="tcp")
+            obj.sport = sport
+            self._test_attrs(obj=obj, req_d=req_d, msg=f"{line=}")
 
     def test_invalid__sport(self):
         """Port.sport"""
-        for platform, line, sport, error in [
-            ("ios", EQ2, "", ValueError),
-            ("nxos", EQ2, "1-3", ValueError),
-            ("nxos", NEQ2, "2,4-65535", ValueError),
+        for platform, sport, error in [
+            ("ios", "", ValueError),
+            ("nxos", "1-3", ValueError),
+            ("nxos", "2,4-65535", ValueError),
         ]:
-            port_o = Port(EQ1, platform=platform)
+            obj = Port(EQ1, platform=platform)
             with self.assertRaises(error, msg=f"{sport=}"):
-                port_o.sport = sport
+                obj.sport = sport
+
+    # =========================== methods ============================
+
+    def test_valid__copy(self):
+        """Port.copy()"""
+        obj1 = Port("eq www", platform="ios", protocol="tcp", note="a", port_nr=True)
+        obj2 = obj1.copy()
+
+        # change obj1 to check obj1 does not depend on obj2
+        new_obj1_kwargs = dict(line="eq telnet", platform="nxos", protocol="udp", note="b",
+                               port_nr=False)
+        for arg, value in new_obj1_kwargs.items():
+            setattr(obj1, arg, value)
+
+        req1_d = dict(line="eq 23", platform="nxos", protocol="udp", note="b", port_nr=False)
+        req2_d = dict(line="eq 80", platform="ios", protocol="tcp", note="a", port_nr=True)
+        self._test_attrs(obj1, req1_d, msg="obj1 does not depend on obj2")
+        self._test_attrs(obj2, req2_d, msg="obj2 copied from obj1")
+
+    def test_valid__data(self):
+        """Port.data()"""
+        kwargs1 = dict(line="eq www 443", platform="ios", protocol="tcp", note="a", port_nr=True)
+        req1 = dict(line="eq 80 443", platform="ios", protocol="tcp", note="a", port_nr=True,
+                    items=[80, 443], operator="eq", ports=[80, 443], sport="80,443")
+
+        for kwargs, req_d in [
+            (kwargs1, req1),
+        ]:
+            obj = Port(**kwargs)
+            result = obj.data()
+            diff = list(dictdiffer.diff(first=result, second=req_d))
+            self.assertEqual(diff, [], msg=f"{kwargs=}")
 
     # =========================== helpers ============================
 
     def test_valid__line__operator(self):
         """Port._line__operator()"""
-        port_o = Port(EQ1)
+        obj = Port(EQ1)
         for items, req in [
             (["eq", "1"], "eq"),
             (["neq", "1"], "neq"),
@@ -472,22 +427,23 @@ class Test(Helpers):
             (["gt", "1"], "gt"),
             (["range", "1", "2"], "range"),
         ]:
-            result = port_o._line__operator(items)
+            result = obj._line__operator(items)
             self.assertEqual(result, req, msg=f"{items=}")
 
     def test_invalid__line__operator(self):
         """Port._line__operator()"""
-        port_o = Port(EQ1)
+        obj = Port(EQ1)
         for items, error in [
             ([], ValueError),
             (["typo", "1"], ValueError),
         ]:
             with self.assertRaises(error, msg=f"{items=}"):
-                port_o._line__operator(items)
+                obj._line__operator(items)
 
     def test_valid__line__items_to_ints(self):
         """Port._line__items_to_ints()"""
         for platform, line, items, req in [
+            # ios
             ("ios", EQ1, ["1"], [1]),
             ("ios", EQ1, ["1", "2"], [1, 2]),
             ("ios", NEQ1, ["1"], [1]),
@@ -495,32 +451,33 @@ class Test(Helpers):
             ("ios", LT1, ["1"], [1]),
             ("ios", GT1, ["1"], [1]),
             ("ios", R24, ["1", "3"], [1, 3]),
-
+            # nxos
             ("nxos", EQ1, ["1"], [1]),
             ("nxos", NEQ1, ["1"], [1]),
             ("nxos", LT1, ["1"], [1]),
             ("nxos", GT1, ["1"], [1]),
             ("nxos", R24, ["1", "3"], [1, 3]),
         ]:
-            port_o = Port(line, platform=platform)
-            result = port_o._line__items_to_ints(items)
+            obj = Port(line, platform=platform)
+            result = obj._line__items_to_ints(items)
             self.assertEqual(result, req, msg=f"{items=}")
 
     def test_invalid__line__items_to_ints(self):
         """Port._line__items_to_ints()"""
         for platform, line, ports, error in [
+            # ios
             ("ios", EQ1, [], ValueError),
             ("ios", LT1, ["1", "2"], ValueError),
             ("ios", GT1, ["1", "2"], ValueError),
             ("ios", R24, ["1"], ValueError),
             ("ios", R24, ["1", "2", "3"], ValueError),
-
+            # nxos
             ("nxos", EQ1, ["1", "2"], ValueError),
             ("nxos", NEQ1, ["1", "2"], ValueError),
         ]:
-            port_o = Port(line, platform=platform)
+            obj = Port(line, platform=platform)
             with self.assertRaises(error, msg=f"{platform=} {line=} {ports=}"):
-                port_o._line__items_to_ints(ports)
+                obj._line__items_to_ints(ports)
 
     def test_valid__items_to_ports(self):
         """Port._items_to_ports()"""
@@ -534,8 +491,8 @@ class Test(Helpers):
             ("lt 1", [3], [1, 2]),
             ("range 1 2", [2, 4], [2, 3, 4]),
         ]:
-            port_o = Port(line)
-            result = port_o._items_to_ports(items)
+            obj = Port(line)
+            result = obj._items_to_ports(items)
             self.assertEqual(result, req, msg=f"{items=}")
 
     def test_valid__ports_to_items(self):
@@ -550,8 +507,8 @@ class Test(Helpers):
             ("lt 3", [1, 2], [3]),
             ("range 2 4", [2, 3, 4], [2, 4]),
         ]:
-            port_o = Port(line)
-            result = port_o._ports_to_items(items)
+            obj = Port(line)
+            result = obj._ports_to_items(items)
             self.assertEqual(result, req, msg=f"{items=}")
 
 
