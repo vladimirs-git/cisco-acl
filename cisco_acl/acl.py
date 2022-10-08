@@ -395,17 +395,17 @@ class Acl(AceGroup):
                       permit ip 10.0.0.0 0.0.0.3 any
                       permit ip host 10.0.0.4 any"
         """
-        shadowed: LStr = self.shadowed()
-        if not shadowed:
+        shadowing_d: DLStr = self.shadowing()
+        if not shadowing_d:
             return {}
-        shadowing: DLStr = self.shadowing()
+        shadowed: LStr = [s for ls in shadowing_d.values() for s in ls]
 
         acl_new: Acl = self.copy()
         acl_new.ungroup()
         acl_new.items = [o for o in acl_new.items if o.line not in shadowed]
         acl_new.group(self.group_by)
         self.items = acl_new.items
-        return shadowing
+        return shadowing_d
 
     def shadowed(self) -> LStr:
         """Returns shadowed ACEs
@@ -429,7 +429,7 @@ class Acl(AceGroup):
         return shadowed
 
     def shadowing(self) -> DLStr:
-        """Returns Shadowing and shadowed ACEs as *dict*,
+        """Returns shadowing and shadowed ACEs as *dict*,
         where *key* is shadowing rule (in the top), *value* shadowed rules (in the bottom).
         NOTES:
         - Method compare *Ace* with the same self.action and other.action.
@@ -451,16 +451,16 @@ class Acl(AceGroup):
         acl_o.ungroup()
         aces = [o for o in acl_o.items if isinstance(o, Ace)]
 
-        shadowed_d: DLStr = {}  # return
-        _shadowed: SStr = set()
+        shadowing_d: DLStr = {}  # return
+        shadowed: SStr = set()
         for idx, ace_top in enumerate(aces):
             aces_bottom = aces[idx + 1:]
             for ace_bottom in aces_bottom:
                 if ace_bottom.is_shadowed_by(ace_top):
-                    if ace_bottom.line not in _shadowed:
-                        shadowed_d.setdefault(ace_top.line, []).append(ace_bottom.line)
-                    _shadowed.add(ace_bottom.line)
-        return shadowed_d
+                    if ace_bottom.line not in shadowed:
+                        shadowing_d.setdefault(ace_top.line, []).append(ace_bottom.line)
+                    shadowed.add(ace_bottom.line)
+        return shadowing_d
 
     def ungroup_ports(self) -> None:
         """Ungroups ACEs with multiple ports in single line ("eq" or "neq")

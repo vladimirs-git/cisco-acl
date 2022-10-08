@@ -30,8 +30,8 @@ __all__ = [
     "addrgroups",
 ]
 
-__version__ = "2.0.1"
-__date__ = "2022-10-06"
+__version__ = "2.0.2"
+__date__ = "2022-10-08"
 __title__ = "cisco-acl"
 
 __summary__ = "Python package to parse and manage Cisco ACL (Access Control List)"

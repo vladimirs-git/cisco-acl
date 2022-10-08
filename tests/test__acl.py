@@ -974,9 +974,9 @@ class Test(Helpers):
             self.assertEqual(diff, [], msg=f"{line=}")
 
             # shadowed
-            result = obj.shadowed()
+            result_ = obj.shadowed()
             req = [s for ls in req_d.values() for s in ls]
-            self.assertEqual(result, req, msg=f"{line=}")
+            self.assertEqual(result_, req, msg=f"{line=}")
 
     def test_valid__sort(self):
         """Acl.sort()"""
