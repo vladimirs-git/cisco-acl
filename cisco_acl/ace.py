@@ -392,17 +392,17 @@ class Ace(BaseAce):
         """
         if self._action != other.action:
             return False
-        if not self._is_shadowed_by_protocol(other):
+        if not self._is_shadowed__by_protocol(other):
             return False
-        if not self._is_address_shadowed(other=other, sdst="src"):
+        if not self._is_shadowed__by_address(other=other, sdst="src"):
             return False
-        if not self._is_address_shadowed(other=other, sdst="dst"):
+        if not self._is_shadowed__by_address(other=other, sdst="dst"):
             return False
-        if not self._is_shadowed_by_srcport(other):
+        if not self._is_shadowed__by_srcport(other):
             return False
-        if not self._is_shadowed_by_dstport(other):
+        if not self._is_shadowed__by_dstport(other):
             return False
-        if not self._is_shadowed_by_option(other):
+        if not self._is_shadowed__by_option(other):
             return False
         return True
 
@@ -455,7 +455,7 @@ class Ace(BaseAce):
         return True
 
     # noinspection DuplicatedCode
-    def _is_address_shadowed(self, other: Ace, sdst: str) -> bool:
+    def _is_shadowed__by_address(self, other: Ace, sdst: str) -> bool:
         """True if bottom address is shadowed by top address
         :param other:
         :param sdst: "src", "dst"
@@ -485,13 +485,13 @@ class Ace(BaseAce):
             results.append(result)
         return all(results)
 
-    def _is_shadowed_by_protocol(self, other: Ace) -> bool:
+    def _is_shadowed__by_protocol(self, other: Ace) -> bool:
         """True if self.protocol is shadowed by other.protocol"""
         if other.protocol.name == "ip":
             return True
         return other.protocol.number == self._protocol.number
 
-    def _is_shadowed_by_srcport(self, other: Ace) -> bool:
+    def _is_shadowed__by_srcport(self, other: Ace) -> bool:
         """True if self.srcport is shadowed by other.srcport"""
         if top := set(other.srcport.ports):
             if bottom := set(self._srcport.ports):
@@ -500,7 +500,7 @@ class Ace(BaseAce):
             return False
         return True
 
-    def _is_shadowed_by_dstport(self, other: Ace) -> bool:
+    def _is_shadowed__by_dstport(self, other: Ace) -> bool:
         """True if self.dstport is shadowed by other.dstport"""
         if top := set(other.dstport.ports):
             if bottom := set(self._dstport.ports):
@@ -509,7 +509,7 @@ class Ace(BaseAce):
             return False
         return True
 
-    def _is_shadowed_by_option(self, other: Ace) -> bool:
+    def _is_shadowed__by_option(self, other: Ace) -> bool:
         """True if self.dstport is shadowed by other.dstport"""
         if top := set(other.option.flags):
             if bottom := set(self._option.flags):
