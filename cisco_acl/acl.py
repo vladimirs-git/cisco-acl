@@ -389,7 +389,7 @@ class Acl(AceGroup):
                      permit ip host 10.0.0.1 any
                      permit ip host 10.0.0.2 any
                      permit ip host 10.0.0.4 any")
-        acl.remove_shadowed() -> {"permit ip 10.0.0.0 0.0.0.3 any": ["permit ip host 10.0.0.1 any",
+        acl.delete_shadowed() -> {"permit ip 10.0.0.0 0.0.0.3 any": ["permit ip host 10.0.0.1 any",
                                                                      "permit ip host 10.0.0.2 any"]}
         acl.line == "ip access-list extended NAME
                       permit ip 10.0.0.0 0.0.0.3 any

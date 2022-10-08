@@ -895,8 +895,8 @@ class Test(Helpers):
             with self.assertRaises(error, msg=f"{kwargs=}"):
                 obj.resequence(**kwargs)
 
-    def test_remove_shadowed(self):
-        """Acl.remove_shadowed()"""
+    def test_delete_shadowed(self):
+        """Acl.delete_shadowed()"""
         line1 = f"""permit ip {PREFIX30} any
                     remark === NAME1
                     permit ip {PREFIX31} any
