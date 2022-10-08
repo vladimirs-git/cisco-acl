@@ -375,7 +375,7 @@ class Ace(BaseAce):
         return data
 
     def is_shadowed_by(self, other: Ace) -> bool:
-        """Checks is ACE is shadowed by other ACE.
+        """Checks is ACE shadowed by other ACE.
         NOTES:
         - Method compare *Ace* with the same self.action and other.action.
           For example ACEs where self.action=="permit" and other.action=="deny"

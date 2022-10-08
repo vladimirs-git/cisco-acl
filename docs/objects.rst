@@ -193,7 +193,7 @@ data()
 
 is_shadowed_by()
 ................
-**Ace.is_shadowed_by(other)** - Checks is ACE is shadowed by other ACE.
+**Ace.is_shadowed_by(other)** - Checks is ACE shadowed by other ACE.
 NOTES:
 - Method compare *Ace* with the same self.action and other.action. For example ACEs where self.action=="permit" and other.action=="deny" not taken into account (skip checking)
 - Not supported: not contiguous wildcard (like "10.0.0.0 0.0.3.3")
