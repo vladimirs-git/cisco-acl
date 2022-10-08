@@ -395,17 +395,17 @@ class Acl(AceGroup):
                       permit ip 10.0.0.0 0.0.0.3 any
                       permit ip host 10.0.0.4 any"
         """
-        shadowed: LStr = self.shadowed()
+        shadowing_d: DLStr = self.shadowing()
+        shadowed: LStr = [s for ls in shadowing_d.values() for s in ls]
         if not shadowed:
             return {}
-        shadowing: DLStr = self.shadowing()
 
         acl_new: Acl = self.copy()
         acl_new.ungroup()
         acl_new.items = [o for o in acl_new.items if o.line not in shadowed]
         acl_new.group(self.group_by)
         self.items = acl_new.items
-        return shadowing
+        return shadowing_d
 
     def shadowed(self) -> LStr:
         """Returns shadowed ACEs
