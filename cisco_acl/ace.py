@@ -469,7 +469,7 @@ class Ace(BaseAce):
             if not bottoms:
                 msg = f"absent ipnets in {self._dstaddr.line=}"
                 raise TypeError(msg)
-        else:  # srs
+        else:  # src
             tops = other.srcaddr.ipnets()
             if not tops:
                 msg = f"absent ipnets in {other.srcaddr.line=}"
