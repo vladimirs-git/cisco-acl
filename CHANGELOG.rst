@@ -4,10 +4,11 @@
 CHANGELOG
 =========
 
-2.0.2 (2022-10-08)
+2.0.2 (2022-10-10)
 ------------------
 * [fix] README.rst
-
+* [fix] Address("10.0.0.1/30") with invalid mask,
+	WARNING:root:ValueError: 10.0.0.1/30 has host bits set, fixed to prefix 10.0.0.0/30
 
 2.0.1 (2022-10-06)
 ------------------

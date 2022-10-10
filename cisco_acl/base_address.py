@@ -354,7 +354,7 @@ class BaseAddress(Base):
     @staticmethod
     def _is_address_prefix(line: str) -> bool:
         """True if address is prefix "A.B.C.D/LEN" """
-        regex = h.OCTETS + r"/\d+"
+        regex = h.OCTETS + r"/\d+$"
         if re.match(regex, line):
             return True
         return False
@@ -412,9 +412,8 @@ class BaseAddress(Base):
         except ValueError as ex:
             if "has host bits set" not in str(ex):
                 raise type(ex)(*ex.args)
-            line_ = prefix.split("/")[0] + "/32"
-            ipnet = IPv4Network(address=line_)
-            msg = f"ValueError: {ex}, invalid {prefix} fixed to {ipnet}"
+            ipnet = IPv4Network(address=prefix, strict=False)
+            msg = f"ValueError: {ex}, fixed to prefix {ipnet}"
             logging.warning(msg)
 
         _type = "prefix"

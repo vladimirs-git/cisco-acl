@@ -6,7 +6,6 @@ import unittest
 from datetime import datetime
 
 # noinspection PyProtectedMember
-from cisco_acl import __title__
 from setup import PACKAGE_, ROOT, README
 
 CHANGELOG = "CHANGELOG.rst"

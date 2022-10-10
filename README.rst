@@ -1,3 +1,9 @@
+
+.. image:: https://img.shields.io/pypi/v/cisco-acl.svg
+   :target: https://pypi.python.org/pypi/cisco-acl
+.. image:: https://img.shields.io/pypi/pyversions/cisco-acl.svg
+   :target: https://pypi.python.org/pypi/cisco-acl
+
 cisco-acl
 =========
 
@@ -35,6 +41,11 @@ ACEs        Multiple Access Control Entries
 Acl.items   List of objects: Ace, AceGroup, Remark
 ==========  ========================================================================================
 
+
+Requirements
+------------
+
+Python 3.8+
 
 
 Installation

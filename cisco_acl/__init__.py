@@ -31,7 +31,7 @@ __all__ = [
 ]
 
 __version__ = "2.0.2"
-__date__ = "2022-10-08"
+__date__ = "2022-10-10"
 __title__ = "cisco-acl"
 
 __summary__ = "Python package to parse and manage Cisco ACL (Access Control List)"

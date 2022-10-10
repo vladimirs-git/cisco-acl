@@ -2,6 +2,7 @@
 
 import unittest
 from ipaddress import IPv4Network
+from logging import WARNING
 
 import dictdiffer  # type: ignore
 
@@ -132,9 +133,32 @@ class Test(Helpers):
             obj.line = line
             self._test_attrs(obj=obj, req_d=req_d, msg=f"{line=} {platform=}")
 
+    def test_valid__line__change_invalid_mask(self):
+        """Address.line Address.platform change invalid mask"""
+        for line, req_d, req_log in [
+            ("10.0.0.1/30", PREFIX30_D, [WARNING]),
+            ("10.0.0.0/0", PREFIX00_D, [WARNING]),
+        ]:
+            with self.assertLogs() as logs:
+                obj = Address(line, platform="nxos")
+                self._test_attrs(obj=obj, req_d=req_d, msg=f"{line=}")
+                result_log = [o.levelno for o in logs.records]
+                self.assertEqual(result_log, req_log, msg=f"{line=}")
+
+            # setter
+            obj = Address("any", platform="nxos")
+            with self.assertLogs() as logs:
+                obj.line = line
+                self._test_attrs(obj=obj, req_d=req_d, msg=f"{line=}")
+                result_log = [o.levelno for o in logs.records]
+                self.assertEqual(result_log, req_log, msg=f"{line=}")
+
     def test_invalid__line(self):
         """Address.line"""
         for kwargs, error in [
+            (dict(line="10.0.0.0", platform="nxos"), ValueError),
+            (dict(line="10.0.0.0/24/24", platform="nxos"), ValueError),
+            (dict(line="10.0.0.0/33", platform="nxos"), ValueError),
             (dict(line=IOS_ADDGR, platform="nxos"), ValueError),
             (dict(line=CNX_ADDGR, platform="ios"), ValueError),
             (dict(line="", platform="ios"), ValueError),
