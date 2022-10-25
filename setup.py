@@ -6,7 +6,7 @@ from setuptools import setup  # type: ignore
 
 import cisco_acl as package
 
-VERSION = "1.2.2"
+VERSION = "2.1.0"
 PACKAGE = package.__title__
 PACKAGE_ = package.__title__.lower().replace("-", "_")  # PEP 503 normalization
 ROOT = pathlib.Path(__file__).parent.resolve()
@@ -41,6 +41,8 @@ if __name__ == "__main__":
             "Topic :: System :: Networking",
             "License :: OSI Approved :: MIT License",
             "Programming Language :: Python :: 3.8",
+            "Programming Language :: Python :: 3.9",
+            "Programming Language :: Python :: 3.10",
             "Natural Language :: English",
         ],
     )

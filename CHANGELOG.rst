@@ -4,6 +4,62 @@
 CHANGELOG
 =========
 
+2.1.0 (2022-10-25)
+------------------
+* [change] Ace.data(uuid=True)
+* [fix] Ace.shadow_of() performance improvement
+* [fix] Acl.delete_shadow()
+* [fix] Address.platform = "nxos", lost addrgroup items
+* [fix] uuid the same after platform change
+* [new] Aclg
+* [new] Address.subnet_of() AddressAg.subnet_of()
+* [new] address.collapse() address_ag.collapse()
+* [new] skip: "addrgroup", "nc_wildcard" in Ace.is_shadow_by(skip) Acl.shading()
+
+
+2.0.3 (2022-10-11)
+------------------
+* [fix] disabled 100 chars check_line_length() for init_line()
+
+
+2.0.2 (2022-10-10)
+------------------
+* [fix] README.rst
+* [fix] Address("10.0.0.1/30") with invalid mask,
+	WARNING:root:ValueError: 10.0.0.1/30 has host bits set, fixed to prefix 10.0.0.0/30
+
+2.0.1 (2022-10-06)
+------------------
+* [fix] Ace.is_shadow_by() for addrgroup
+
+
+2.0.0 (2022-10-06)
+------------------
+* [change] AceGroup.resequence()
+* [change] ConfigParser._make_ace_group()
+* [change] config_to_ace(), config_to_aceg() merged to config_to_acl()
+* [change] property Acl.ip_acl_name > method Acl.ip_acl_name()
+* [delete] deleter
+* [new] Ace.is_shadow_by()
+* [new] Ace.option: Option
+* [new] AceGroup.name
+* [new] Acl.delete_notes()
+* [new] Acl.shadow()
+* [new] Acl.shadow()
+* [new] Acl.split_ports()
+* [new] Acl.type = "extended", "standard"
+* [new] Acl.ungroup()
+* [new] AddrGroup.__contains__()
+* [new] AddrGroup.resequence()
+* [new] Address.cmd_addgr()
+* [new] Address.sequence
+* [new] AddressAg
+* [new] ConfigParser._init_platform()
+* [new] functions.py parse_address_group(), parse_ace(), parse_acl()
+* [new] h.init_platform()
+* [new] in Address, AddressGr, AddrGroup methods: ipnets(), subnets(), prefixes(), wildcards()
+
+
 1.2.2 (2022-09-08)
 ------------------
 * [new] platform="cnx"

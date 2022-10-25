@@ -80,7 +80,7 @@ acl1.resequence(start=0)
 print(f"{acl1.platform=}")
 print(acl1)
 print()
-# acl1.platform='ios'
+# acl1.platform="ios"
 # ip access-list extended ACL1
 #   deny tcp any any eq domain
 #   permit icmp any any
@@ -92,7 +92,7 @@ acl1.platform = "nxos"
 print(f"{acl1.platform=}")
 print(acl1)
 print()
-# acl1.platform='nxos'
+# acl1.platform="nxos"
 # ip access-list ACL1
 #   deny tcp any any eq domain
 #   permit icmp any any
@@ -107,7 +107,7 @@ acl1.platform = "ios"
 print(f"{acl1.platform=}")
 print(acl1)
 print()
-# acl1.platform='ios'
+# acl1.platform="ios"
 # ip access-list extended ACL1
 #   deny tcp any any eq domain
 #   permit icmp any any

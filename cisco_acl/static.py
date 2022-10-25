@@ -1,9 +1,9 @@
 """Static settings"""
 
-DEFAULT_PLATFORM = "ios"
+IOS = "ios"
 MAX_LINE_LENGTH = 100
 SEQUENCE_MAX = 4294967295
-INDENTATION = 2
+INDENTATION = "  "
 
 PLATFORMS = ("ios", "nxos")
 ACTIONS = ("remark", "permit", "deny")

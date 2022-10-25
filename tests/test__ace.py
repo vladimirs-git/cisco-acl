@@ -1,16 +1,24 @@
 """Unittest ace.py"""
-
+import re
+# pylint: disable=too-many-lines
 import unittest
+from ipaddress import IPv4Network
+
+import dictdiffer  # type: ignore
 
 from cisco_acl import Ace, Remark
+from cisco_acl.address import Address
 from tests.helpers_test import (
     DENY_IP,
-    DENY_IP_1,
+    DENY_IP1,
     Helpers,
     PERMIT_IP,
-    PERMIT_IP_1,
-    PERMIT_IP_2,
+    PERMIT_IP1,
+    PERMIT_IP2,
+    PREFIX30,
     REMARK,
+    UUID,
+    WILD30,
 )
 
 
@@ -23,50 +31,50 @@ class Test(Helpers):
     def test_valid__hash__(self):
         """Ace.__hash__()"""
         line = PERMIT_IP
-        ace_o = Ace(line)
-        result = ace_o.__hash__()
+        obj = Ace(line)
+        result = obj.__hash__()
         req = line.__hash__()
         self.assertEqual(result, req, msg=f"{line=}")
 
     def test_valid__eq__(self):
         """Ace.__eq__() __ne__()"""
-        ace_o = Ace(PERMIT_IP_1)
-        for other_o, req, in [
-            (Ace(PERMIT_IP_1), True),
-            (Ace(PERMIT_IP_2), False),
-            (Ace(DENY_IP_1), False),
+        obj1 = Ace(PERMIT_IP1)
+        for obj2, req, in [
+            (Ace(PERMIT_IP1), True),
+            (Ace(PERMIT_IP2), False),
+            (Ace(DENY_IP1), False),
             (Remark(REMARK), False),
-            (PERMIT_IP_1, False),
+            (PERMIT_IP1, False),
         ]:
-            result = ace_o.__eq__(other_o)
-            self.assertEqual(result, req, msg=f"{ace_o=} {other_o=}")
-            result = ace_o.__ne__(other_o)
-            self.assertEqual(result, not req, msg=f"{ace_o=} {other_o=}")
+            result = obj1.__eq__(obj2)
+            self.assertEqual(result, req, msg=f"{obj1=} {obj2=}")
+            result = obj1.__ne__(obj2)
+            self.assertEqual(result, not req, msg=f"{obj1=} {obj2=}")
 
     def test_valid__lt__(self):
         """Ace.__lt__() __le__() __gt__() __ge__()"""
-        for ace_o, other_o, req_lt, req_le, req_gt, req_ge in [
+        for obj1, obj2, req_lt, req_le, req_gt, req_ge in [
             (Ace(PERMIT_IP), Ace(PERMIT_IP), False, True, False, True),
             (Ace(PERMIT_IP), Ace(DENY_IP), False, False, True, True),
-            (Ace(PERMIT_IP_1), Ace(PERMIT_IP_2), True, True, False, False),
-            (Ace(PERMIT_IP_2), Ace(DENY_IP_1), False, False, True, True),
+            (Ace(PERMIT_IP1), Ace(PERMIT_IP2), True, True, False, False),
+            (Ace(PERMIT_IP2), Ace(DENY_IP1), False, False, True, True),
         ]:
-            result = ace_o.__lt__(other_o)
-            self.assertEqual(result, req_lt, msg=f"{ace_o=} {other_o=}")
-            result = ace_o.__le__(other_o)
-            self.assertEqual(result, req_le, msg=f"{ace_o=} {other_o=}")
-            result = ace_o.__gt__(other_o)
-            self.assertEqual(result, req_gt, msg=f"{ace_o=} {other_o=}")
-            result = ace_o.__ge__(other_o)
-            self.assertEqual(result, req_ge, msg=f"{ace_o=} {other_o=}")
+            result = obj1.__lt__(obj2)
+            self.assertEqual(result, req_lt, msg=f"{obj1=} {obj2=}")
+            result = obj1.__le__(obj2)
+            self.assertEqual(result, req_le, msg=f"{obj1=} {obj2=}")
+            result = obj1.__gt__(obj2)
+            self.assertEqual(result, req_gt, msg=f"{obj1=} {obj2=}")
+            result = obj1.__ge__(obj2)
+            self.assertEqual(result, req_ge, msg=f"{obj1=} {obj2=}")
 
     def test_valid__lt__sort(self):
         """Ace.__lt__(), Ace.__le__()"""
         for items in [
             # action
-            [Remark("remark text1"), Remark("remark text2")],
-            [Remark("remark text1"), Ace("permit ip any any")],
-            [Remark("remark text1"), Ace("deny ip any any")],
+            [Remark("remark TEXT"), Remark("remark TEXT2")],
+            [Remark("remark TEXT"), Ace("permit ip any any")],
+            [Remark("remark TEXT"), Ace("deny ip any any")],
             [Ace("deny ip any any"), Ace("permit ip any any")],
             # protocol
             [Ace("permit ip any any"), Ace("permit ahp any any")],
@@ -74,14 +82,14 @@ class Test(Helpers):
             [Ace("permit ip any any"), Ace("permit ip 1.1.1.0 0.0.0.255 any")],
             [Ace("permit ip any any"), Ace("permit ip 1.1.1.0 0.0.0.3 any")],
             [Ace("permit ip any any"), Ace("permit ip host 1.1.1.1 any")],
-            [Ace("permit ip any any"), Ace("permit ip addrgroup NAME any")],
+            [Ace("permit ip any any"), Ace("permit ip object-group NAME any")],
             [Ace("permit ip 1.1.1.0 0.0.0.255 any"), Ace("permit ip 1.1.1.0 0.0.0.3 any")],
             [Ace("permit ip 1.1.1.0 0.0.0.255 any"), Ace("permit ip host 1.1.1.1 any")],
-            [Ace("permit ip 1.1.1.0 0.0.0.255 any"), Ace("permit ip addrgroup NAME any")],
+            [Ace("permit ip 1.1.1.0 0.0.0.255 any"), Ace("permit ip object-group NAME any")],
             [Ace("permit ip 1.1.1.0 0.0.0.3 any"), Ace("permit ip host 1.1.1.1 any")],
-            [Ace("permit ip 1.1.1.0 0.0.0.3 any"), Ace("permit ip addrgroup NAME any")],
-            [Ace("permit ip host 1.1.1.1 any"), Ace("permit ip addrgroup NAME any")],
-            [Ace("permit ip addrgroup NAME1 any"), Ace("permit ip addrgroup NAME2 any")],
+            [Ace("permit ip 1.1.1.0 0.0.0.3 any"), Ace("permit ip object-group NAME any")],
+            [Ace("permit ip host 1.1.1.1 any"), Ace("permit ip object-group NAME any")],
+            [Ace("permit ip object-group NAME1 any"), Ace("permit ip object-group NAME2 any")],
             # srcport
             [Ace("permit tcp any eq 1 any"), Ace("permit tcp any eq 2 any")],
             [Ace("permit tcp any eq 1 any"), Ace("permit tcp any gt 1 any")],
@@ -100,14 +108,14 @@ class Test(Helpers):
             [Ace("permit ip any any"), Ace("permit ip any 1.1.1.0 0.0.0.255")],
             [Ace("permit ip any any"), Ace("permit ip any 1.1.1.0 0.0.0.3")],
             [Ace("permit ip any any"), Ace("permit ip any host 1.1.1.1")],
-            [Ace("permit ip any any"), Ace("permit ip any addrgroup NAME")],
+            [Ace("permit ip any any"), Ace("permit ip any object-group NAME")],
             [Ace("permit ip any 1.1.1.0 0.0.0.255"), Ace("permit ip any 1.1.1.0 0.0.0.3")],
             [Ace("permit ip any 1.1.1.0 0.0.0.255"), Ace("permit ip any host 1.1.1.1")],
-            [Ace("permit ip any 1.1.1.0 0.0.0.255"), Ace("permit ip any addrgroup NAME")],
+            [Ace("permit ip any 1.1.1.0 0.0.0.255"), Ace("permit ip any object-group NAME")],
             [Ace("permit ip any 1.1.1.0 0.0.0.3"), Ace("permit ip any host 1.1.1.1")],
-            [Ace("permit ip any 1.1.1.0 0.0.0.3"), Ace("permit ip any addrgroup NAME")],
-            [Ace("permit ip any host 1.1.1.1"), Ace("permit ip any addrgroup NAME")],
-            [Ace("permit ip any addrgroup NAME1"), Ace("permit ip any addrgroup NAME2")],
+            [Ace("permit ip any 1.1.1.0 0.0.0.3"), Ace("permit ip any object-group NAME")],
+            [Ace("permit ip any host 1.1.1.1"), Ace("permit ip any object-group NAME")],
+            [Ace("permit ip any object-group NAME1"), Ace("permit ip any object-group NAME2")],
             # dstport
             [Ace("permit tcp any any eq 1"), Ace("permit tcp any any eq 2")],
             [Ace("permit tcp any any eq 1"), Ace("permit tcp any any gt 1")],
@@ -133,6 +141,19 @@ class Test(Helpers):
             result = sorted(items)
             self.assertEqual(result, req, msg=f"{items=}")
 
+    def test_valid__repr__(self):
+        """Ace.__repr__()"""
+        for kwargs, req in [
+            (dict(line=PERMIT_IP1, platform="ios", note=""), "Ace(\"1 permit ip any any\")"),
+            (dict(line=PERMIT_IP1, platform="nxos", note="a", protocol_nr=True, port_nr=True),
+             "Ace(\"1 permit 0 any any\", platform=\"nxos\", note=\"a\", "
+             "protocol_nr=True, port_nr=True)"),
+        ]:
+            obj = Ace(**kwargs)
+            result = obj.__repr__()
+            result = self._quotation(result)
+            self.assertEqual(result, req, msg=f"{result=}")
+
     # =========================== property ===========================
 
     def test_valid__line(self):
@@ -140,7 +161,7 @@ class Test(Helpers):
         icmp = "permit icmp any any"
         icmp_pr = "permit 1 any any"
         icmp_d = dict(line=icmp,
-                      sequence="",
+                      sequence=0,
                       action="permit",
                       protocol="icmp",
                       srcaddr="any",
@@ -156,7 +177,7 @@ class Test(Helpers):
         tcp_n = "permit tcp any eq 21 443 object-group NAME neq 514 ack log"
 
         tcp_d = dict(line=tcp,
-                     sequence="",
+                     sequence=0,
                      action="permit",
                      protocol="tcp",
                      srcaddr="any",
@@ -164,14 +185,14 @@ class Test(Helpers):
                      dstaddr="object-group NAME",
                      dstport="neq cmd",
                      option="ack log")
-        tcp_10_d = {**tcp_d, **{"line": tcp_10, "sequence": "10"}}
+        tcp_10_d = {**tcp_d, **{"line": tcp_10, "sequence": 10}}
         tcp_n_d = {**tcp_d,
                    **{"line": tcp_n, "srcport": "eq 21 443", "dstport": "neq 514"}}
 
         udp = "deny udp host 1.1.1.1 lt syslog 2.2.2.0 0.0.0.3 range bootps tftp"
         udp_n = "deny udp host 1.1.1.1 lt 514 2.2.2.0 0.0.0.3 range 67 69"
         udp_d = dict(line=udp,
-                     sequence="",
+                     sequence=0,
                      action="deny",
                      protocol="udp",
                      srcaddr="host 1.1.1.1",
@@ -214,23 +235,18 @@ class Test(Helpers):
             (dict(line=udp, protocol_nr=True, port_nr=True), udp_n_d),
             (dict(line=udp_n, protocol_nr=True, port_nr=True), udp_n_d),
         ]:
-            # getter
-            ace_o = Ace(**kwargs)
-            self._test_attrs(obj=ace_o, req_d=req_d, msg=f"getter {kwargs=}")
-
+            obj = Ace(**kwargs)
+            self._test_attrs(obj=obj, req_d=req_d, msg=f"{kwargs=}")
             # setter
             line = kwargs["line"]
-            ace_o.line = line
-            self._test_attrs(obj=ace_o, req_d=req_d, msg=f"setter {line=}")
-
-        # deleter
-        with self.assertRaises(AttributeError, msg="deleter line"):
-            # noinspection PyPropertyAccess
-            del ace_o.line
+            obj.line = line
+            self._test_attrs(obj=obj, req_d=req_d, msg=f"{line=}")
 
     def test_invalid__line(self):
         """Ace.line"""
         for line, error in [
+            ("permit ip any eq 1 any", ValueError),
+            ("permit ip any any eq 1", ValueError),
             (REMARK, ValueError),
             (f"10 {REMARK}", ValueError),
             ({}, TypeError),
@@ -244,398 +260,956 @@ class Test(Helpers):
         """Ace.port_nr"""
         line_num = "10 permit tcp host 10.0.0.1 range 21 23 10.0.0.0 0.0.0.3 eq 80 443 log"
         line_name = "10 permit tcp host 10.0.0.1 range ftp telnet 10.0.0.0 0.0.0.3 eq www 443 log"
-        ace_o = Ace(line_name)
         for port_nr, req in [
             (True, line_num),
             (False, line_name),
         ]:
-            ace_o.port_nr = port_nr
-            result = ace_o.line
+            before = not port_nr
+            obj = Ace(line=line_name, port_nr=before)
+            obj.port_nr = port_nr
+            result = obj.line
             self.assertEqual(result, req, msg=f"{port_nr=}")
 
     def test_valid__platform(self):
         """Ace.platform"""
-        ios_grp = "deny ip object-group A object-group B"
-        nxos_grp = "deny ip addrgroup A addrgroup B"
-        ios_host = "permit ip host 1.1.1.1 host 2.2.2.2"
-        nxos_host = "permit ip 1.1.1.1/32 2.2.2.2/32"
-        ios_prefix = "permit ip 1.1.1.0 0.0.0.255 2.2.2.0 0.0.0.255"
-        nxos_prefix = "permit ip 1.1.1.0/24 2.2.2.0/24"
-        any_wild = "permit ip 1.1.0.0 0.0.3.3 2.2.0.0 0.0.3.3"
-        any_eq = "permit tcp any eq 1 any neq 3 log"
-        any_gt = "permit tcp any gt 65533 any lt 3 log"
+        prefix00 = "permit ip 0.0.0.0/0 0.0.0.0/0"
+        prefix30 = "permit ip 10.0.0.0/30 10.0.0.0/30"
+        prefix32 = "permit ip 10.0.0.1/32 10.0.0.1/32"
+        wild00 = "permit ip 0.0.0.0 255.255.255.255 0.0.0.0 255.255.255.255"
+        wild30 = "permit ip 10.0.0.0 0.0.0.3 10.0.0.0 0.0.0.3"
+        wild32 = "permit ip 10.0.0.1 0.0.0.0 10.0.0.1 0.0.0.0"
+        wild_3_3 = "permit ip 10.0.0.0 0.0.3.3 10.0.0.0 0.0.3.3"
+        wild_252 = "permit ip 0.0.0.0 255.255.255.252 0.0.0.0 255.255.255.252"
+        host = "permit ip host 10.0.0.1 host 10.0.0.1"
+        any_ = "permit ip any any"
+        ios_addgr = "deny ip object-group A object-group B"
+        cnx_addgr = "deny ip addrgroup A addrgroup B"
+        eq_neq = "permit tcp any eq 1 any neq 3 log"
+        gt_lt = "permit tcp any gt 65533 any lt 3 log"
 
-        for platform, to_platform, line, req_line in [
-            ("ios", "ios", ios_grp, ios_grp),
-            ("ios", "ios", ios_host, ios_host),
-            ("ios", "ios", ios_prefix, ios_prefix),
-            ("ios", "ios", any_wild, any_wild),
-            ("ios", "ios", any_eq, any_eq),
-            ("ios", "ios", any_gt, any_gt),
-
-            ("ios", "nxos", ios_grp, nxos_grp),
-            ("ios", "nxos", ios_host, nxos_host),
-            ("ios", "nxos", ios_prefix, nxos_prefix),
-            ("ios", "nxos", any_wild, any_wild),
-            ("ios", "nxos", any_eq, any_eq),
-            ("ios", "nxos", any_gt, any_gt),
-
-            ("nxos", "ios", nxos_grp, ios_grp),
-            ("nxos", "ios", nxos_host, ios_host),
-            ("nxos", "ios", nxos_prefix, ios_prefix),
-            ("nxos", "ios", any_wild, any_wild),
-            ("nxos", "ios", any_eq, any_eq),
-            ("nxos", "ios", any_gt, any_gt),
-
-            ("nxos", "nxos", nxos_grp, nxos_grp),
-            ("nxos", "nxos", nxos_host, nxos_host),
-            ("nxos", "nxos", nxos_prefix, nxos_prefix),
-            ("nxos", "nxos", any_wild, any_wild),
-            ("nxos", "nxos", any_eq, any_eq),
-            ("nxos", "nxos", any_gt, any_gt),
-
-            ("cnx", "ios", nxos_grp, ios_grp),
-            ("cnx", "ios", nxos_host, ios_host),
-            ("cnx", "ios", nxos_prefix, ios_prefix),
-            ("cnx", "ios", any_wild, any_wild),
-            ("cnx", "ios", any_eq, any_eq),
-            ("cnx", "ios", any_gt, any_gt),
-
-            ("cnx", "nxos", nxos_grp, nxos_grp),
-            ("cnx", "nxos", nxos_host, nxos_host),
-            ("cnx", "nxos", nxos_prefix, nxos_prefix),
-            ("cnx", "nxos", any_wild, any_wild),
-            ("cnx", "nxos", any_eq, any_eq),
-            ("cnx", "nxos", any_gt, any_gt),
+        for platform, platform_new, line, req_new in [
+            # ios to ios
+            ("ios", "ios", wild00, any_),
+            ("ios", "ios", wild30, wild30),
+            ("ios", "ios", wild32, host),
+            ("ios", "ios", wild_3_3, wild_3_3),
+            ("ios", "ios", wild_252, wild_252),
+            ("ios", "ios", host, host),
+            ("ios", "ios", any_, any_),
+            ("ios", "ios", ios_addgr, ios_addgr),
+            ("ios", "ios", eq_neq, eq_neq),
+            ("ios", "ios", gt_lt, gt_lt),
+            # ios to nxos
+            ("ios", "nxos", wild00, any_),
+            ("ios", "nxos", wild30, prefix30),
+            ("ios", "nxos", wild32, prefix32),
+            ("ios", "nxos", wild_3_3, wild_3_3),
+            ("ios", "nxos", wild_252, wild_252),
+            ("ios", "nxos", host, prefix32),
+            ("ios", "nxos", any_, any_),
+            ("ios", "nxos", ios_addgr, cnx_addgr),
+            ("ios", "nxos", eq_neq, eq_neq),
+            ("ios", "nxos", gt_lt, gt_lt),
+            # nxos to nxos
+            ("nxos", "nxos", prefix00, any_),
+            ("nxos", "nxos", prefix30, prefix30),
+            ("nxos", "nxos", prefix32, prefix32),
+            ("nxos", "nxos", wild00, any_),
+            ("nxos", "nxos", wild30, prefix30),
+            ("nxos", "nxos", wild32, prefix32),
+            ("nxos", "nxos", wild_3_3, wild_3_3),
+            ("nxos", "nxos", wild_252, wild_252),
+            ("nxos", "nxos", host, prefix32),
+            ("nxos", "nxos", any_, any_),
+            ("nxos", "nxos", cnx_addgr, cnx_addgr),
+            ("nxos", "nxos", eq_neq, eq_neq),
+            ("nxos", "nxos", gt_lt, gt_lt),
+            # nxos to ios
+            ("nxos", "ios", prefix00, any_),
+            ("nxos", "ios", prefix30, wild30),
+            ("nxos", "ios", prefix32, host),
+            ("nxos", "ios", wild00, any_),
+            ("nxos", "ios", wild30, wild30),
+            ("nxos", "ios", wild32, host),
+            ("nxos", "ios", wild_3_3, wild_3_3),
+            ("nxos", "ios", wild_252, wild_252),
+            ("nxos", "ios", host, host),
+            ("nxos", "ios", any_, any_),
+            ("nxos", "ios", cnx_addgr, ios_addgr),
+            ("nxos", "ios", eq_neq, eq_neq),
+            ("nxos", "ios", gt_lt, gt_lt),
         ]:
-            # getter
-            ace_o = Ace(line, platform=platform)
-            result = ace_o.platform
-            req_ = platform
-            if platform == "cnx":
-                req_ = "nxos"
-            self.assertEqual(result, req_, msg=f"{platform=} {line=}")
+            msg = f"{platform=} {platform_new=} {line=}"
+            obj = Ace(line, platform=platform, max_ncwb=30)
+            result = obj.line
+            self.assertEqual(result, line, msg=msg)
 
-            # setter
-            ace_o.platform = to_platform
-            result = ace_o.platform
-            req_ = to_platform
-            self.assertEqual(result, req_, msg=f"{platform=} {to_platform=} {line=}")
-            result = ace_o.line
-            self.assertEqual(result, req_line, msg=f"{platform=} {to_platform=} {line=}")
+            # platform
+            obj.platform = platform_new
+            result = obj.line
+            self.assertEqual(result, req_new, msg=msg)
 
-        # deleter
-        ace_o = Ace(PERMIT_IP)
-        with self.assertRaises(AttributeError, msg="deleter line"):
-            # noinspection PyPropertyAccess
-            del ace_o.line
+    def test_valid__platform__addrgroup_items(self):
+        """Ace.platform"""
+        ios_addgr = "permit ip object-group A object-group A"
+        cnx_addgr = "permit ip addrgroup A addrgroup A"
+        for platform, line, items, platform_new, req in [
+            ("ios", ios_addgr, [WILD30], "ios", [WILD30]),
+            ("ios", ios_addgr, [WILD30], "cnx", [PREFIX30]),
+            ("cnx", cnx_addgr, [PREFIX30], "cnx", [PREFIX30]),
+            ("cnx", cnx_addgr, [PREFIX30], "ios", [WILD30]),
+        ]:
+            msg = f"{platform=} {line=} {items=} {platform_new=}"
+            obj = Ace(line, platform=platform)
+            obj.srcaddr.items = [Address(s, platform=platform) for s in items]
+            obj.dstaddr.items = [Address(s, platform=platform) for s in items]
+            for item in [*obj.srcaddr.items, *obj.dstaddr.items]:
+                item.uuid = UUID
+
+            obj.platform = platform_new
+            result = [o.line for o in obj.srcaddr.items]
+            self.assertEqual(result, req, msg=msg)
+            result = [o.line for o in obj.dstaddr.items]
+            self.assertEqual(result, req, msg=msg)
+            # uids
+            result_ = [o.uuid for o in obj.srcaddr.items]
+            self.assertEqual(result_, [UUID], msg=msg)
+            result_ = [o.uuid for o in obj.dstaddr.items]
+            self.assertEqual(result_, [UUID], msg=msg)
 
     def test_invalid__platform(self):
         """Ace.platform"""
-        ace_o = Ace(PERMIT_IP)
-        with self.assertRaises(ValueError, msg="platform"):
-            ace_o.platform = "typo"
-        with self.assertRaises(ValueError, msg="platform"):
-            Ace(PERMIT_IP, platform="typo")
+        for platform, platform_new, line, error in [
+            ("ios", "typo", PERMIT_IP, ValueError),
+            ("ios", "nxos", "permit tcp any eq 1 2 any", ValueError),
+            ("ios", "nxos", "permit tcp any any eq 1 2", ValueError),
+        ]:
+            obj = Ace(line, platform=platform)
+            with self.assertRaises(error, msg=f"{platform=} {platform_new=} {line=}"):
+                obj.platform = platform_new
+
+    def test_valid__type(self):
+        """Ace.type"""
+        host_ext = "permit tcp host 10.0.0.1 eq 1 host 10.0.0.2 eq 2 ack log"
+        host_std = "permit host 10.0.0.1"
+        host_ext_ = "permit ip host 10.0.0.1 any"
+        wild_ext = "permit tcp 10.0.0.0 0.0.0.3 eq 1 10.0.0.4 0.0.0.3 eq 2 ack log"
+        wild_std = "permit 10.0.0.0 0.0.0.3"
+        wild_ext_ = "permit ip 10.0.0.0 0.0.0.3 any"
+        for type_, type_new, line, req in [
+            # extended
+            ("extended", "extended", host_ext, host_ext),
+            ("extended", "extended", wild_ext, wild_ext),
+            ("extended", "standard", host_ext, host_std),
+            ("extended", "standard", wild_ext, wild_std),
+            # standard
+            ("standard", "standard", host_std, host_std),
+            ("standard", "standard", wild_std, wild_std),
+            ("standard", "extended", host_std, host_ext_),
+            ("standard", "extended", wild_std, wild_ext_),
+        ]:
+            obj = Ace(line, platform="ios", type=type_)
+            obj.type = type_new
+            result = obj.line
+            self.assertEqual(result, req, msg=f"{type_=} {type_new=} {line=}")
+
+    def test_invalid__type(self):
+        """Ace.type"""
+        addrgroup = "permit ip object-group NAME any"
+
+        for platform, type_, type_new, line, error in [
+            ("nxos", "extended", "standard", PERMIT_IP, ValueError),  # nxos
+            ("ios", "extended", "standard", addrgroup, ValueError),  # addrgroup
+        ]:
+            obj = Ace(line, platform=platform, type=type_)
+            with self.assertRaises(error, msg=f"{platform=} {type_=} {type_new=} {line=}"):
+                obj.type = type_new
 
     # =========================== methods ============================
 
     def test_valid__copy(self):
         """Ace.copy()"""
-        kwargs1 = dict(line=PERMIT_IP, platform="ios", port_nr=True, note="a")
-        kwargs2 = dict(line=DENY_IP, platform="nxos", port_nr=False, note="b")
-        ace_o1 = Ace(**kwargs1)
-        ace_o2 = ace_o1.copy()
-        for arg, value in kwargs2.items():
-            setattr(ace_o1, arg, value)
-        self._test_attrs(ace_o2, kwargs1, msg="ace_o2 copy of ace_o1")
-        self._test_attrs(ace_o1, kwargs2, msg="ace_o1 does not depend on ace_o2")
+        obj1 = Ace(line="10 permit tcp host 10.0.0.1 10.0.0.0 0.0.0.3 eq www 443 log",
+                   platform="ios", note="a", protocol_nr=True, port_nr=True)
+        obj2 = obj1.copy()
 
-    def test_valid__range(self):
-        """Ace.range()"""
-        proto = ["permit 1 any any", "permit 2 any any"]
-        src_tcp_eq = ["permit tcp any eq 20 any", "permit tcp any eq 21 any"]
-        src_tcp_neq = ["permit tcp any neq 20 any", "permit tcp any neq 21 any"]
-        dst_tcp_eq = ["permit tcp any any eq 20", "permit tcp any any eq 21"]
-        dst_tcp_neq = ["permit tcp any any neq 20", "permit tcp any any neq 21"]
-        src_udp_eq = ["permit udp any eq 67 any", "permit udp any eq 68 any"]
-        dst_udp_eq = ["permit udp any any eq 67", "permit udp any any eq 68"]
-        src_combo_eq = ["permit tcp any eq 20 any", "permit tcp any eq 21 any",
-                        "permit tcp any any eq 20", "permit tcp any any eq 21"]
-        src_combo_neq = ["permit tcp any neq 20 any", "permit tcp any neq 21 any",
-                         "permit tcp any neq 1 any eq 20", "permit tcp any neq 1 any eq 21"]
-        for kwargs, line, req in [
-            ({}, "permit ip any any", []),
-            (dict(protocol="1-2"), "permit ip any any", proto),
-            (dict(protocol="1-2"), "permit 0 any any", proto),
-            # tcp
-            (dict(srcport="20-21"), "permit tcp any any", src_tcp_eq),
-            (dict(srcport="20-21"), "permit tcp any eq 1 any", src_tcp_eq),
-            (dict(srcport="20-21"), "permit tcp any neq 1 any", src_tcp_neq),
-            (dict(dstport="20-21"), "permit tcp any any", dst_tcp_eq),
-            (dict(dstport="20-21"), "permit tcp any any eq 1 ", dst_tcp_eq),
-            (dict(dstport="20-21"), "permit tcp any any neq 1 ", dst_tcp_neq),
-            # udp
-            (dict(srcport="67-68"), "permit udp any any", src_udp_eq),
-            (dict(srcport="67-68"), "permit udp any eq 1 any", src_udp_eq),
-            (dict(dstport="67-68"), "permit udp any any", dst_udp_eq),
-            (dict(dstport="67-68"), "permit udp any any eq 1 ", dst_udp_eq),
-            # combo
-            (dict(srcport="20-21", dstport="20,21"), "permit tcp any any", src_combo_eq),
-            (dict(srcport="20-21", dstport="20,21"), "permit tcp any neq 1 any", src_combo_neq),
+        # change obj1 to check obj1 does not depend on obj2
+        new_obj1_kwargs = dict(line="20 deny udp any eq 80 10.0.0.0 0.0.0.255 range 2 3",
+                               note="b", protocol_nr=False, port_nr=False, platform="nxos")
+        for arg, value in new_obj1_kwargs.items():
+            setattr(obj1, arg, value)
+
+        req1_d = dict(line="20 deny udp any eq 80 10.0.0.0/24 range 2 3",
+                      platform="nxos",
+                      sequence=20,
+                      action="deny",
+                      protocol="udp",
+                      srcaddr="any",
+                      srcport="eq 80",
+                      dstaddr="10.0.0.0/24",
+                      dstport="range 2 3",
+                      option="",
+                      protocol_nr=False,
+                      port_nr=False,
+                      note="b")
+        req2_d = dict(line="10 permit tcp host 10.0.0.1 10.0.0.0 0.0.0.3 eq 80 443 log",
+                      platform="ios",
+                      sequence=10,
+                      action="permit",
+                      protocol="tcp",
+                      srcaddr="host 10.0.0.1",
+                      srcport="",
+                      dstaddr="10.0.0.0 0.0.0.3",
+                      dstport="eq 80 443",
+                      option="log",
+                      protocol_nr=True,
+                      port_nr=True,
+                      note="a")
+        self._test_attrs(obj1, req1_d, msg="obj1 does not depend on obj2")
+        self._test_attrs(obj2, req2_d, msg="obj2 copied from obj1")
+
+    def test_valid__data(self):
+        """Ace.data()"""
+        line1 = "10 permit tcp host 10.0.0.1 10.0.0.0 0.0.0.3 eq 80 443 log"
+        kwargs1 = dict(line=line1, platform="ios", note="a")
+        req1 = dict(line="10 permit tcp host 10.0.0.1 10.0.0.0 0.0.0.3 eq www 443 log",
+                    platform="ios",
+                    type="extended",
+                    sequence=10,
+                    action="permit",
+                    protocol=dict(line="tcp",
+                                  platform="ios",
+                                  note="",
+                                  protocol_nr=False,
+                                  has_port=True,
+                                  name="tcp",
+                                  number=6),
+                    srcaddr=dict(line="host 10.0.0.1",
+                                 platform="ios",
+                                 items=[],
+                                 note="",
+                                 max_ncwb=16,
+                                 type="host",
+                                 addrgroup="",
+                                 ipnet=IPv4Network("10.0.0.1/32"),
+                                 prefix="10.0.0.1/32",
+                                 subnet="10.0.0.1 255.255.255.255",
+                                 wildcard="10.0.0.1 0.0.0.0"),
+                    srcport=dict(line="",
+                                 platform="ios",
+                                 protocol="",
+                                 note="",
+                                 port_nr=False,
+                                 items=[],
+                                 operator="",
+                                 ports=[],
+                                 sport=""),
+                    dstaddr=dict(line="10.0.0.0 0.0.0.3",
+                                 platform="ios",
+                                 items=[],
+                                 note="",
+                                 max_ncwb=16,
+                                 type="wildcard",
+                                 addrgroup="",
+                                 ipnet=IPv4Network("10.0.0.0/30"),
+                                 prefix="10.0.0.0/30",
+                                 subnet="10.0.0.0 255.255.255.252",
+                                 wildcard="10.0.0.0 0.0.0.3"),
+                    dstport=dict(line="eq www 443",
+                                 platform="ios",
+                                 protocol="tcp",
+                                 note="",
+                                 port_nr=False,
+                                 items=[80, 443],
+                                 operator="eq",
+                                 ports=[80, 443],
+                                 sport="80,443"),
+                    option=dict(line="log", platform="ios", note="", flags=[], logs=["log"]),
+                    note="a",
+                    max_ncwb=16,
+                    protocol_nr=False,
+                    port_nr=False)
+        req_uuid1 = [("remove", "protocol", [("uuid", "ID1")]),
+                     ("remove", "srcaddr", [("uuid", "ID1")]),
+                     ("remove", "srcport", [("uuid", "ID1")]),
+                     ("remove", "dstaddr", [("uuid", "ID1")]),
+                     ("remove", "dstport", [("uuid", "ID1")]),
+                     ("remove", "option", [("uuid", "ID1")]),
+                     ("remove", "", [("uuid", "ID1")])]
+
+        for kwargs, req_d, req_uuid in [
+            (kwargs1, req1, req_uuid1),
         ]:
-            ace_o = Ace(line=line)
-            results = ace_o.range(protocol_nr=True, port_nr=True, **kwargs)
-            result = [str(o) for o in results]
-            self.assertEqual(result, req, msg=f"{line=} {kwargs=}")
+            obj = Ace(**kwargs)
+            obj.uuid = UUID
+            obj.protocol.uuid = UUID
+            obj.srcaddr.uuid = UUID
+            obj.srcport.uuid = UUID
+            obj.dstaddr.uuid = UUID
+            obj.dstport.uuid = UUID
+            obj.option.uuid = UUID
+            for item in [*obj.srcaddr.items, *obj.dstaddr.items]:
+                item.uuid = UUID
 
-    def test_invalid__range(self):
-        """Ace.range()"""
-        for line, kwargs, error in [
-            ("permit icmp any any", dict(protocol="1-2", srcport="1-2"), ValueError),
-            ("permit icmp any any", dict(protocol="1-2", dstport="1-2"), ValueError),
+            result = obj.data()
+            diff = list(dictdiffer.diff(first=result, second=req_d))
+            self.assertEqual(diff, [], msg=f"{kwargs=}")
+
+            result = obj.data(uuid=True)
+            diff = list(dictdiffer.diff(first=result, second=req_d))
+            self.assertEqual(diff, req_uuid, msg=f"{kwargs=}")
+
+    def test_valid__shadow_of(self):
+        """Ace.shadow_of()"""
+        for top, bottom, req in [
+            # protocol
+            ("permit ip any any", "permit ip any any", True),
+            ("permit ip any any", "permit icmp any any", True),
+            ("permit ip any any", "permit tcp any any", True),
+            ("permit icmp any any", "permit ip any any", False),
+            ("permit icmp any any", "permit icmp any any", True),
+            ("permit icmp any any", "permit tcp any any", False),
+            ("permit icmp any any", "permit tcp any any ack", False),
+            # tcp any
+            ("permit tcp any any", "permit ip any any", False),
+            ("permit tcp any any", "permit icmp any any", False),
+            ("permit tcp any any", "permit tcp any any", True),
+            ("permit tcp any any", "permit tcp any any ack", True),
+            ("permit tcp any any", "permit tcp any eq 1 any", True),
+            ("permit tcp any any", "permit tcp any neq 1 any", True),
+            ("permit tcp any any", "permit tcp any gt 1 any", True),
+            ("permit tcp any any", "permit tcp any lt 2 any", True),
+            ("permit tcp any any", "permit tcp any range 1 2 any", True),
+            ("permit tcp any any", "permit tcp any range 1 2 any", True),
+            ("permit tcp any any", "permit udp any any", False),
+            ("permit tcp any any", "permit udp any any ack", False),
+            ("permit tcp any any", "permit udp any eq 1 any", False),
+            ("permit tcp any any", "permit udp any neq 1 any", False),
+            ("permit tcp any any", "permit udp any gt 1 any", False),
+            ("permit tcp any any", "permit udp any lt 2 any", False),
+            ("permit tcp any any", "permit udp any range 1 2 any", False),
+            # udp any
+            ("permit udp any any", "permit ip any any", False),
+            ("permit udp any any", "permit icmp any any", False),
+            ("permit udp any any", "permit tcp any any", False),
+            ("permit udp any any", "permit tcp any any ack", False),
+            ("permit udp any any", "permit tcp any eq 1 any", False),
+            ("permit udp any any", "permit tcp any neq 1 any", False),
+            ("permit udp any any", "permit tcp any gt 1 any", False),
+            ("permit udp any any", "permit tcp any lt 2 any", False),
+            ("permit udp any any", "permit tcp any range 1 2 any", False),
+            ("permit udp any any", "permit tcp any range 1 2 any", False),
+            ("permit udp any any", "permit udp any any", True),
+            ("permit udp any any", "permit udp any eq 1 any", True),
+            ("permit udp any any", "permit udp any neq 1 any", True),
+            ("permit udp any any", "permit udp any gt 1 any", True),
+            ("permit udp any any", "permit udp any lt 2 any", True),
+            ("permit udp any any", "permit udp any range 1 2 any", True),
+
+            # srcaddr prefix 0.0.0.0/0
+            ("permit ip 0.0.0.0/0 any", "permit ip 0.0.0.0/0 any", True),
+            ("permit ip 0.0.0.0/0 any", "permit ip 10.0.0.0/24 any", True),
+            ("permit ip 0.0.0.0/0 any", "permit ip 10.0.1.0/24 any", True),
+            ("permit ip 0.0.0.0/0 any", "permit ip 0.0.0.0 255.255.255.255 any", True),
+            ("permit ip 0.0.0.0/0 any", "permit ip 10.0.0.0 0.0.0.255 any", True),
+            ("permit ip 0.0.0.0/0 any", "permit ip 10.0.1.0 0.0.0.255 any", True),
+            ("permit ip 0.0.0.0/0 any", "permit ip 10.0.0.0 0.0.0.3 any", True),
+            ("permit ip 0.0.0.0/0 any", "permit ip 10.0.1.0 0.0.0.3 any", True),
+            ("permit ip 0.0.0.0/0 any", "permit ip 10.0.0.1 0.0.0.0 any", True),
+            ("permit ip 0.0.0.0/0 any", "permit ip 10.0.1.1 0.0.0.0 any", True),
+            ("permit ip 0.0.0.0/0 any", "permit ip any any", True),
+            ("permit ip 0.0.0.0/0 any", "permit ip host 10.0.0.1 any", True),
+            ("permit ip 0.0.0.0/0 any", "permit ip host 10.0.1.1 any", True),
+            ("permit ip 0.0.0.0/0 any", "permit ip 10.0.0.0 0.0.3.3 any", True),
+            ("permit ip 0.0.0.0/0 any", "permit ip addrgroup NAME00 any", True),
+            ("permit ip 0.0.0.0/0 any", "permit ip addrgroup NAME24_2 any", True),
+            ("permit ip 0.0.0.0/0 any", "permit ip addrgroup NAME24 any", True),
+            ("permit ip 0.0.0.0/0 any", "permit ip addrgroup NAME30 any", True),
+            ("permit ip 0.0.0.0/0 any", "permit ip addrgroup NAME32 any", True),
+            # srcaddr prefix 10.0.0.0/24
+            ("permit ip 10.0.0.0/24 any", "permit ip 0.0.0.0/0 any", False),
+            ("permit ip 10.0.0.0/24 any", "permit ip 10.0.0.0/24 any", True),
+            ("permit ip 10.0.0.0/24 any", "permit ip 10.0.1.0/24 any", False),
+            ("permit ip 10.0.0.0/24 any", "permit ip 0.0.0.0 255.255.255.255 any", False),
+            ("permit ip 10.0.0.0/24 any", "permit ip 10.0.0.0 0.0.0.255 any", True),
+            ("permit ip 10.0.0.0/24 any", "permit ip 10.0.1.0 0.0.0.255 any", False),
+            ("permit ip 10.0.0.0/24 any", "permit ip 10.0.0.0 0.0.0.3 any", True),
+            ("permit ip 10.0.0.0/24 any", "permit ip 10.0.1.0 0.0.0.3 any", False),
+            ("permit ip 10.0.0.0/24 any", "permit ip 10.0.0.1 0.0.0.0 any", True),
+            ("permit ip 10.0.0.0/24 any", "permit ip 10.0.1.1 0.0.0.0 any", False),
+            ("permit ip 10.0.0.0/24 any", "permit ip any any", False),
+            ("permit ip 10.0.0.0/24 any", "permit ip host 10.0.0.1 any", True),
+            ("permit ip 10.0.0.0/24 any", "permit ip host 10.0.1.1 any", False),
+            ("permit ip 10.0.0.0/24 any", "permit ip 10.0.0.0 0.0.3.3 any", False),
+            ("permit ip 10.0.0.0/24 any", "permit ip addrgroup NAME00 any", False),
+            ("permit ip 10.0.0.0/24 any", "permit ip addrgroup NAME24_2 any", False),
+            ("permit ip 10.0.0.0/24 any", "permit ip addrgroup NAME24 any", True),
+            ("permit ip 10.0.0.0/24 any", "permit ip addrgroup NAME30 any", True),
+            ("permit ip 10.0.0.0/24 any", "permit ip addrgroup NAME32 any", True),
+            # srcaddr prefix 10.0.0.0/24
+            ("permit ip 10.0.0.0/30 any", "permit ip 0.0.0.0/0 any", False),
+            ("permit ip 10.0.0.0/30 any", "permit ip 10.0.0.0/24 any", False),
+            ("permit ip 10.0.0.0/30 any", "permit ip 10.0.1.0/24 any", False),
+            ("permit ip 10.0.0.0/30 any", "permit ip 0.0.0.0 255.255.255.255 any", False),
+            ("permit ip 10.0.0.0/30 any", "permit ip 10.0.0.0 0.0.0.255 any", False),
+            ("permit ip 10.0.0.0/30 any", "permit ip 10.0.1.0 0.0.0.255 any", False),
+            ("permit ip 10.0.0.0/30 any", "permit ip 10.0.0.0 0.0.0.3 any", True),
+            ("permit ip 10.0.0.0/30 any", "permit ip 10.0.1.0 0.0.0.3 any", False),
+            ("permit ip 10.0.0.0/30 any", "permit ip 10.0.0.1 0.0.0.0 any", True),
+            ("permit ip 10.0.0.0/30 any", "permit ip 10.0.1.1 0.0.0.0 any", False),
+            ("permit ip 10.0.0.0/30 any", "permit ip any any", False),
+            ("permit ip 10.0.0.0/30 any", "permit ip host 10.0.0.1 any", True),
+            ("permit ip 10.0.0.0/30 any", "permit ip host 10.0.1.1 any", False),
+            ("permit ip 10.0.0.0/30 any", "permit ip 10.0.0.0 0.0.3.3 any", False),
+            ("permit ip 10.0.0.0/30 any", "permit ip addrgroup NAME00 any", False),
+            ("permit ip 10.0.0.0/30 any", "permit ip addrgroup NAME24_2 any", False),
+            ("permit ip 10.0.0.0/30 any", "permit ip addrgroup NAME24 any", False),
+            ("permit ip 10.0.0.0/30 any", "permit ip addrgroup NAME30 any", True),
+            ("permit ip 10.0.0.0/30 any", "permit ip addrgroup NAME32 any", True),
+            # srcaddr prefix 10.0.0.1/32
+            ("permit ip 10.0.0.1/32 any", "permit ip 0.0.0.0/0 any", False),
+            ("permit ip 10.0.0.1/32 any", "permit ip 10.0.0.0/24 any", False),
+            ("permit ip 10.0.0.1/32 any", "permit ip 10.0.1.0/24 any", False),
+            ("permit ip 10.0.0.1/32 any", "permit ip 0.0.0.0 255.255.255.255 any", False),
+            ("permit ip 10.0.0.1/32 any", "permit ip 10.0.0.0 0.0.0.255 any", False),
+            ("permit ip 10.0.0.1/32 any", "permit ip 10.0.1.0 0.0.0.255 any", False),
+            ("permit ip 10.0.0.1/32 any", "permit ip 10.0.0.0 0.0.0.3 any", False),
+            ("permit ip 10.0.0.1/32 any", "permit ip 10.0.1.0 0.0.0.3 any", False),
+            ("permit ip 10.0.0.1/32 any", "permit ip 10.0.0.1 0.0.0.0 any", True),
+            ("permit ip 10.0.0.1/32 any", "permit ip 10.0.1.1 0.0.0.0 any", False),
+            ("permit ip 10.0.0.1/32 any", "permit ip any any", False),
+            ("permit ip 10.0.0.1/32 any", "permit ip host 10.0.0.1 any", True),
+            ("permit ip 10.0.0.1/32 any", "permit ip host 10.0.1.1 any", False),
+            ("permit ip 10.0.0.1/32 any", "permit ip 10.0.0.0 0.0.3.3 any", False),
+            ("permit ip 10.0.0.1/32 any", "permit ip addrgroup NAME00 any", False),
+            ("permit ip 10.0.0.1/32 any", "permit ip addrgroup NAME24_2 any", False),
+            ("permit ip 10.0.0.1/32 any", "permit ip addrgroup NAME24 any", False),
+            ("permit ip 10.0.0.1/32 any", "permit ip addrgroup NAME30 any", False),
+            ("permit ip 10.0.0.1/32 any", "permit ip addrgroup NAME32 any", True),
+            # srcaddr non-contiguous wildcard
+            ("permit ip 10.0.0.0 0.0.3.3 any", "permit ip 0.0.0.0/0 any", False),
+            ("permit ip 10.0.0.0 0.0.3.3 any", "permit ip 10.0.0.0/24 any", False),
+            ("permit ip 10.0.0.0 0.0.3.3 any", "permit ip 10.0.1.0/24 any", False),
+            ("permit ip 10.0.0.0 0.0.3.3 any", "permit ip 0.0.0.0 255.255.255.255 any", False),
+            ("permit ip 10.0.0.0 0.0.3.3 any", "permit ip 10.0.0.0 0.0.0.255 any", False),
+            ("permit ip 10.0.0.0 0.0.3.3 any", "permit ip 10.0.1.0 0.0.0.255 any", False),
+            ("permit ip 10.0.0.0 0.0.3.3 any", "permit ip 10.0.0.0 0.0.0.3 any", True),
+            ("permit ip 10.0.0.0 0.0.3.3 any", "permit ip 10.0.1.0 0.0.0.3 any", True),
+            ("permit ip 10.0.0.0 0.0.3.3 any", "permit ip 10.0.0.1 0.0.0.0 any", True),
+            ("permit ip 10.0.0.0 0.0.3.3 any", "permit ip 10.0.1.1 0.0.0.0 any", True),
+            ("permit ip 10.0.0.0 0.0.3.3 any", "permit ip any any", False),
+            ("permit ip 10.0.0.0 0.0.3.3 any", "permit ip 10.0.0.0 0.0.3.3 any", True),
+            ("permit ip 10.0.0.0 0.0.3.3 any", "permit ip host 10.0.1.1 any", True),
+            ("permit ip 10.0.0.0 0.0.3.3 any", "permit ip addrgroup NAME00 any", False),
+            ("permit ip 10.0.0.0 0.0.3.3 any", "permit ip addrgroup NAME24_2 any", False),
+            ("permit ip 10.0.0.0 0.0.3.3 any", "permit ip addrgroup NAME24 any", False),
+            ("permit ip 10.0.0.0 0.0.3.3 any", "permit ip addrgroup NAME30 any", True),
+            ("permit ip 10.0.0.0 0.0.3.3 any", "permit ip addrgroup NAME32 any", True),
+            # srcaddr any
+            ("permit ip any any", "permit ip 0.0.0.0/0 any", True),
+            ("permit ip any any", "permit ip 10.0.0.0/24 any", True),
+            ("permit ip any any", "permit ip 10.0.1.0/24 any", True),
+            ("permit ip any any", "permit ip 0.0.0.0 255.255.255.255 any", True),
+            ("permit ip any any", "permit ip 10.0.0.0 0.0.0.255 any", True),
+            ("permit ip any any", "permit ip 10.0.1.0 0.0.0.255 any", True),
+            ("permit ip any any", "permit ip 10.0.0.0 0.0.0.3 any", True),
+            ("permit ip any any", "permit ip 10.0.1.0 0.0.0.3 any", True),
+            ("permit ip any any", "permit ip 10.0.0.1 0.0.0.0 any", True),
+            ("permit ip any any", "permit ip 10.0.1.1 0.0.0.0 any", True),
+            ("permit ip any any", "permit ip any any", True),
+            ("permit ip any any", "permit ip host 10.0.0.1 any", True),
+            ("permit ip any any", "permit ip host 10.0.1.1 any", True),
+            ("permit ip any any", "permit ip 10.0.0.0 0.0.3.3 any", True),
+            ("permit ip any any", "permit ip addrgroup NAME00 any", True),
+            ("permit ip any any", "permit ip addrgroup NAME24_2 any", True),
+            ("permit ip any any", "permit ip addrgroup NAME24 any", True),
+            ("permit ip any any", "permit ip addrgroup NAME30 any", True),
+            ("permit ip any any", "permit ip addrgroup NAME32 any", True),
+            # srcaddr host
+            ("permit ip host 10.0.0.1 any", "permit ip 0.0.0.0/0 any", False),
+            ("permit ip host 10.0.0.1 any", "permit ip 10.0.0.0/24 any", False),
+            ("permit ip host 10.0.0.1 any", "permit ip 10.0.1.0/24 any", False),
+            ("permit ip host 10.0.0.1 any", "permit ip 0.0.0.0 255.255.255.255 any", False),
+            ("permit ip host 10.0.0.1 any", "permit ip 10.0.0.0 0.0.0.255 any", False),
+            ("permit ip host 10.0.0.1 any", "permit ip 10.0.1.0 0.0.0.255 any", False),
+            ("permit ip host 10.0.0.1 any", "permit ip 10.0.0.0 0.0.0.3 any", False),
+            ("permit ip host 10.0.0.1 any", "permit ip 10.0.1.0 0.0.0.3 any", False),
+            ("permit ip host 10.0.0.1 any", "permit ip 10.0.0.1 0.0.0.0 any", True),
+            ("permit ip host 10.0.0.1 any", "permit ip 10.0.1.1 0.0.0.0 any", False),
+            ("permit ip host 10.0.0.1 any", "permit ip any any", False),
+            ("permit ip host 10.0.0.1 any", "permit ip host 10.0.0.1 any", True),
+            ("permit ip host 10.0.0.1 any", "permit ip host 10.0.1.1 any", False),
+            ("permit ip host 10.0.0.1 any", "permit ip 10.0.0.0 0.0.3.3 any", False),
+            ("permit ip host 10.0.0.1 any", "permit ip addrgroup NAME00 any", False),
+            ("permit ip host 10.0.0.1 any", "permit ip addrgroup NAME24_2 any", False),
+            ("permit ip host 10.0.0.1 any", "permit ip addrgroup NAME24 any", False),
+            ("permit ip host 10.0.0.1 any", "permit ip addrgroup NAME30 any", False),
+            ("permit ip host 10.0.0.1 any", "permit ip addrgroup NAME32 any", True),
+            # srcaddr addrgroup 10.0.0.0/24
+            ("permit ip addrgroup NAME24 any", "permit ip 0.0.0.0/0 any", False),
+            ("permit ip addrgroup NAME24 any", "permit ip 10.0.0.0/24 any", True),
+            ("permit ip addrgroup NAME24 any", "permit ip 10.0.1.0/24 any", False),
+            ("permit ip addrgroup NAME24 any", "permit ip 0.0.0.0 255.255.255.255 any", False),
+            ("permit ip addrgroup NAME24 any", "permit ip 10.0.0.0 0.0.0.255 any", True),
+            ("permit ip addrgroup NAME24 any", "permit ip 10.0.1.0 0.0.0.255 any", False),
+            ("permit ip addrgroup NAME24 any", "permit ip 10.0.0.0 0.0.0.3 any", True),
+            ("permit ip addrgroup NAME24 any", "permit ip 10.0.1.0 0.0.0.3 any", False),
+            ("permit ip addrgroup NAME24 any", "permit ip 10.0.0.1 0.0.0.0 any", True),
+            ("permit ip addrgroup NAME24 any", "permit ip 10.0.1.1 0.0.0.0 any", False),
+            ("permit ip addrgroup NAME24 any", "permit ip any any", False),
+            ("permit ip addrgroup NAME24 any", "permit ip host 10.0.0.1 any", True),
+            ("permit ip addrgroup NAME24 any", "permit ip host 10.0.1.1 any", False),
+            ("permit ip addrgroup NAME24 any", "permit ip 10.0.0.0 0.0.3.3 any", False),
+            ("permit ip addrgroup NAME24 any", "permit ip addrgroup NAME00 any", False),
+            ("permit ip addrgroup NAME24 any", "permit ip addrgroup NAME24_2 any", False),
+            ("permit ip addrgroup NAME24 any", "permit ip addrgroup NAME24 any", True),
+            ("permit ip addrgroup NAME24 any", "permit ip addrgroup NAME30 any", True),
+            ("permit ip addrgroup NAME24 any", "permit ip addrgroup NAME32 any", True),
+            # srcaddr addrgroup 10.0.0.0/24, 10.0.1.0/24
+            ("permit ip addrgroup NAME24_2 any", "permit ip 0.0.0.0/0 any", False),
+            ("permit ip addrgroup NAME24_2 any", "permit ip 10.0.0.0/24 any", True),
+            ("permit ip addrgroup NAME24_2 any", "permit ip 10.0.1.0/24 any", True),
+            ("permit ip addrgroup NAME24_2 any", "permit ip 0.0.0.0 255.255.255.255 any", False),
+            ("permit ip addrgroup NAME24_2 any", "permit ip 10.0.0.0 0.0.0.255 any", True),
+            ("permit ip addrgroup NAME24_2 any", "permit ip 10.0.1.0 0.0.0.255 any", True),
+            ("permit ip addrgroup NAME24_2 any", "permit ip 10.0.0.0 0.0.0.3 any", True),
+            ("permit ip addrgroup NAME24_2 any", "permit ip 10.0.1.0 0.0.0.3 any", True),
+            ("permit ip addrgroup NAME24_2 any", "permit ip 10.0.0.1 0.0.0.0 any", True),
+            ("permit ip addrgroup NAME24_2 any", "permit ip 10.0.1.1 0.0.0.0 any", True),
+            ("permit ip addrgroup NAME24_2 any", "permit ip any any", False),
+            ("permit ip addrgroup NAME24_2 any", "permit ip host 10.0.0.1 any", True),
+            ("permit ip addrgroup NAME24_2 any", "permit ip host 10.0.1.1 any", True),
+            ("permit ip addrgroup NAME24_2 any", "permit ip 10.0.0.0 0.0.3.3 any", False),
+            ("permit ip addrgroup NAME24_2 any", "permit ip addrgroup NAME00 any", False),
+            ("permit ip addrgroup NAME24_2 any", "permit ip addrgroup NAME24_2 any", True),
+            ("permit ip addrgroup NAME24_2 any", "permit ip addrgroup NAME24 any", True),
+            ("permit ip addrgroup NAME24_2 any", "permit ip addrgroup NAME30 any", True),
+            ("permit ip addrgroup NAME24_2 any", "permit ip addrgroup NAME32 any", True),
+
+            # dstaddr prefix 0.0.0.0/0
+            ("permit ip any 0.0.0.0/0", "permit ip any 0.0.0.0/0", True),
+            ("permit ip any 0.0.0.0/0", "permit ip any 10.0.0.0/24", True),
+            ("permit ip any 0.0.0.0/0", "permit ip any 10.0.1.0/24", True),
+            ("permit ip any 0.0.0.0/0", "permit ip any 0.0.0.0 255.255.255.255", True),
+            ("permit ip any 0.0.0.0/0", "permit ip any 10.0.0.0 0.0.0.255", True),
+            ("permit ip any 0.0.0.0/0", "permit ip any 10.0.1.0 0.0.0.255", True),
+            ("permit ip any 0.0.0.0/0", "permit ip any 10.0.0.0 0.0.0.3", True),
+            ("permit ip any 0.0.0.0/0", "permit ip any 10.0.1.0 0.0.0.3", True),
+            ("permit ip any 0.0.0.0/0", "permit ip any 10.0.0.1 0.0.0.0", True),
+            ("permit ip any 0.0.0.0/0", "permit ip any 10.0.1.1 0.0.0.0", True),
+            ("permit ip any 0.0.0.0/0", "permit ip any 10.0.0.0 0.0.3.3", True),
+            ("permit ip any 0.0.0.0/0", "permit ip any any", True),
+            ("permit ip any 0.0.0.0/0", "permit ip any host 10.0.0.1", True),
+            ("permit ip any 0.0.0.0/0", "permit ip any host 10.0.1.1", True),
+            ("permit ip any 0.0.0.0/0", "permit ip any addrgroup NAME00", True),
+            ("permit ip any 0.0.0.0/0", "permit ip any addrgroup NAME24_2", True),
+            ("permit ip any 0.0.0.0/0", "permit ip any addrgroup NAME24", True),
+            ("permit ip any 0.0.0.0/0", "permit ip any addrgroup NAME30", True),
+            ("permit ip any 0.0.0.0/0", "permit ip any addrgroup NAME32", True),
+            # dstaddr prefix 10.0.0.0/24
+            ("permit ip any 10.0.0.0/24", "permit ip any 0.0.0.0/0", False),
+            ("permit ip any 10.0.0.0/24", "permit ip any 10.0.0.0/24", True),
+            ("permit ip any 10.0.0.0/24", "permit ip any 10.0.1.0/24", False),
+            ("permit ip any 10.0.0.0/24", "permit ip any 0.0.0.0 255.255.255.255", False),
+            ("permit ip any 10.0.0.0/24", "permit ip any 10.0.0.0 0.0.0.255", True),
+            ("permit ip any 10.0.0.0/24", "permit ip any 10.0.1.0 0.0.0.255", False),
+            ("permit ip any 10.0.0.0/24", "permit ip any 10.0.0.0 0.0.0.3", True),
+            ("permit ip any 10.0.0.0/24", "permit ip any 10.0.1.0 0.0.0.3", False),
+            ("permit ip any 10.0.0.0/24", "permit ip any 10.0.0.1 0.0.0.0", True),
+            ("permit ip any 10.0.0.0/24", "permit ip any 10.0.1.1 0.0.0.0", False),
+            ("permit ip any 10.0.0.0/24", "permit ip any 10.0.0.0 0.0.3.3", False),
+            ("permit ip any 10.0.0.0/24", "permit ip any any", False),
+            ("permit ip any 10.0.0.0/24", "permit ip any host 10.0.0.1", True),
+            ("permit ip any 10.0.0.0/24", "permit ip any host 10.0.1.1", False),
+            ("permit ip any 10.0.0.0/24", "permit ip any addrgroup NAME00", False),
+            ("permit ip any 10.0.0.0/24", "permit ip any addrgroup NAME24_2", False),
+            ("permit ip any 10.0.0.0/24", "permit ip any addrgroup NAME24", True),
+            ("permit ip any 10.0.0.0/24", "permit ip any addrgroup NAME30", True),
+            ("permit ip any 10.0.0.0/24", "permit ip any addrgroup NAME32", True),
+            # dstaddr prefix 10.0.0.0/24
+            ("permit ip any 10.0.0.0/30", "permit ip any 0.0.0.0/0", False),
+            ("permit ip any 10.0.0.0/30", "permit ip any 10.0.0.0/24", False),
+            ("permit ip any 10.0.0.0/30", "permit ip any 10.0.1.0/24", False),
+            ("permit ip any 10.0.0.0/30", "permit ip any 0.0.0.0 255.255.255.255", False),
+            ("permit ip any 10.0.0.0/30", "permit ip any 10.0.0.0 0.0.0.255", False),
+            ("permit ip any 10.0.0.0/30", "permit ip any 10.0.1.0 0.0.0.255", False),
+            ("permit ip any 10.0.0.0/30", "permit ip any 10.0.0.0 0.0.0.3", True),
+            ("permit ip any 10.0.0.0/30", "permit ip any 10.0.1.0 0.0.0.3", False),
+            ("permit ip any 10.0.0.0/30", "permit ip any 10.0.0.1 0.0.0.0", True),
+            ("permit ip any 10.0.0.0/30", "permit ip any 10.0.1.1 0.0.0.0", False),
+            ("permit ip any 10.0.0.0/30", "permit ip any 10.0.0.0 0.0.3.3", False),
+            ("permit ip any 10.0.0.0/30", "permit ip any any", False),
+            ("permit ip any 10.0.0.0/30", "permit ip any host 10.0.0.1", True),
+            ("permit ip any 10.0.0.0/30", "permit ip any host 10.0.1.1", False),
+            ("permit ip any 10.0.0.0/30", "permit ip any addrgroup NAME00", False),
+            ("permit ip any 10.0.0.0/30", "permit ip any addrgroup NAME24_2", False),
+            ("permit ip any 10.0.0.0/30", "permit ip any addrgroup NAME24", False),
+            ("permit ip any 10.0.0.0/30", "permit ip any addrgroup NAME30", True),
+            ("permit ip any 10.0.0.0/30", "permit ip any addrgroup NAME32", True),
+            # dstaddr prefix 10.0.0.1/32
+            ("permit ip any 10.0.0.1/32", "permit ip any 0.0.0.0/0", False),
+            ("permit ip any 10.0.0.1/32", "permit ip any 10.0.0.0/24", False),
+            ("permit ip any 10.0.0.1/32", "permit ip any 10.0.1.0/24", False),
+            ("permit ip any 10.0.0.1/32", "permit ip any 0.0.0.0 255.255.255.255", False),
+            ("permit ip any 10.0.0.1/32", "permit ip any 10.0.0.0 0.0.0.255", False),
+            ("permit ip any 10.0.0.1/32", "permit ip any 10.0.1.0 0.0.0.255", False),
+            ("permit ip any 10.0.0.1/32", "permit ip any 10.0.0.0 0.0.0.3", False),
+            ("permit ip any 10.0.0.1/32", "permit ip any 10.0.1.0 0.0.0.3", False),
+            ("permit ip any 10.0.0.1/32", "permit ip any 10.0.0.1 0.0.0.0", True),
+            ("permit ip any 10.0.0.1/32", "permit ip any 10.0.1.1 0.0.0.0", False),
+            ("permit ip any 10.0.0.1/32", "permit ip any 10.0.0.0 0.0.3.3", False),
+            ("permit ip any 10.0.0.1/32", "permit ip any any", False),
+            ("permit ip any 10.0.0.1/32", "permit ip any host 10.0.0.1", True),
+            ("permit ip any 10.0.0.1/32", "permit ip any host 10.0.1.1", False),
+            ("permit ip any 10.0.0.1/32", "permit ip any addrgroup NAME00", False),
+            ("permit ip any 10.0.0.1/32", "permit ip any addrgroup NAME24_2", False),
+            ("permit ip any 10.0.0.1/32", "permit ip any addrgroup NAME24", False),
+            ("permit ip any 10.0.0.1/32", "permit ip any addrgroup NAME30", False),
+            ("permit ip any 10.0.0.1/32", "permit ip any addrgroup NAME32", True),
+            # dstaddr any
+            ("permit ip any any", "permit ip any 0.0.0.0/0", True),
+            ("permit ip any any", "permit ip any 10.0.0.0/24", True),
+            ("permit ip any any", "permit ip any 10.0.1.0/24", True),
+            ("permit ip any any", "permit ip any 0.0.0.0 255.255.255.255", True),
+            ("permit ip any any", "permit ip any 10.0.0.0 0.0.0.255", True),
+            ("permit ip any any", "permit ip any 10.0.1.0 0.0.0.255", True),
+            ("permit ip any any", "permit ip any 10.0.0.0 0.0.0.3", True),
+            ("permit ip any any", "permit ip any 10.0.1.0 0.0.0.3", True),
+            ("permit ip any any", "permit ip any 10.0.0.1 0.0.0.0", True),
+            ("permit ip any any", "permit ip any 10.0.1.1 0.0.0.0", True),
+            ("permit ip any any", "permit ip any 10.0.0.0 0.0.3.3", True),
+            ("permit ip any any", "permit ip any any", True),
+            ("permit ip any any", "permit ip any host 10.0.0.1", True),
+            ("permit ip any any", "permit ip any host 10.0.1.1", True),
+            ("permit ip any any", "permit ip any addrgroup NAME00", True),
+            ("permit ip any any", "permit ip any addrgroup NAME24_2", True),
+            ("permit ip any any", "permit ip any addrgroup NAME24", True),
+            ("permit ip any any", "permit ip any addrgroup NAME30", True),
+            ("permit ip any any", "permit ip any addrgroup NAME32", True),
+            # dstaddr host
+            ("permit ip any host 10.0.0.1", "permit ip any 0.0.0.0/0", False),
+            ("permit ip any host 10.0.0.1", "permit ip any 10.0.0.0/24", False),
+            ("permit ip any host 10.0.0.1", "permit ip any 10.0.1.0/24", False),
+            ("permit ip any host 10.0.0.1", "permit ip any 0.0.0.0 255.255.255.255", False),
+            ("permit ip any host 10.0.0.1", "permit ip any 10.0.0.0 0.0.0.255", False),
+            ("permit ip any host 10.0.0.1", "permit ip any 10.0.1.0 0.0.0.255", False),
+            ("permit ip any host 10.0.0.1", "permit ip any 10.0.0.0 0.0.0.3", False),
+            ("permit ip any host 10.0.0.1", "permit ip any 10.0.1.0 0.0.0.3", False),
+            ("permit ip any host 10.0.0.1", "permit ip any 10.0.0.1 0.0.0.0", True),
+            ("permit ip any host 10.0.0.1", "permit ip any 10.0.1.1 0.0.0.0", False),
+            ("permit ip any host 10.0.0.1", "permit ip any 10.0.0.0 0.0.3.3", False),
+            ("permit ip any host 10.0.0.1", "permit ip any any", False),
+            ("permit ip any host 10.0.0.1", "permit ip any host 10.0.0.1", True),
+            ("permit ip any host 10.0.0.1", "permit ip any host 10.0.1.1", False),
+            ("permit ip any host 10.0.0.1", "permit ip any addrgroup NAME00", False),
+            ("permit ip any host 10.0.0.1", "permit ip any addrgroup NAME24_2", False),
+            ("permit ip any host 10.0.0.1", "permit ip any addrgroup NAME24", False),
+            ("permit ip any host 10.0.0.1", "permit ip any addrgroup NAME30", False),
+            ("permit ip any host 10.0.0.1", "permit ip any addrgroup NAME32", True),
+            # dstaddr non-contiguous wildcard
+            ("permit ip any 10.0.0.0 0.0.3.3", "permit ip any 0.0.0.0/0", False),
+            ("permit ip any 10.0.0.0 0.0.3.3", "permit ip any 10.0.0.0/24", False),
+            ("permit ip any 10.0.0.0 0.0.3.3", "permit ip any 10.0.1.0/24", False),
+            ("permit ip any 10.0.0.0 0.0.3.3", "permit ip any 0.0.0.0 255.255.255.255", False),
+            ("permit ip any 10.0.0.0 0.0.3.3", "permit ip any 10.0.0.0 0.0.0.255", False),
+            ("permit ip any 10.0.0.0 0.0.3.3", "permit ip any 10.0.1.0 0.0.0.255", False),
+            ("permit ip any 10.0.0.0 0.0.3.3", "permit ip any 10.0.0.0 0.0.0.3", True),
+            ("permit ip any 10.0.0.0 0.0.3.3", "permit ip any 10.0.1.0 0.0.0.3", True),
+            ("permit ip any 10.0.0.0 0.0.3.3", "permit ip any 10.0.0.1 0.0.0.0", True),
+            ("permit ip any 10.0.0.0 0.0.3.3", "permit ip any 10.0.1.1 0.0.0.0", True),
+            ("permit ip any 10.0.0.0 0.0.3.3", "permit ip any any", False),
+            ("permit ip any 10.0.0.0 0.0.3.3", "permit ip any 10.0.0.0 0.0.3.3", True),
+            ("permit ip any 10.0.0.0 0.0.3.3", "permit ip any host 10.0.1.1", True),
+            ("permit ip any 10.0.0.0 0.0.3.3", "permit ip any addrgroup NAME00", False),
+            ("permit ip any 10.0.0.0 0.0.3.3", "permit ip any addrgroup NAME24_2", False),
+            ("permit ip any 10.0.0.0 0.0.3.3", "permit ip any addrgroup NAME24", False),
+            ("permit ip any 10.0.0.0 0.0.3.3", "permit ip any addrgroup NAME30", True),
+            ("permit ip any 10.0.0.0 0.0.3.3", "permit ip any addrgroup NAME32", True),
+
+            # srcport any
+            ("permit tcp any any", "permit tcp any any", True),
+            ("permit tcp any any", "permit tcp any eq 1 any", True),
+            ("permit tcp any any", "permit tcp any eq 2 any", True),
+            ("permit tcp any any", "permit tcp any neq 1 any", True),
+            ("permit tcp any any", "permit tcp any neq 2 any", True),
+            ("permit tcp any any", "permit tcp any gt 1 any", True),
+            ("permit tcp any any", "permit tcp any gt 2 any", True),
+            ("permit tcp any any", "permit tcp any lt 2 any", True),
+            ("permit tcp any any", "permit tcp any lt 3 any", True),
+            ("permit tcp any any", "permit tcp any range 1 2 any", True),
+            ("permit tcp any any", "permit tcp any range 3 4 any", True),
+            # srcport eq
+            ("permit tcp any eq 2 any", "permit tcp any any", False),
+            ("permit tcp any eq 2 any", "permit tcp any eq 1 any", False),
+            ("permit tcp any eq 2 any", "permit tcp any eq 2 any", True),
+            ("permit tcp any eq 2 any", "permit tcp any neq 1 any", False),
+            ("permit tcp any eq 2 any", "permit tcp any neq 2 any", False),
+            ("permit tcp any eq 2 any", "permit tcp any gt 1 any", False),
+            ("permit tcp any eq 2 any", "permit tcp any gt 2 any", False),
+            ("permit tcp any eq 2 any", "permit tcp any lt 2 any", False),
+            ("permit tcp any eq 2 any", "permit tcp any lt 3 any", False),
+            ("permit tcp any eq 2 any", "permit tcp any range 1 2 any", False),
+            ("permit tcp any eq 2 any", "permit tcp any range 3 4 any", False),
+            # srcport neq
+            ("permit tcp any neq 2 any", "permit tcp any any", False),
+            ("permit tcp any neq 2 any", "permit tcp any eq 1 any", True),
+            ("permit tcp any neq 2 any", "permit tcp any eq 2 any", False),
+            ("permit tcp any neq 2 any", "permit tcp any neq 1 any", False),
+            ("permit tcp any neq 2 any", "permit tcp any neq 2 any", True),
+            ("permit tcp any neq 2 any", "permit tcp any gt 1 any", False),
+            ("permit tcp any neq 2 any", "permit tcp any gt 2 any", True),
+            ("permit tcp any neq 2 any", "permit tcp any lt 2 any", True),
+            ("permit tcp any neq 2 any", "permit tcp any lt 3 any", False),
+            ("permit tcp any neq 2 any", "permit tcp any range 1 2 any", False),
+            ("permit tcp any neq 2 any", "permit tcp any range 3 4 any", True),
+            # srcport gt
+            ("permit tcp any gt 2 any", "permit tcp any any", False),
+            ("permit tcp any gt 2 any", "permit tcp any eq 1 any", False),
+            ("permit tcp any gt 2 any", "permit tcp any eq 2 any", False),
+            ("permit tcp any gt 2 any", "permit tcp any neq 1 any", False),
+            ("permit tcp any gt 2 any", "permit tcp any neq 2 any", False),
+            ("permit tcp any gt 2 any", "permit tcp any gt 1 any", False),
+            ("permit tcp any gt 2 any", "permit tcp any gt 2 any", True),
+            ("permit tcp any gt 2 any", "permit tcp any lt 2 any", False),
+            ("permit tcp any gt 2 any", "permit tcp any lt 3 any", False),
+            ("permit tcp any gt 2 any", "permit tcp any range 1 2 any", False),
+            ("permit tcp any gt 2 any", "permit tcp any range 3 4 any", True),
+            # srcport lt
+            ("permit tcp any lt 2 any", "permit tcp any any", False),
+            ("permit tcp any lt 2 any", "permit tcp any eq 1 any", True),
+            ("permit tcp any lt 2 any", "permit tcp any eq 2 any", False),
+            ("permit tcp any lt 2 any", "permit tcp any neq 1 any", False),
+            ("permit tcp any lt 2 any", "permit tcp any neq 2 any", False),
+            ("permit tcp any lt 2 any", "permit tcp any gt 1 any", False),
+            ("permit tcp any lt 2 any", "permit tcp any gt 2 any", False),
+            ("permit tcp any lt 2 any", "permit tcp any lt 2 any", True),
+            ("permit tcp any lt 2 any", "permit tcp any lt 3 any", False),
+            ("permit tcp any lt 2 any", "permit tcp any range 1 2 any", False),
+            ("permit tcp any lt 2 any", "permit tcp any range 3 4 any", False),
+            # srcport range
+            ("permit tcp any range 1 2 any", "permit tcp any any", False),
+            ("permit tcp any range 1 2 any", "permit tcp any eq 1 any", True),
+            ("permit tcp any range 1 2 any", "permit tcp any eq 2 any", True),
+            ("permit tcp any range 1 2 any", "permit tcp any neq 1 any", False),
+            ("permit tcp any range 1 2 any", "permit tcp any neq 2 any", False),
+            ("permit tcp any range 1 2 any", "permit tcp any gt 1 any", False),
+            ("permit tcp any range 1 2 any", "permit tcp any gt 2 any", False),
+            ("permit tcp any range 1 2 any", "permit tcp any lt 2 any", True),
+            ("permit tcp any range 1 2 any", "permit tcp any lt 3 any", True),
+            ("permit tcp any range 1 2 any", "permit tcp any range 1 2 any", True),
+            ("permit tcp any range 1 2 any", "permit tcp any range 3 4 any", False),
+            ("permit tcp any range 1 2 any", "permit tcp any range 2 3 any", False),
+            # dstport any
+            ("permit tcp any any", "permit tcp any any", True),
+            ("permit tcp any any", "permit tcp any any eq 1", True),
+            ("permit tcp any any", "permit tcp any any eq 2", True),
+            ("permit tcp any any", "permit tcp any any neq 1", True),
+            ("permit tcp any any", "permit tcp any any neq 2", True),
+            ("permit tcp any any", "permit tcp any any gt 1", True),
+            ("permit tcp any any", "permit tcp any any gt 2", True),
+            ("permit tcp any any", "permit tcp any any lt 2", True),
+            ("permit tcp any any", "permit tcp any any lt 3", True),
+            ("permit tcp any any", "permit tcp any any range 1 2", True),
+            ("permit tcp any any", "permit tcp any any range 3 4", True),
+            # dstport eq
+            ("permit tcp any any eq 2", "permit tcp any any", False),
+            ("permit tcp any any eq 2", "permit tcp any any eq 1", False),
+            ("permit tcp any any eq 2", "permit tcp any any eq 2", True),
+            ("permit tcp any any eq 2", "permit tcp any any neq 1", False),
+            ("permit tcp any any eq 2", "permit tcp any any neq 2", False),
+            ("permit tcp any any eq 2", "permit tcp any any gt 1", False),
+            ("permit tcp any any eq 2", "permit tcp any any gt 2", False),
+            ("permit tcp any any eq 2", "permit tcp any any lt 2", False),
+            ("permit tcp any any eq 2", "permit tcp any any lt 3", False),
+            ("permit tcp any any eq 2", "permit tcp any any range 1 2", False),
+            ("permit tcp any any eq 2", "permit tcp any any range 3 4", False),
+            # dstport neq
+            ("permit tcp any any neq 2", "permit tcp any any", False),
+            ("permit tcp any any neq 2", "permit tcp any any eq 1", True),
+            ("permit tcp any any neq 2", "permit tcp any any eq 2", False),
+            ("permit tcp any any neq 2", "permit tcp any any neq 1", False),
+            ("permit tcp any any neq 2", "permit tcp any any neq 2", True),
+            ("permit tcp any any neq 2", "permit tcp any any gt 1", False),
+            ("permit tcp any any neq 2", "permit tcp any any gt 2", True),
+            ("permit tcp any any neq 2", "permit tcp any any lt 2", True),
+            ("permit tcp any any neq 2", "permit tcp any any lt 3", False),
+            ("permit tcp any any neq 2", "permit tcp any any range 1 2", False),
+            ("permit tcp any any neq 2", "permit tcp any any range 3 4", True),
+            # dstport gt
+            ("permit tcp any any gt 2", "permit tcp any any", False),
+            ("permit tcp any any gt 2", "permit tcp any any eq 1", False),
+            ("permit tcp any any gt 2", "permit tcp any any eq 2", False),
+            ("permit tcp any any gt 2", "permit tcp any any neq 1", False),
+            ("permit tcp any any gt 2", "permit tcp any any neq 2", False),
+            ("permit tcp any any gt 2", "permit tcp any any gt 1", False),
+            ("permit tcp any any gt 2", "permit tcp any any gt 2", True),
+            ("permit tcp any any gt 2", "permit tcp any any lt 2", False),
+            ("permit tcp any any gt 2", "permit tcp any any lt 3", False),
+            ("permit tcp any any gt 2", "permit tcp any any range 1 2", False),
+            ("permit tcp any any gt 2", "permit tcp any any range 3 4", True),
+            # dstport lt
+            ("permit tcp any any lt 2", "permit tcp any any", False),
+            ("permit tcp any any lt 2", "permit tcp any any eq 1", True),
+            ("permit tcp any any lt 2", "permit tcp any any eq 2", False),
+            ("permit tcp any any lt 2", "permit tcp any any neq 1", False),
+            ("permit tcp any any lt 2", "permit tcp any any neq 2", False),
+            ("permit tcp any any lt 2", "permit tcp any any gt 1", False),
+            ("permit tcp any any lt 2", "permit tcp any any gt 2", False),
+            ("permit tcp any any lt 2", "permit tcp any any lt 2", True),
+            ("permit tcp any any lt 2", "permit tcp any any lt 3", False),
+            ("permit tcp any any lt 2", "permit tcp any any range 1 2", False),
+            ("permit tcp any any lt 2", "permit tcp any any range 3 4", False),
+            # dstport range
+            ("permit tcp any any range 1 2", "permit tcp any any", False),
+            ("permit tcp any any range 1 2", "permit tcp any any eq 1", True),
+            ("permit tcp any any range 1 2", "permit tcp any any eq 2", True),
+            ("permit tcp any any range 1 2", "permit tcp any any neq 1", False),
+            ("permit tcp any any range 1 2", "permit tcp any any neq 2", False),
+            ("permit tcp any any range 1 2", "permit tcp any any gt 1", False),
+            ("permit tcp any any range 1 2", "permit tcp any any gt 2", False),
+            ("permit tcp any any range 1 2", "permit tcp any any lt 2", True),
+            ("permit tcp any any range 1 2", "permit tcp any any lt 3", True),
+            ("permit tcp any any range 1 2", "permit tcp any any range 1 2", True),
+            ("permit tcp any any range 1 2", "permit tcp any any range 3 4", False),
+            ("permit tcp any any range 1 2", "permit tcp any any range 2 3", False),
+            # option
+            ("permit tcp any any", "permit tcp any any", True),
+            ("permit tcp any any", "permit tcp any any syn", True),
+            ("permit tcp any any", "permit tcp any any syn log", True),
+            ("permit tcp any any", "permit tcp any any ack", True),
+            # option syn
+            ("permit tcp any any syn", "permit tcp any any", False),
+            ("permit tcp any any syn", "permit tcp any any syn", True),
+            ("permit tcp any any syn", "permit tcp any any syn log", True),
+            ("permit tcp any any syn", "permit tcp any any ack", False),
+            # option syn log
+            ("permit tcp any any syn log", "permit tcp any any", False),
+            ("permit tcp any any syn log", "permit tcp any any syn", True),
+            ("permit tcp any any syn log", "permit tcp any any syn log", True),
+            ("permit tcp any any syn log", "permit tcp any any ack", False),
+            # option ack
+            ("permit tcp any any ack", "permit tcp any any", False),
+            ("permit tcp any any ack", "permit tcp any any syn", False),
+            ("permit tcp any any ack", "permit tcp any any syn log", False),
+            ("permit tcp any any ack", "permit tcp any any ack", True),
         ]:
-            ace_o = Ace(line=line, port_nr=True)
-            with self.assertRaises(error, msg=f"{line=} {kwargs=}"):
-                ace_o.range(**kwargs)
+            top_o = Ace(top, platform="nxos")
+            bottom_o = Ace(bottom, platform="nxos")
+            for addr_o in [top_o.srcaddr, top_o.dstaddr, bottom_o.srcaddr, bottom_o.dstaddr]:
+                if addr_o.addrgroup == "NAME00":
+                    addr_o.items.append(Address("0.0.0.0/0", platform="nxos"))
+                elif addr_o.addrgroup == "NAME24_2":
+                    addr_o.items.extend([Address("10.0.0.0/24", platform="nxos"),
+                                         Address("10.0.1.0/24", platform="nxos")])
+                elif addr_o.addrgroup == "NAME24":
+                    addr_o.items.append(Address("10.0.0.0/24", platform="nxos"))
+                elif addr_o.addrgroup == "NAME30":
+                    addr_o.items.append(Address("10.0.0.0/30", platform="nxos"))
+                elif addr_o.addrgroup == "NAME32":
+                    addr_o.items.append(Address("10.0.0.1/32", platform="nxos"))
 
-    def test_valid__rule(self):
-        """Ace.rule()"""
-        allow_ip = dict(action="allow")
-        allow_tcp = dict(
-            action="allow",
-            srcaddrs=["10.0.0.1/32"],
-            dstaddrs=["10.0.0.0/30"],
-            protocols=["tcp"],
-            tcp_srcports=[1, 2, 3],
-            tcp_dstports=[80, 443],
-            udp_srcports=[],
-            udp_dstports=[],
-            options=["log"],
-        )
-        deny_udp = dict(
-            action="deny",
-            srcaddrs=[],
-            dstaddrs=["0.0.0.0/0"],
-            protocols=["udp"],
-            tcp_srcports=[],
-            tcp_dstports=[],
-            udp_srcports=[1],
-            udp_dstports=[2],
-            options=[],
-        )
-        allow_group = dict(
-            action="allow",
-            srcaddrs=["10.0.0.1/32", "10.0.0.2/32"],
-            dstaddrs=["10.0.0.0/30", "10.0.0.4/30"],
-            protocols=["icmp", "tcp", "udp"],
-            tcp_srcports=[1, 2],
-            tcp_dstports=[3, 4],
-            udp_srcports=[5, 6],
-            udp_dstports=[7, 8],
-            options=["log"],
-        )
-        permit_ip = ["permit ip any any"]
-        permit_tcp_ios = ["permit tcp host 10.0.0.1 eq 1 2 3 10.0.0.0 0.0.0.3 eq www 443 log"]
-        permit_tcp_nxos = [
-            "permit tcp 10.0.0.1/32 eq 1 10.0.0.0/30 eq www log",
-            "permit tcp 10.0.0.1/32 eq 1 10.0.0.0/30 eq 443 log",
-            "permit tcp 10.0.0.1/32 eq 2 10.0.0.0/30 eq www log",
-            "permit tcp 10.0.0.1/32 eq 2 10.0.0.0/30 eq 443 log",
-            "permit tcp 10.0.0.1/32 eq 3 10.0.0.0/30 eq www log",
-            "permit tcp 10.0.0.1/32 eq 3 10.0.0.0/30 eq 443 log",
-        ]
-        deny_udp_ = ["deny udp any eq 1 any eq 2"]
-        permit_group_ios = [
-            "permit icmp host 10.0.0.1 10.0.0.0 0.0.0.3 log",
-            "permit icmp host 10.0.0.1 10.0.0.4 0.0.0.3 log",
-            "permit icmp host 10.0.0.2 10.0.0.0 0.0.0.3 log",
-            "permit icmp host 10.0.0.2 10.0.0.4 0.0.0.3 log",
-            "permit tcp host 10.0.0.1 eq 1 2 10.0.0.0 0.0.0.3 eq 3 4 log",
-            "permit tcp host 10.0.0.1 eq 1 2 10.0.0.4 0.0.0.3 eq 3 4 log",
-            "permit tcp host 10.0.0.2 eq 1 2 10.0.0.0 0.0.0.3 eq 3 4 log",
-            "permit tcp host 10.0.0.2 eq 1 2 10.0.0.4 0.0.0.3 eq 3 4 log",
-            "permit udp host 10.0.0.1 eq 5 6 10.0.0.0 0.0.0.3 eq echo 8 log",
-            "permit udp host 10.0.0.1 eq 5 6 10.0.0.4 0.0.0.3 eq echo 8 log",
-            "permit udp host 10.0.0.2 eq 5 6 10.0.0.0 0.0.0.3 eq echo 8 log",
-            "permit udp host 10.0.0.2 eq 5 6 10.0.0.4 0.0.0.3 eq echo 8 log",
-        ]
-        permit_group_nxos = [
-            "permit icmp 10.0.0.1/32 10.0.0.0/30 log",
-            "permit icmp 10.0.0.1/32 10.0.0.4/30 log",
-            "permit icmp 10.0.0.2/32 10.0.0.0/30 log",
-            "permit icmp 10.0.0.2/32 10.0.0.4/30 log",
+            result = bottom_o.shadow_of(top_o)
+            self.assertEqual(result, req, msg=f"{top=} {bottom=}")
 
-            "permit tcp 10.0.0.1/32 eq 1 10.0.0.0/30 eq 3 log",
-            "permit tcp 10.0.0.1/32 eq 1 10.0.0.0/30 eq 4 log",
-            "permit tcp 10.0.0.1/32 eq 1 10.0.0.4/30 eq 3 log",
-            "permit tcp 10.0.0.1/32 eq 1 10.0.0.4/30 eq 4 log",
-            "permit tcp 10.0.0.1/32 eq 2 10.0.0.0/30 eq 3 log",
-            "permit tcp 10.0.0.1/32 eq 2 10.0.0.0/30 eq 4 log",
-            "permit tcp 10.0.0.1/32 eq 2 10.0.0.4/30 eq 3 log",
-            "permit tcp 10.0.0.1/32 eq 2 10.0.0.4/30 eq 4 log",
-
-            "permit tcp 10.0.0.2/32 eq 1 10.0.0.0/30 eq 3 log",
-            "permit tcp 10.0.0.2/32 eq 1 10.0.0.0/30 eq 4 log",
-            "permit tcp 10.0.0.2/32 eq 1 10.0.0.4/30 eq 3 log",
-            "permit tcp 10.0.0.2/32 eq 1 10.0.0.4/30 eq 4 log",
-            "permit tcp 10.0.0.2/32 eq 2 10.0.0.0/30 eq 3 log",
-            "permit tcp 10.0.0.2/32 eq 2 10.0.0.0/30 eq 4 log",
-            "permit tcp 10.0.0.2/32 eq 2 10.0.0.4/30 eq 3 log",
-            "permit tcp 10.0.0.2/32 eq 2 10.0.0.4/30 eq 4 log",
-
-            "permit udp 10.0.0.1/32 eq 5 10.0.0.0/30 eq echo log",
-            "permit udp 10.0.0.1/32 eq 5 10.0.0.0/30 eq 8 log",
-            "permit udp 10.0.0.1/32 eq 5 10.0.0.4/30 eq echo log",
-            "permit udp 10.0.0.1/32 eq 5 10.0.0.4/30 eq 8 log",
-            "permit udp 10.0.0.1/32 eq 6 10.0.0.0/30 eq echo log",
-            "permit udp 10.0.0.1/32 eq 6 10.0.0.0/30 eq 8 log",
-            "permit udp 10.0.0.1/32 eq 6 10.0.0.4/30 eq echo log",
-            "permit udp 10.0.0.1/32 eq 6 10.0.0.4/30 eq 8 log",
-
-            "permit udp 10.0.0.2/32 eq 5 10.0.0.0/30 eq echo log",
-            "permit udp 10.0.0.2/32 eq 5 10.0.0.0/30 eq 8 log",
-            "permit udp 10.0.0.2/32 eq 5 10.0.0.4/30 eq echo log",
-            "permit udp 10.0.0.2/32 eq 5 10.0.0.4/30 eq 8 log",
-            "permit udp 10.0.0.2/32 eq 6 10.0.0.0/30 eq echo log",
-            "permit udp 10.0.0.2/32 eq 6 10.0.0.0/30 eq 8 log",
-            "permit udp 10.0.0.2/32 eq 6 10.0.0.4/30 eq echo log",
-            "permit udp 10.0.0.2/32 eq 6 10.0.0.4/30 eq 8 log",
-        ]
-        for kwargs, platform, req in [
-            (allow_ip, "ios", permit_ip),
-            (allow_ip, "nxos", permit_ip),
-            (allow_ip, "cnx", permit_ip),
-            (allow_tcp, "ios", permit_tcp_ios),
-            (allow_tcp, "nxos", permit_tcp_nxos),
-            (allow_tcp, "cnx", permit_tcp_nxos),
-            (deny_udp, "ios", deny_udp_),
-            (deny_udp, "nxos", deny_udp_),
-            (deny_udp, "cnx", deny_udp_),
-            (allow_group, "ios", permit_group_ios),
-            (allow_group, "nxos", permit_group_nxos),
-            (allow_group, "cnx", permit_group_nxos),
+    def test_valid__shadow_of__skip(self):
+        """Ace.shadow_of() skip"""
+        for top, bot, skip, req in [
+            # nc_wildcard
+            ("permit ip any 10.0.0.0 0.0.3.3", "permit ip any any", None, False),
+            ("permit ip 10.0.0.0 0.0.3.3 any", "permit ip any any", None, False),
+            ("permit ip any any", "permit ip any 10.0.0.0 0.0.3.3", None, True),
+            ("permit ip any any", "permit ip 10.0.0.0 0.0.3.3 any", None, True),
+            # skip
+            ("permit ip any addrgroup NAME", "permit ip any any", ["addrgroup"], False),
+            ("permit ip addrgroup NAME any", "permit ip any any", ["addrgroup"], False),
+            ("permit ip any any", "permit ip any addrgroup NAME", ["addrgroup"], False),
+            ("permit ip any any", "permit ip addrgroup NAME any", ["addrgroup"], False),
+            ("permit ip any 10.0.0.0 0.0.3.3", "permit ip any any", ["nc_wildcard"], False),
+            ("permit ip 10.0.0.0 0.0.3.3 any", "permit ip any any", ["nc_wildcard"], False),
+            ("permit ip any any", "permit ip any 10.0.0.0 0.0.3.3", ["nc_wildcard"], False),
+            ("permit ip any any", "permit ip 10.0.0.0 0.0.3.3 any", ["nc_wildcard"], False),
         ]:
-            result_lo = Ace.rule(platform=platform, **kwargs)
-            result = [o.line for o in result_lo]
-            for id_, req_ in enumerate(req):
-                result_ = result[id_]
-                if result_ != req_:
-                    self.assertEqual(result_, req_, msg=f"{id_=} {req_=}")
-            self.assertEqual(result, req, msg=f"{kwargs=}")
+            top_o = Ace(top, platform="nxos")
+            bot_o = Ace(bot, platform="nxos")
+            result = bot_o.shadow_of(other=top_o, skip=skip)
+            self.assertEqual(result, req, msg=f"{top=} {bot=}")
 
-    def test_invalid__rule(self):
-        """Ace.rule()"""
-        for kwargs, error in [
-            ({}, KeyError),
-            (dict(action="remark"), KeyError),
-            (dict(action="permit"), KeyError),
-            (dict(action="allow", srcaddrs=[None]), TypeError),
-            (dict(action="allow", dstaddrs=[{}]), TypeError),
-            (dict(action="allow", protocols=[{}]), ValueError),
-            (dict(action="allow", protocols=["tcp"], tcp_srcports=[{}]), ValueError),
-            (dict(action="allow", protocols=["tcp"], tcp_dstports=[{}]), ValueError),
-            (dict(action="allow", protocols=["udp"], udp_dstports=[{}]), ValueError),
-            (dict(action="allow", protocols=["udp"], udp_dstports=[{}]), ValueError),
+    def test_valid__shadow_of__srcaddr(self):
+        """Ace._shadow_of__srcaddr()"""
+        src_addgr = "permit ip addrgroup NAME24 any"
+        src_nc_wildcard = "permit ip 10.0.0.0 0.0.3.3 any"
+        addr = "10.0.0.0/24"
+        for top, bot, top_addr, bot_addr, skip, req in [
+            # no skip
+            (src_addgr, "permit ip any any", addr, [], [], False),
+            (src_addgr, "permit ip 10.0.0.0/24 any", addr, [], [], True),
+            (src_addgr, "permit ip 10.0.1.0/24 any", addr, [], [], False),
+            (src_addgr, src_addgr, addr, addr, [], True),
+            # skip addrgroup
+            (src_addgr, "permit ip any any", addr, [], ["addrgroup"], False),
+            (src_addgr, "permit ip 10.0.0.0/24 any", [], [], ["addrgroup"], False),
+            (src_addgr, "permit ip any any", addr, [], ["addrgroup"], False),
+            (src_addgr, "permit ip 10.0.0.0/24 any", [], [], ["addrgroup"], False),
+            # skip nc_wildcard
+            (src_nc_wildcard, "permit ip any any", [], [], ["nc_wildcard"], False),
+            ("permit ip any any", src_nc_wildcard, [], [], ["nc_wildcard"], False),
         ]:
-            with self.assertRaises(error, msg=f"{kwargs=}"):
-                Ace.rule(**kwargs)
+            top_o = Ace(top, platform="nxos")
+            bot_o = Ace(bot, platform="nxos")
+            if re.search("addrgroup", top):
+                top_o.srcaddr.items = top_addr
+            if re.search("addrgroup", bot):
+                bot_o.srcaddr.items = bot_addr
 
-    # =========================== helpers ============================
+            result = bot_o._shadow_of__srcaddr(other=top_o, skip=skip)
+            self.assertEqual(result, req, msg=f"{top=} {bot=}")
 
-    def test_valid__range__port(self):
-        """Ace._range__port()"""
-        src_tcp_eq = ["permit tcp any eq 20 any", "permit tcp any eq 21 any"]
-        src_tcp_gt = ["permit tcp any gt 20 any", "permit tcp any gt 21 any"]
-        src_tcp_lt = ["permit tcp any lt 20 any", "permit tcp any lt 21 any"]
-        src_tcp_neq = ["permit tcp any neq 20 any", "permit tcp any neq 21 any"]
-        src_udp_eq = ["permit udp any eq 67 any", "permit udp any eq 68 any"]
-        src_udp_gt = ["permit udp any gt 67 any", "permit udp any gt 68 any"]
-        src_udp_lt = ["permit udp any lt 67 any", "permit udp any lt 68 any"]
-        src_udp_neq = ["permit udp any neq 67 any", "permit udp any neq 68 any"]
-        dst_tcp_eq = ["permit tcp any any eq 20", "permit tcp any any eq 21"]
-        dst_tcp_gt = ["permit tcp any any gt 20", "permit tcp any any gt 21"]
-        dst_tcp_lt = ["permit tcp any any lt 20", "permit tcp any any lt 21"]
-        dst_tcp_neq = ["permit tcp any any neq 20", "permit tcp any any neq 21"]
-        dst_udp_eq = ["permit udp any any eq 67", "permit udp any any eq 68"]
-        dst_udp_gt = ["permit udp any any gt 67", "permit udp any any gt 68"]
-        dst_udp_lt = ["permit udp any any lt 67", "permit udp any any lt 68"]
-        dst_udp_neq = ["permit udp any any neq 67", "permit udp any any neq 68"]
-        for kwargs, line, req in [
-            # src tcp
-            (dict(sdst="src", range_=""), "permit tcp any any", []),
-            (dict(sdst="src", range_="20-21"), "permit tcp any any", src_tcp_eq),
-            (dict(sdst="src", range_="20-21"), "permit tcp any eq 1 any", src_tcp_eq),
-            (dict(sdst="src", range_="20-21"), "permit tcp any gt 1 any", src_tcp_gt),
-            (dict(sdst="src", range_="20-21"), "permit tcp any lt 1 any", src_tcp_lt),
-            (dict(sdst="src", range_="20-21"), "permit tcp any neq 1 any", src_tcp_neq),
-            # src udp
-            (dict(sdst="src", range_=""), "permit udp any any", []),
-            (dict(sdst="src", range_="67-68"), "permit udp any any", src_udp_eq),
-            (dict(sdst="src", range_="67-68"), "permit udp any eq 1 any", src_udp_eq),
-            (dict(sdst="src", range_="67-68"), "permit udp any gt 1 any", src_udp_gt),
-            (dict(sdst="src", range_="67-68"), "permit udp any lt 1 any", src_udp_lt),
-            (dict(sdst="src", range_="67-68"), "permit udp any neq 1 any", src_udp_neq),
-            # dst tcp
-            (dict(sdst="src", range_=""), "permit tcp any any", []),
-            (dict(sdst="dst", range_="20,21"), "permit tcp any any", dst_tcp_eq),
-            (dict(sdst="dst", range_="20,21"), "permit tcp any any eq 1 ", dst_tcp_eq),
-            (dict(sdst="dst", range_="20,21"), "permit tcp any any gt 1 ", dst_tcp_gt),
-            (dict(sdst="dst", range_="20,21"), "permit tcp any any lt 1 ", dst_tcp_lt),
-            (dict(sdst="dst", range_="20,21"), "permit tcp any any neq 1 ", dst_tcp_neq),
-            # dst udp
-            (dict(sdst="src", range_=""), "permit udp any any", []),
-            (dict(sdst="dst", range_="67,68"), "permit udp any any", dst_udp_eq),
-            (dict(sdst="dst", range_="67,68"), "permit udp any any eq 1 ", dst_udp_eq),
-            (dict(sdst="dst", range_="67,68"), "permit udp any any gt 1 ", dst_udp_gt),
-            (dict(sdst="dst", range_="67,68"), "permit udp any any lt 1 ", dst_udp_lt),
-            (dict(sdst="dst", range_="67,68"), "permit udp any any neq 1 ", dst_udp_neq),
+    def test_valid__shadow_of__dstaddr(self):
+        """Ace._shadow_of__dstaddr()"""
+        dst_addgr = "permit ip any addrgroup NAME24"
+        dst_nc_wildcard = "permit ip any 10.0.0.0 0.0.3.3"
+        addr = "10.0.0.0/24"
+        for top, bot, top_addr, bot_addr, skip, req in [
+            # no skip
+            (dst_addgr, "permit ip any any", addr, [], [], False),
+            (dst_addgr, "permit ip any 10.0.0.0/24", addr, [], [], True),
+            (dst_addgr, "permit ip any 10.0.1.0/24", addr, [], [], False),
+            (dst_addgr, dst_addgr, addr, addr, [], True),
+            # skip addrgroup
+            (dst_addgr, "permit ip any any", addr, [], ["addrgroup"], False),
+            (dst_addgr, "permit ip any 10.0.0.0/24", addr, [], ["addrgroup"], False),
+            (dst_addgr, "permit ip any any", addr, [], ["addrgroup"], False),
+            (dst_addgr, "permit ip any 10.0.0.0/24", addr, [], ["addrgroup"], False),
+            # skip nc_wildcard
+            (dst_nc_wildcard, "permit ip any any", [], [], ["nc_wildcard"], False),
+            ("permit ip any any", dst_nc_wildcard, [], [], ["nc_wildcard"], False),
         ]:
-            ace_o = Ace(line=line)
-            results = ace_o._range__port(**kwargs, port_nr=True)
-            result = [str(o) for o in results]
-            self.assertEqual(result, req, msg=f"{line=} {kwargs=}")
+            top_o = Ace(top, platform="nxos")
+            bot_o = Ace(bot, platform="nxos")
+            if re.search("addrgroup", top):
+                top_o.dstaddr.items = [Address(top_addr)]
+            if re.search("addrgroup", bot):
+                bot_o.dstaddr.items = [Address(bot_addr)]
 
-        src_tcp_eq = ["permit tcp any eq ftp-data any", "permit tcp any eq ftp any"]
-        for kwargs, line, req in [
-            (dict(sdst="src", range_="20-21"), "permit tcp any any", src_tcp_eq),
-        ]:
-            ace_o = Ace(line=line)
-            results = ace_o._range__port(**kwargs, port_nr=False)
-            result = [str(o) for o in results]
-            self.assertEqual(result, req, msg=f"{line=} {kwargs=}")
+            result = bot_o._shadow_of__dstaddr(other=top_o, skip=skip)
+            self.assertEqual(result, req, msg=f"{top=} {bot=}")
 
-    def test_invalid__range__port(self):
-        """Ace._range__port()"""
-        for kwargs, line, error in [
-            (dict(sdst="src", range_="20-21"), "permit tcp any range 1 2 any", ValueError),
-            (dict(sdst="dst", range_="20-21"), "permit tcp any any range 1 2", ValueError),
+    def test_valid__ungroup_ports(self):
+        """Ace.ungroup_ports()"""
+        for line, req in [
+            ("permit tcp any any", ["permit tcp any any"]),
+            ("permit tcp any eq 1 any eq 2", ["permit tcp any eq 1 any eq 2"]),
+            ("permit tcp any eq 1 2 any", ["permit tcp any eq 1 any", "permit tcp any eq 2 any"]),
+            ("permit tcp any any eq 1 2", ["permit tcp any any eq 1", "permit tcp any any eq 2"]),
+            ("permit tcp any eq 1 2 any eq 3 4", ["permit tcp any eq 1 any eq 3",
+                                                  "permit tcp any eq 1 any eq 4",
+                                                  "permit tcp any eq 2 any eq 3",
+                                                  "permit tcp any eq 2 any eq 4"]),
         ]:
-            ace_o = Ace(line=line)
-            with self.assertRaises(error, msg=f"{line=} {kwargs=}"):
-                ace_o._range__port(port_nr=True, **kwargs)
-
-    def test_valid__range__protocol(self):
-        """Ace._range__protocol()"""
-        req1 = ["permit icmp any any", "permit igmp any any", "permit 3 any any"]
-        req2 = ["permit 1 any any", "permit 3 any any", "permit 4 any any", "permit 5 any any"]
-        for kwargs, line, req in [
-            (dict(range_="", protocol_nr=False), "permit icmp any any", []),
-            (dict(range_="1-3", protocol_nr=False), "permit ip any any", req1),
-            (dict(range_="1-3", protocol_nr=False), "permit 0 any any", req1),
-            (dict(range_="1-3", protocol_nr=False), "permit icmp any any", req1),
-            (dict(range_="1-3", protocol_nr=False), "permit 1 any any", req1),
-            # protocol_nr
-            (dict(range_="", protocol_nr=True), "permit icmp any any", []),
-            (dict(range_="1,3-5", protocol_nr=True), "permit ip any any", req2),
-            (dict(range_="1,3-5", protocol_nr=True), "permit 0 any any", req2),
-            (dict(range_="1,3-5", protocol_nr=True), "permit icmp any any", req2),
-            (dict(range_="1,3-5", protocol_nr=True), "permit 1 any any", req2),
-        ]:
-            ace_o = Ace(line=line, protocol_nr=True, port_nr=True)
-            results = ace_o._range__protocol(**kwargs)
-            result = [str(o) for o in results]
-            self.assertEqual(result, req, msg=f"{line=} {kwargs=}")
+            obj = Ace(line, platform="ios")
+            aces = obj.ungroup_ports()
+            result = [o.line for o in aces]
+            self.assertEqual(result, req, msg=f"{line=}")
 
 
 if __name__ == "__main__":

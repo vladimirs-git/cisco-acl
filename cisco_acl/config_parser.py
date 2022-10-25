@@ -4,7 +4,8 @@ import re
 from abc import ABC
 from copy import deepcopy
 
-from cisco_acl.types_ import DAny, DLStr, DStr, LDAny, LStr, LDStr
+from cisco_acl import helpers as h
+from cisco_acl.types_ import DAny, DLStr, DStr, LDAny, LStr, OLStr
 
 
 class ConfigParser(ABC):
@@ -12,103 +13,164 @@ class ConfigParser(ABC):
 
     def __init__(self, **kwargs):
         """CISCO config parser
+        :param config: Cisco config, "show running-config" output
         :param platform: Platform: "ios", "nxos"
         :param version: Software version (not implemented, planned for compatability)
         """
-        self.platform: str = kwargs.get("platform") or "ios"
-        self.version: str = kwargs.get("version") or ""
-        self.config: str = kwargs.get("config") or ""
+        self.platform: str = h.init_platform(**kwargs)
+        self.version: str = str(kwargs.get("version") or "")
+        self.config: str = str(kwargs.get("config") or "")  # not parsed config
 
+        self.lines: LStr = []  # config in *list* format
+        self.dic: DLStr = {}  # config in *dict* format, commands as *LStr*
+        self.mdic: DAny = {}  # config in multidimensional *dict* format, commands as *LStr*
         self.dic_text: DStr = {}  # config in *dict* format, commands as *str*
         self.mdic_text: DAny = {}  # config in multidimensional *dict* format, commands as *str*
 
-    def parse_config(self) -> None:
-        """Parses all data. Gets data structure described in class"""
-        self._parse_rows()
+    def __repr__(self):
+        name = self.__class__.__name__
+        platform = self.platform
+        version = self.version
+        return f"<{name}: {platform=} {version=}>"
 
-    def acls(self) -> LDAny:
+    # =========================== methods ============================
+
+    def addgrs(self) -> LDAny:
+        """Parses address groups from config
+        :return: *dict* ready for AddrGroup
+
+        :example:
+            config: "object-group ip address NAME
+                       10 host 10.0.0.1
+                       20 10.0.0.0/24"
+            self.platform: "nxos"
+            return: [{"name": "NAME",
+                      "items": ["10 host 10.0.0.1", "20 10.0.0.0/24"],
+                      "platform": "nxos"}]
+        """
+        addgrs: LDAny = []
+        for objgr_key, objgr_cfg in self.dic_text.items():
+            regex = "object-group (network |ip address )?(.+)"
+            type_, name = h.findall2(regex, objgr_key)
+            if type_ and name:
+                items = h.lines_wo_spaces(objgr_cfg)
+                addgr_d: DAny = dict(name=name, items=items, platform=self.platform)
+                addgrs.append(addgr_d)
+        return addgrs
+
+    # noinspection PyShadowingBuiltins,PyIncorrectDocstring
+    def acls(self, type: str = "", **kwargs) -> LDAny:  # pylint: disable=redefined-builtin
         """Parses ACLs from config
+
+        :param type: ACL type: "extended", "standard", "any" (default "any")
+        :type type: str
+
+        :param names: Parse only ACLs with specified names
+        :type names: List[str]
+
         :return: Parsed ACLs
+        :rtype: List[dict]
 
         :example:
             self.config: "ip access-list ACL_NAME
-                            10 remark ACE_NAME_1
+                            10 remark ACE_NAME1
                             20 permit icmp any any
-                            30 remark ACE_NAME_2
+                            30 remark ACEG_NAME2
                             40 deny ip any any
                           interface Ethernet1/1/1
                             ip access-group ACL_NAME in
                           "
+            self.platform: "nxos"
             return: [{"acl_name": "ACL_NAME",
-                      "aces": "10 remark ACE_NAME_1
+                      "aces": "10 remark ACE_NAME1
                                20 permit icmp any any
-                               30 remark ACE_NAME_2
+                               30 remark ACEG_NAME2
                                40 deny ip any any",
                       "input": ["interface Ethernet1/1/1"],
-                      "output": []}]
+                      "output": [],
+                      "platform": "nxos"}]
         """
-        result: LDAny = []
-        acls_d: DStr = self._extended_acls()
-        for name, acl_s in acls_d.items():
-            acl_d: DAny = dict(name=name, line=acl_s, input=[], output=[])
-            result.append(acl_d)
-        self._add_acl_interfaces(result)
-        return result
+        names: OLStr = kwargs.get("names")
+        if names is not None:
+            names = [str(s) for s in names]
 
-    def acls_by_remark(self) -> LDAny:
-        """Parses ACLs from config. ACEs grouped by remarks
-        :return: Parsed ACLs
+        acls: LDAny = []  # result
+        for acl_key, acl_cfg in self.dic_text.items():
+            regex = "ip access-list (extended |standard )?(.+)"
+            acl_type, name = h.findall2(regex, acl_key)
+            if not name:
+                continue
+            if names is None or name in names:
+                acl_type = h.init_type(type=acl_type, platform=self.platform)
+                acl_d: DAny = dict(line=f"{acl_key}\n{acl_cfg}",
+                                   platform=self.platform,
+                                   name=name,
+                                   type=acl_type,
+                                   input=[],
+                                   output=[])
+                if not type or type == acl_type:
+                    acls.append(acl_d)
+        self._add_acl_interfaces(acls)
+        return acls
 
-        :example:
-            self.config: "ip access-list ACL_NAME
-                            10 remark ACE_NAME_1
-                            20 permit icmp any any
-                            30 remark ACE_NAME_2
-                            40 deny ip any any
-                          interface Ethernet1/1/1
-                            ip access-group ACL_NAME in
-                          "
-            return: [{"acl_name": "ACL_NAME",
-                      "ace_group": [{"note": "ACE_NAME_1",
-                                     "line": "10 remark ACE_NAME_1\n20 permit icmp any any"},
-                                    {"note": "ACE_NAME_2",
-                                     "line": "30 remark ACE_NAME_2\40 deny ip any any"}],
-                      "input": ["interface Ethernet1/1/1"],
-                      "output": []}]
-        """
-        result: LDAny = []
-        acls: DStr = self._extended_acls_d()
-        for name, acl_cfg in acls.items():
-            ace_group: LDStr = self._make_ace_group(acl=acl_cfg)
-            acl_d: DAny = dict(name=name, ace_group=ace_group, input=[], output=[])
-            result.append(acl_d)
-        self._add_acl_interfaces(result)
-        return result
+    def pattern__cfg_acl(self) -> str:
+        """Pattern for extended ACL, by platform"""
+        if self.platform == "nxos":
+            return "ip access-list "
+        return "ip access-list extended "
 
-    # ========================== parse rows ==========================
+    def pattern__object_group(self) -> str:
+        """Pattern for object-group, by platform"""
+        if self.platform == "nxos":
+            return "object-group network "
+        return "object-group ip address "
 
-    def _parse_rows(self) -> None:
+    # ========================= parse_config =========================
+
+    def parse_config(self) -> None:
         """Parses config rows to specific format: list, dict, multidimensional dict
         # make rows, main_rows, dic, mdic, etc.
         self.dic_text - config in *dict* format, commands as *str*
         self.mdic_text - config in multidimensional *dict* format, commands as *str*
         """
-        config_l = [i for i in self.config.splitlines() if not re.match(r"!|$", i.strip())]
-        for line in config_l:
-            while True:
-                if re.match(r"\s", line):
-                    break
-                break
-        dic = self._parse_dic(config_l)
-        mdic = self._parse_mdic(config_l)
-        self.dic_text = {k: "\n".join(v) for k, v in dic.items()}
-        self.mdic_text = self._join_mdic_text(mdic)
+        config_l = [s.rstrip() for s in self.config.splitlines()]
+        config_l = [s for s in config_l if not re.match(r"!|$", s)]
+        if config_l:
+            config_l[0] = config_l[0].strip()
+        self.lines = self._parse_lines(config_l)
+        self.dic = self._parse_dic(config_l)
+        self.mdic = self._parse_mdic(config_l)
+        self.dic_text = {k: "\n".join(v) for k, v in self.dic.items()}
+        self.mdic_text = self._join_mdic_text(self.mdic)
+
+    @staticmethod
+    def _parse_lines(config_l: LStr) -> LStr:
+        """Returns command lines without indentation"""
+        lines = [s.strip() for s in config_l]
+        lines = [s for s in lines if s]
+        return lines
+
+    @staticmethod
+    def _join_mdic_text(mdic: DAny) -> DAny:
+        """Joins self.mdic[key]["_config_"] from List[str] to str"""
+
+        def join_config(mdic_text_: DAny) -> None:
+            """join self.mdic[key]["_config_"] from List[str] to str"""
+            for key, values in mdic_text_.items():
+                if key == "_config_" and isinstance(values, list):
+                    mdic_text_[key] = "\n".join(values)
+                else:
+                    join_config(values)
+
+        mdic_text: DAny = deepcopy(mdic)
+        join_config(mdic_text)
+        return mdic_text
 
     @staticmethod
     def _parse_dic(config_l: LStr) -> DLStr:
         """Config in dictionary format (indented strings in dictionary)
         :example:
-            data = {"interface Ethernet1/1": ["ip address 1.1.1.1/24",
+            data: {"interface Ethernet1/1": ["ip address 1.1.1.1/24",
                                               "no shutdown",
                                               "hsrp 5",
                                               "ip 1.1.1.2"]}
@@ -131,12 +193,12 @@ class ConfigParser(ABC):
     def _parse_mdic(self, config_l: LStr) -> DAny:
         """Parses config in multidimensional dict format
         :example:
-            data = {"interface Ethernet1/1": {"_config_": ["ip address 1.1.1.1/24",
+            data: {"interface Ethernet1/1": {"_config_": ["ip address 1.1.1.1/24",
                                                            "no shutdown"],
                                               "hsrp 5" : {"_config_": ["ip 1.1.1.2"]}}
                    }
         """
-        data: DAny = {"_config_": []}  # return
+        data: DAny = {"_config_": []}  # result
         # validation
         if not config_l:  # exit if config is empty
             return data
@@ -183,6 +245,54 @@ class ConfigParser(ABC):
             data.update({line: {"_config_": []}})
 
         return data
+
+    # =========================== helpers ============================
+
+    def _add_acl_interfaces(self, acls: LDAny) -> None:
+        """Adds input/output interfaces to parsed `acls`
+        :result: Side effect `acls`
+        """
+        intf_acls_all: LDAny = self._acls_on_interfaces()
+        for acl_d in acls:
+            intf_acls = [d for d in intf_acls_all if d["name"] == acl_d["name"]]
+            for intf_acl in intf_acls:
+                if intf_acl["input"]:
+                    acl_d["input"].append(intf_acl["input"])
+                if intf_acl["output"]:
+                    acl_d["output"].append(intf_acl["output"])
+        for acl_d in acls:
+            acl_d["input"] = sorted(set(acl_d["input"]))
+            acl_d["output"] = sorted(set(acl_d["output"]))
+
+    def _acls_on_interfaces(self) -> LDAny:
+        """Returns data of ACLs applied to the interfaces
+        :example:
+            self.config: "interface GigabitEthernet1/1/1
+                            ip address 10.0.2.1 255.255.255.0
+                            ip access-group ACL_NAME in"
+            return: [{"acl": "ACL_NAME",
+                      "input": "interface GigabitEthernet1/1/1",
+                      "output": ""}]
+        """
+        access_groups: LDAny = []
+        intfs_cfg: DStr = self._interfaces_w_acl()
+        for intf_name, intf_cfg in intfs_cfg.items():
+            if not intf_name.startswith("interface "):
+                raise ValueError("invalid interface")
+            if access_group_t := re.findall(r"ip access-group (\S+) (\S+)", intf_cfg):
+                acl_name = access_group_t[0][0]
+                data: DAny = dict(name=acl_name, input="", output="")
+                for acl_name, direction in access_group_t:
+                    if not acl_name:
+                        raise ValueError(f"absent access-group {acl_name=}")
+                    if direction not in ["in", "out"]:
+                        raise ValueError(f"invalid access-group {direction=}")
+                    if direction == "in":
+                        data.update(dict(input=intf_name))
+                    elif direction == "out":
+                        data.update(dict(output=intf_name))
+                access_groups.append(data)
+        return access_groups
 
     def _get_indented_dic(self, i, config_l) -> tuple:
         """Config in multidimensional dict format,
@@ -233,128 +343,6 @@ class ConfigParser(ABC):
 
         return i, indent_next, {key: data}
 
-    @staticmethod
-    def _join_mdic_text(mdic: DAny) -> DAny:
-        """Joins self.mdic[key]["_config_"] from List[str] to str"""
-
-        def join_config(mdic_text_: DAny) -> None:
-            """join self.mdic[key]["_config_"] from List[str] to str"""
-            for key, values in mdic_text_.items():
-                if key == "_config_" and isinstance(values, list):
-                    mdic_text_[key] = "\n".join(values)
-                else:
-                    join_config(values)
-
-        mdic_text: DAny = deepcopy(mdic)
-        join_config(mdic_text)
-        return mdic_text
-
-    # =========================== helpers ============================
-
-    def _add_acl_interfaces(self, acls: LDAny) -> None:
-        """Adds input/output interfaces to parsed `acls`
-        :result: Side effect `acls`
-        """
-        intf_acls_all: LDAny = self._acls_on_interfaces()
-        for acl_d in acls:
-            intf_acls = [d for d in intf_acls_all if d["name"] == acl_d["name"]]
-            for intf_acl in intf_acls:
-                if intf_acl["input"]:
-                    acl_d["input"].append(intf_acl["input"])
-                if intf_acl["output"]:
-                    acl_d["output"].append(intf_acl["output"])
-        for acl_d in acls:
-            acl_d["input"] = sorted(set(acl_d["input"]))
-            acl_d["output"] = sorted(set(acl_d["output"]))
-
-    def _extended_acls(self) -> DStr:
-        """Returns *str* of extended ACLs, skips standard ACLs
-        :example:
-            self.config: "ip access-list extended ACL_NAME
-                            permit ip any any
-                          ip access-list standard acl_standard
-                            permit ip any any"
-            return: ["ip access-list extended ACL_NAME\npermit ip any any"]
-        """
-        acls: DStr = {}
-        pattern = self._extended_acl__pattern()
-        for acl_name, acl_cfg in self.dic_text.items():
-            if acl_name.startswith(pattern):
-                name = acl_name.replace(pattern, "", 1).strip()
-                acls[name] = f"{acl_name}\n{acl_cfg}"
-        return acls
-
-    def _extended_acls_d(self) -> DStr:
-        """Returns *dict* of extended ACLs, skips standard ACLs
-        :example:
-            self.config: "ip access-list extended ACL_NAME
-                            permit ip any any
-                          ip access-list standard acl_standard
-                            permit ip any any"
-            return:
-                {"ACL_NAME": "permit ip any any"}
-        """
-        acls: DStr = {}
-        pattern = self._extended_acl__pattern()
-        for acl_name, acl_cfg in self.dic_text.items():
-            if acl_name.startswith(pattern):
-                name = acl_name.replace(pattern, "", 1).strip()
-                acls[name] = acl_cfg
-        return acls
-
-    def _extended_acl__pattern(self):
-        """Pattern for extended ACL for, platform depended"""
-        if self.platform == "nxos":
-            return "ip access-list "
-        return "ip access-list extended "
-
-    @staticmethod
-    def _make_ace_group(acl: str) -> LDStr:
-        """Returns ACE groups, grouped by 1st remark, without lines not related to ACE
-        :param acl: ACL config (ACEs)
-        :return: ACE groups, grouped by 1st remark
-        :example:
-            acl: "remark ACE_NAME1
-                  permit icmp any any
-                  remark ACE_NAME2
-                  deny ip any any"
-            return: [{"note": "ACE_NAME1", "line": "remark ACE_NAME1\npermit icmp any any"},
-                     {"note": "ACE_NAME2", "line": "remark ACE_NAME2\ndeny ip any any"}]
-        """
-        groups: LDStr = []
-
-        skip = ["statistics per-entry"]
-        aces_all = [s.strip() for s in acl.split("\n")]
-        aces_all = [s for s in aces_all if s]
-        aces_all = [s for s in aces_all if s not in skip]
-        if not aces_all:
-            return []
-
-        note = ""
-        ace1 = aces_all[0]
-
-        re_remark = r"(\d+ )?remark "
-        if re.match(re_remark, ace1):
-            note = re.sub(re_remark, "", ace1)
-
-        lines: LStr = [ace1]
-        for idx, line in enumerate(aces_all[1:], start=1):
-            # rule
-            if not re.match(re_remark, line):
-                lines.append(line)
-                continue
-            # 2nd remark
-            line_prev = aces_all[idx - 1]
-            if re.match(re_remark, line_prev):
-                lines.append(line)
-                continue
-            # 1st remark
-            groups.append(dict(note=note, line="\n".join(lines)))
-            note = re.sub(re_remark, "", line)
-            lines = [line]
-        groups.append(dict(note=note, line="\n".join(lines)))
-        return groups
-
     def _interfaces_w_acl(self) -> DStr:
         """Returns dict of interfaces with access-group, skips interfaces without ACLs
         :example:
@@ -367,34 +355,3 @@ class ConfigParser(ABC):
                      "ip address 10.0.1.1 255.255.255.0\nip access-group ACL_NAME in"}
         """
         return {k: s for k, s in self.dic_text.items() if re.search("ip access-group", s, re.M)}
-
-    def _acls_on_interfaces(self) -> LDAny:
-        """Returns data of ACLs applied to the interfaces
-        :example:
-            self.config: "interface GigabitEthernet1/1/1
-                            ip address 10.0.2.1 255.255.255.0
-                            ip access-group ACL_NAME in"
-            return: [{"acl": "ACL_NAME",
-                      "input": "interface GigabitEthernet1/1/1",
-                      "output": ""}]
-        """
-        access_groups: LDAny = []
-        intfs_cfg: DStr = self._interfaces_w_acl()
-        for intf_name, intf_cfg in intfs_cfg.items():
-            if not intf_name.startswith("interface "):
-                raise ValueError("invalid interface")
-            if access_group := re.findall(r"ip access-group (\S+) (\S+)", intf_cfg):
-                if len(access_group) != 1:
-                    raise ValueError("invalid count of access-groups")
-                acl_name, direction = access_group[0]
-                if not acl_name:
-                    raise ValueError("absent access-group")
-                if direction not in ["in", "out"]:
-                    raise ValueError("invalid access-group direction")
-                data: DAny = dict(
-                    name=acl_name,
-                    input=intf_name if direction == "in" else "",
-                    output=intf_name if direction == "out" else "",
-                )
-                access_groups.append(data)
-        return access_groups

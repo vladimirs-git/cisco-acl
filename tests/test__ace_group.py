@@ -1,20 +1,25 @@
 """Unittest ace_group.py"""
 
 import unittest
+from ipaddress import IPv4Network
 
 import dictdiffer  # type: ignore
 
-from cisco_acl import Ace, AceGroup, Remark
+from cisco_acl import Ace, AceGroup, Remark, Address
 from tests.helpers_test import (
+    DENY_ICMP,
     DENY_IP,
-    DENY_IP_2,
+    DENY_IP2,
     Helpers,
     PERMIT_IP,
-    PERMIT_IP_1,
-    PERMIT_IP_2,
+    PERMIT_IP1,
     PERMIT_NAM,
     PERMIT_NUM,
+    PREFIX30,
     REMARK,
+    UUID,
+    UUID_R,
+    WILD30,
 )
 
 
@@ -27,38 +32,38 @@ class Test(Helpers):
     def test_valid__hash__(self):
         """AceGroup.__hash__()"""
         line = f"{PERMIT_IP}\n{DENY_IP}"
-        aceg_o = AceGroup(line)
-        result = aceg_o.__hash__()
+        obj = AceGroup(line)
+        result = obj.__hash__()
         req = line.__hash__()
         self.assertEqual(result, req, msg=f"{line=}")
 
     def test_valid__eq__(self):
         """AceGroup.__eq__() __ne__()"""
         line = f"{PERMIT_IP}\n{DENY_IP}"
-        aceg_o = AceGroup(line)
-        for other_o, req, in [
+        obj1 = AceGroup(line)
+        for obj2, req, in [
             (AceGroup(line), True),
-            (AceGroup(f"{PERMIT_IP_1}\n{DENY_IP}"), False),
+            (AceGroup(f"{PERMIT_IP1}\n{DENY_IP}"), False),
             (AceGroup(PERMIT_IP), False),
             (Remark(REMARK), False),
             (line, False),
         ]:
-            result = aceg_o.__eq__(other_o)
-            self.assertEqual(result, req, msg=f"{aceg_o=} {other_o=}")
-            result = aceg_o.__ne__(other_o)
-            self.assertEqual(result, not req, msg=f"{aceg_o=} {other_o=}")
+            result = obj1.__eq__(obj2)
+            self.assertEqual(result, req, msg=f"{obj1=} {obj2=}")
+            result = obj1.__ne__(obj2)
+            self.assertEqual(result, not req, msg=f"{obj1=} {obj2=}")
 
     def test_valid__lt__sort(self):
         """AceGroup.__lt__(), AceGroup.__le__()"""
         line = f"{PERMIT_IP}\n{DENY_IP}"
-        aceg_o = AceGroup(line)
+        obj = AceGroup(line)
         for items in [
-            [AceGroup(line), aceg_o],
-            [AceGroup(f"{DENY_IP}\n{PERMIT_IP}"), aceg_o],
-            [aceg_o, AceGroup(f"{PERMIT_IP_1}\n{PERMIT_IP}")],
-            [Remark("remark text"), aceg_o],
-            [Ace("permit ip any any"), aceg_o],
-            [line, aceg_o],
+            [AceGroup(line), obj],
+            [AceGroup(f"{DENY_IP}\n{PERMIT_IP}"), obj],
+            [obj, AceGroup(f"{PERMIT_IP1}\n{PERMIT_IP}")],
+            [Remark("remark text"), obj],
+            [Ace("permit ip any any"), obj],
+            [line, obj],
         ]:
             req = items.copy()
             result = sorted(items)
@@ -73,29 +78,31 @@ class Test(Helpers):
         """AceGroup.items"""
         for items, req, in [
             ([], []),
-            ([Ace(PERMIT_IP), Ace(DENY_IP)], [PERMIT_IP, DENY_IP]),
+            (PERMIT_IP, [PERMIT_IP]),
+            (REMARK, [REMARK]),
+            (Ace(PERMIT_IP), [PERMIT_IP]),
+            (Remark(REMARK), [REMARK]),
+            ([REMARK, DENY_IP], [REMARK, DENY_IP]),
             ([Remark(REMARK), Ace(DENY_IP)], [REMARK, DENY_IP]),
         ]:
-            # init
-            aceg_o = AceGroup(items=items)
-            result = [str(o) for o in aceg_o]
+            obj = AceGroup(items=items)
+            result = [str(o) for o in obj.items]
             self.assertEqual(result, req, msg=f"{items=}")
             # setter
-            aceg_o = AceGroup()
-            aceg_o.items = items
-            result = [str(o) for o in aceg_o]
+            obj = AceGroup()
+            obj.items = items
+            result = [str(o) for o in obj.items]
             self.assertEqual(result, req, msg=f"{items=}")
 
     def test_invalid__items(self):
         """AceGroup.items"""
-        aceg_o = AceGroup()
+        obj = AceGroup()
         for items, error, in [
             (1, TypeError),
-            (PERMIT_IP, TypeError),
-            ([PERMIT_IP], TypeError),
+            ([1], TypeError),
         ]:
             with self.assertRaises(error, msg=f"{items=}"):
-                aceg_o.items = items
+                obj.items = items
 
     def test_valid__line(self):
         """AceGroup.line"""
@@ -106,58 +113,116 @@ class Test(Helpers):
         group2 = f"2 {group1}"
 
         for kwargs, req_d, in [
-            (dict(line=""), dict(line="", sequence="")),
-            (dict(line="typo"), dict(line="", sequence="")),
-            (dict(line=PERMIT_IP), dict(line=PERMIT_IP, sequence="")),
-            (dict(line=PERMIT_IP_1), dict(line=PERMIT_IP_1, sequence="1")),
-            (dict(line=acl1), dict(line=group1, sequence="")),
-            (dict(line=acl1_name), dict(line=group1, sequence="")),
-            (dict(line=acl2), dict(line=group2, sequence="2")),
+            (dict(line=""), dict(line="", sequence=0)),
+            (dict(line="typo"), dict(line="", sequence=0)),
+            (dict(line=PERMIT_IP), dict(line=PERMIT_IP, sequence=0)),
+            (dict(line=PERMIT_IP1), dict(line=PERMIT_IP1, sequence=1)),
+            (dict(line=acl1), dict(line=group1, sequence=0)),
+            (dict(line=acl1_name), dict(line=group1, sequence=0)),
+            (dict(line=acl2), dict(line=group2, sequence=2)),
             # port_nr
             (dict(line=PERMIT_NUM, port_nr=False), dict(line=PERMIT_NAM)),
             (dict(line=PERMIT_NAM, port_nr=True), dict(line=PERMIT_NUM)),
+            # name
+            (dict(line=PERMIT_IP, name="NAME1", note="NOTE1"),
+             dict(line=PERMIT_IP, name="NAME1", note="NOTE1")),
         ]:
-            # getter
-            aceg_o = AceGroup(**kwargs)
-            self._test_attrs(obj=aceg_o, req_d=req_d, msg=f"getter {kwargs=}")
-
+            obj = AceGroup(**kwargs)
+            self._test_attrs(obj=obj, req_d=req_d, msg=f"{kwargs=}")
             # setter
-            aceg_o.line = kwargs["line"]
-            self._test_attrs(obj=aceg_o, req_d=req_d, msg=f"setter {kwargs=}")
+            obj.line = kwargs["line"]
+            self._test_attrs(obj=obj, req_d=req_d, msg=f"{kwargs=}")
 
-        # deleter
-        aceg_o = AceGroup(PERMIT_IP)
-        del aceg_o.line
-        self._test_attrs(obj=aceg_o, req_d=dict(line="", sequence=""), msg="deleter line")
+    def test_valid__platform(self):
+        """AceGroup.platform()"""
+        any_port = "permit tcp any eq 1 any neq 2 log"
+        host = "permit ip host 10.0.0.1 any"
+        wild30 = "permit ip 10.0.0.0 0.0.0.3 any"
+        wild32 = "permit ip 10.0.0.1 0.0.0.0 any"
+        prefix30 = "permit ip 10.0.0.0/30 any"
+        prefix32 = "permit ip 10.0.0.1/32 any"
+        addgr_ios = "permit ip object-group NAME any"
+        addgr_cnx = "permit ip addrgroup NAME any"
 
-    # =========================== methods ============================
-
-    def test_valid__data(self):
-        """AceGroup.data()"""
-        acl1 = f"{PERMIT_IP}\n \n{DENY_IP}\n \n{REMARK}"
-        acl2 = f"2 {acl1}"
-        items1 = [PERMIT_IP, DENY_IP, REMARK]
-        items2 = [PERMIT_IP_2, DENY_IP, REMARK]
-        data0 = dict(platform="ios", note="", sequence=0, items=[""])
-        data1 = dict(platform="ios", note="", sequence=0, items=[PERMIT_IP])
-        data_ip1 = dict(platform="ios", note="", sequence=1, items=[PERMIT_IP_1])
-        data_gr1 = dict(platform="ios", note="", sequence=0, items=items1)
-        data_gr2 = dict(platform="ios", note="", sequence=2, items=items2)
-
-        for line, req_d, in [
-            ("", data0),
-            (PERMIT_IP, data1),
-            (PERMIT_IP_1, data_ip1),
-            (acl1, data_gr1),
-            (acl2, data_gr2),
+        for platform, platform_new, line, req in [
+            # ios to ios
+            ("ios", "ios", any_port, any_port),
+            ("ios", "ios", host, host),
+            ("ios", "ios", wild30, wild30),
+            ("ios", "ios", wild32, host),
+            ("ios", "ios", addgr_ios, addgr_ios),
+            # ios to nxos
+            ("ios", "nxos", any_port, any_port),
+            ("ios", "nxos", host, prefix32),
+            ("ios", "nxos", wild30, prefix30),
+            ("ios", "nxos", wild32, prefix32),
+            ("ios", "nxos", addgr_ios, addgr_cnx),
+            # nxos to nxos
+            ("nxos", "nxos", any_port, any_port),
+            ("nxos", "nxos", host, prefix32),
+            ("nxos", "nxos", wild30, prefix30),
+            ("nxos", "nxos", wild32, prefix32),
+            ("nxos", "nxos", prefix30, prefix30),
+            ("nxos", "nxos", prefix32, prefix32),
+            ("nxos", "nxos", addgr_cnx, addgr_cnx),
+            # nxos to ios
+            ("nxos", "ios", any_port, any_port),
+            ("nxos", "ios", host, host),
+            ("nxos", "ios", wild30, wild30),
+            ("nxos", "ios", wild32, host),
+            ("nxos", "ios", prefix30, wild30),
+            ("nxos", "ios", prefix32, host),
+            ("nxos", "ios", addgr_cnx, addgr_ios),
         ]:
-            for aceg_o in [
-                AceGroup(line),
-                AceGroup(data=req_d),
-            ]:
-                result = aceg_o.data()
-                diff = list(dictdiffer.diff(first=result, second=req_d))
-                self.assertEqual(diff, [], msg=f"{line=}")
+            obj = AceGroup(line, platform=platform)
+            result = obj.line
+            self.assertEqual(result, line, msg=f"{platform=} {platform_new=} {line=}")
+            # platform
+            obj.platform = platform_new
+            result = obj.line
+            self.assertEqual(result, req, msg=f"{platform=} {platform_new=} {line=}")
+
+    def test_valid__platform__addrgroup_items(self):
+        """AceGroup.platform()"""
+        ios_addgr = "permit ip object-group A object-group A"
+        cnx_addgr = "permit ip addrgroup A addrgroup A"
+        for platform, line, items, platform_new, req in [
+            ("ios", ios_addgr, [WILD30], "ios", [WILD30]),
+            ("ios", ios_addgr, [WILD30], "nxos", [PREFIX30]),
+            ("nxos", cnx_addgr, [PREFIX30], "nxos", [PREFIX30]),
+            ("nxos", cnx_addgr, [PREFIX30], "ios", [WILD30]),
+        ]:
+            msg = f"{platform=} {line=} {items=} {platform_new=}"
+            obj = AceGroup(line, platform=platform)
+            obj.items[0].srcaddr.items = [Address(s, platform=platform) for s in items]
+            obj.items[0].dstaddr.items = [Address(s, platform=platform) for s in items]
+            for item in obj.items:
+                item.uuid = UUID
+                for item_ in [*item.srcaddr.items, *item.dstaddr.items]:
+                    item_.uuid = UUID
+            # setter
+            obj.platform = platform_new
+            result = [a.line for o in obj.items for a in o.srcaddr.items]
+            self.assertEqual(result, req, msg=msg)
+            result = [a.line for o in obj.items for a in o.dstaddr.items]
+            self.assertEqual(result, req, msg=msg)
+            # uuid
+            for item in obj.items:
+                result_ = item.uuid
+                self.assertEqual(result_, UUID, msg=msg)
+                for item_ in [*item.srcaddr.items, *item.dstaddr.items]:
+                    result_ = item_.uuid
+                    self.assertEqual(result_, UUID, msg=msg)
+
+    def test_invalid__platform(self):
+        """AceGroup.platform()"""
+        ports_group = "permit tcp any eq 1 2 any neq 3 4"
+        for platform, platform_new, line, error in [
+            ("ios", "nxos", ports_group, ValueError),
+        ]:
+            obj = AceGroup(line, platform=platform)
+            with self.assertRaises(error, msg=f"{platform=} {platform_new=} {line=}"):
+                obj.platform = platform_new
 
     def test_valid__port_nr(self):
         """AceGroup.port_nr"""
@@ -165,56 +230,272 @@ class Test(Helpers):
             (dict(line=PERMIT_NUM, port_nr=True), False, dict(line=PERMIT_NAM)),
             (dict(line=PERMIT_NAM, port_nr=False), True, dict(line=PERMIT_NUM)),
         ]:
-            # setter
-            aceg_o = AceGroup(**kwargs)
-            aceg_o.port_nr = port_nr
-            self._test_attrs(obj=aceg_o, req_d=req_d, msg=f"setter {kwargs=}")
+            obj = AceGroup(**kwargs)
+            obj.port_nr = port_nr
+            self._test_attrs(obj=obj, req_d=req_d, msg=f"{kwargs=}")
 
-    # =========================== helpers ============================
+    def test_valid__type(self):
+        """AceGroup.type"""
+        host_ext = f"{REMARK}\npermit tcp host 10.0.0.1 eq 1 host 10.0.0.2 eq 2 ack log"
+        host_std = f"{REMARK}\npermit host 10.0.0.1"
+        host_ext_ = f"{REMARK}\npermit ip host 10.0.0.1 any"
+        wild_ext = f"{REMARK}\npermit tcp 10.0.0.0 0.0.0.3 eq 1 10.0.0.4 0.0.0.3 eq 2 ack log"
+        wild_std = f"{REMARK}\npermit 10.0.0.0 0.0.0.3"
+        wild_ext_ = f"{REMARK}\npermit ip 10.0.0.0 0.0.0.3 any"
 
-    def test_valid__convert_any_to_aces(self):
-        """AceGroup._convert_any_to_aces()"""
-        items0 = [Remark(REMARK), Ace(PERMIT_IP_1)]
-        items1 = [Ace(PERMIT_IP_1), Ace(DENY_IP_2)]
-        items2 = [Ace(DENY_IP_2), Ace(PERMIT_IP_1)]
-        for items, req_d in [
-            (items0, dict(line=f"{REMARK}\n{PERMIT_IP_1}", sequence="")),
-            (items1, dict(line=f"{PERMIT_IP_1}\n{DENY_IP_2}", sequence="1")),
-            (items2, dict(line=f"{DENY_IP_2}\n{PERMIT_IP_1}", sequence="2")),
+        for type_, type_new, line, req in [
+            # extended
+            ("extended", "extended", host_ext, host_ext),
+            ("extended", "extended", wild_ext, wild_ext),
+            ("extended", "standard", host_ext, host_std),
+            ("extended", "standard", wild_ext, wild_std),
+            # standard
+            ("standard", "standard", host_std, host_std),
+            ("standard", "standard", wild_std, wild_std),
+            ("standard", "extended", host_std, host_ext_),
+            ("standard", "extended", wild_std, wild_ext_),
         ]:
-            # getter
-            aceg_o = AceGroup(items=items)
-            self._test_attrs(obj=aceg_o, req_d=req_d, msg=f"getter {items=}")
+            obj = AceGroup(line, platform="ios", type=type_)
+            obj.type = type_new
+            result = obj.line
+            self.assertEqual(result, req, msg=f"{type_=} {line=}")
 
-            # setter
-            aceg_o.items = items
-            self._test_attrs(obj=aceg_o, req_d=req_d, msg=f"setter {items=}")
+    def test_invalid__type(self):
+        """AceGroup.type"""
+        addrgroup = f"{REMARK}\npermit ip object-group NAME any"
 
-        # deleter
-        aceg_o = AceGroup(items=[Remark(REMARK)])
-        del aceg_o.items
-        self._test_attrs(obj=aceg_o, req_d=dict(line="", sequence=""), msg="deleter items")
-
-    def test_invalid__init_items(self):
-        """AceGroup._init_items()"""
-        acl_o = AceGroup()
-        for items, error, in [
-            (1, TypeError),
-            ([1], TypeError),
-            ([""], TypeError),
-            ([REMARK], TypeError),
-            (Remark(REMARK), TypeError),
+        for platform, type_, type_new, line, error in [
+            ("nxos", "extended", "standard", PERMIT_IP, ValueError),  # nxos
+            ("ios", "extended", "standard", addrgroup, ValueError),  # addrgroup
         ]:
-            with self.assertRaises(error, msg=f"{items=}"):
-                acl_o._init_items(items=items)
-            if not items:
-                continue
-            with self.assertRaises(error, msg=f"{items=}"):
-                AceGroup(items=items)
+            obj = AceGroup(line, platform=platform, type=type_)
+            with self.assertRaises(error, msg=f"{platform=} {type_=} {type_new=} {line=}"):
+                obj.type = type_new
+
+    # =========================== methods ============================
+
+    def test_valid__copy(self):
+        """AceGroup.copy()"""
+        obj1 = AceGroup(line=f"1 {PERMIT_IP}", platform="ios", name="NAME",
+                        note="a", protocol_nr=True, port_nr=True)
+        obj2 = obj1.copy()
+
+        # change obj1 to check obj1 does not depend on obj2
+        new_obj1_kwargs = dict(line=f"2 {DENY_IP}", name="NAME2", note="b",
+                               protocol_nr=False, port_nr=False, platform="nxos")
+        for arg, value in new_obj1_kwargs.items():
+            setattr(obj1, arg, value)
+
+        req1_d = dict(line="2 deny ip any any",
+                      platform="nxos",
+                      name="NAME2",
+                      sequence=2,
+                      items=[Ace("2 deny ip any any", platform="nxos")],
+                      note="b",
+                      protocol_nr=False,
+                      port_nr=False)
+        req2_d = dict(line="1 permit 0 any any",
+                      platform="ios",
+                      name="NAME",
+                      sequence=1,
+                      items=[Ace("1 permit 0 any any", protocol_nr=True, port_nr=True)],
+                      note="a",
+                      protocol_nr=True,
+                      port_nr=True)
+        self._test_attrs(obj1, req1_d, msg="obj1 does not depend on obj2")
+        self._test_attrs(obj2, req2_d, msg="obj2 copied from obj1")
+
+    def test_valid__data(self):
+        """AceGroup.data()"""
+        kw_no_line = dict(line="")
+        req_no_line = dict(
+            line="",
+            platform="ios",
+            type="extended",
+            name="",
+            items=[],
+            group_by="",
+            note="",
+            sequence=0,
+            protocol_nr=False,
+            port_nr=False,
+        )
+
+        kw_line = dict(
+            line=f"1 {PERMIT_IP}\n2 {DENY_ICMP}",
+            platform="nxos",
+            note="a",
+            protocol_nr=True,
+            port_nr=True,
+        )
+        req_line = dict(
+            line="1 permit 0 any any\n2 deny 1 any any",
+            platform="nxos",
+            type="extended",
+            name="",
+            items=[dict(line="1 permit 0 any any",
+                        platform="nxos",
+                        type="extended",
+                        protocol_nr=True,
+                        port_nr=True,
+                        sequence=1,
+                        action="permit",
+                        protocol=dict(line="0",
+                                      platform="nxos",
+                                      note="",
+                                      protocol_nr=True,
+                                      has_port=False,
+                                      name="ip",
+                                      number=0),
+                        srcaddr=dict(line="any",
+                                     platform="nxos",
+                                     items=[],
+                                     note="",
+                                     max_ncwb=16,
+                                     type="any",
+                                     addrgroup="",
+                                     ipnet=IPv4Network("0.0.0.0/0"),
+                                     prefix="0.0.0.0/0",
+                                     subnet="0.0.0.0 0.0.0.0",
+                                     wildcard="0.0.0.0 255.255.255.255"),
+                        srcport=dict(line="",
+                                     platform="nxos",
+                                     protocol="",
+                                     note="",
+                                     port_nr=True,
+                                     items=[],
+                                     operator="",
+                                     ports=[],
+                                     sport=""),
+                        dstaddr=dict(line="any",
+                                     platform="nxos",
+                                     items=[],
+                                     note="",
+                                     max_ncwb=16,
+                                     type="any",
+                                     addrgroup="",
+                                     ipnet=IPv4Network("0.0.0.0/0"),
+                                     prefix="0.0.0.0/0",
+                                     subnet="0.0.0.0 0.0.0.0",
+                                     wildcard="0.0.0.0 255.255.255.255"),
+                        dstport=dict(line="",
+                                     platform="nxos",
+                                     protocol="",
+                                     note="",
+                                     port_nr=True,
+                                     items=[],
+                                     operator="",
+                                     ports=[],
+                                     sport=""),
+                        option=dict(line="", platform="nxos", note="", flags=[], logs=[]),
+                        note="",
+                        max_ncwb=16),
+                   dict(line="2 deny 1 any any",
+                        platform="nxos",
+                        type="extended",
+                        protocol_nr=True,
+                        port_nr=True,
+                        sequence=2,
+                        action="deny",
+                        protocol=dict(line="1",
+                                      platform="nxos",
+                                      note="",
+                                      protocol_nr=True,
+                                      has_port=False,
+                                      name="icmp",
+                                      number=1),
+                        srcaddr=dict(line="any",
+                                     platform="nxos",
+                                     items=[],
+                                     note="",
+                                     max_ncwb=16,
+                                     type="any",
+                                     addrgroup="",
+                                     ipnet=IPv4Network("0.0.0.0/0"),
+                                     prefix="0.0.0.0/0",
+                                     subnet="0.0.0.0 0.0.0.0",
+                                     wildcard="0.0.0.0 255.255.255.255"),
+                        srcport=dict(line="",
+                                     platform="nxos",
+                                     protocol="",
+                                     note="",
+                                     port_nr=True,
+                                     items=[],
+                                     operator="",
+                                     ports=[],
+                                     sport=""),
+                        dstaddr=dict(line="any",
+                                     platform="nxos",
+                                     items=[],
+                                     note="",
+                                     max_ncwb=16,
+                                     type="any",
+                                     addrgroup="",
+                                     ipnet=IPv4Network("0.0.0.0/0"),
+                                     prefix="0.0.0.0/0",
+                                     subnet="0.0.0.0 0.0.0.0",
+                                     wildcard="0.0.0.0 255.255.255.255"),
+                        dstport=dict(line="",
+                                     platform="nxos",
+                                     protocol="",
+                                     note="",
+                                     port_nr=True,
+                                     items=[],
+                                     operator="",
+                                     ports=[],
+                                     sport=""),
+                        option=dict(line="", platform="nxos", note="", flags=[], logs=[]),
+                        note="",
+                        max_ncwb=16)],
+            group_by="",
+            note="a",
+            protocol_nr=True,
+            port_nr=True,
+            sequence=1,
+        )
+        req_uuid1 = [("remove", ["items", 0, "protocol"], [("uuid", "ID1")]),
+                     ("remove", ["items", 0, "srcaddr"], [("uuid", "ID1")]),
+                     ("remove", ["items", 0, "srcport"], [("uuid", "ID1")]),
+                     ("remove", ["items", 0, "dstaddr"], [("uuid", "ID1")]),
+                     ("remove", ["items", 0, "dstport"], [("uuid", "ID1")]),
+                     ("remove", ["items", 0, "option"], [("uuid", "ID1")]),
+                     ("remove", ["items", 0], [("uuid", "ID1")]),
+                     ("remove", ["items", 1, "protocol"], [("uuid", "ID1")]),
+                     ("remove", ["items", 1, "srcaddr"], [("uuid", "ID1")]),
+                     ("remove", ["items", 1, "srcport"], [("uuid", "ID1")]),
+                     ("remove", ["items", 1, "dstaddr"], [("uuid", "ID1")]),
+                     ("remove", ["items", 1, "dstport"], [("uuid", "ID1")]),
+                     ("remove", ["items", 1, "option"], [("uuid", "ID1")]),
+                     ("remove", ["items", 1], [("uuid", "ID1")]),
+                     ("remove", "", [("uuid", "ID1")])]
+        for kwargs, req_d, req_uuid in [
+            (kw_no_line, req_no_line, UUID_R),
+            (kw_line, req_line, req_uuid1),
+        ]:
+            obj = AceGroup(**kwargs)
+            obj.uuid = UUID
+            for item in obj.items:
+                item.uuid = UUID
+                item.protocol.uuid = UUID
+                item.srcaddr.uuid = UUID
+                item.srcport.uuid = UUID
+                item.dstaddr.uuid = UUID
+                item.dstport.uuid = UUID
+                item.option.uuid = UUID
+                for item_ in [*item.srcaddr.items, *item.dstaddr.items]:
+                    item_.uuid = UUID
+
+            result = obj.data()
+            diff = list(dictdiffer.diff(first=result, second=req_d))
+            self.assertEqual(diff, [], msg=f"{kwargs=}")
+
+            result = obj.data(uuid=True)
+            diff = list(dictdiffer.diff(first=result, second=req_d))
+            self.assertEqual(diff, req_uuid, msg=f"{kwargs=}")
 
     def test_valid__line_to_ace(self):
-        """AceGroup._line_to_ace()"""
-        aceg_o = AceGroup()
+        """AceGroup._line_to_ace() AceGroup._line_to_oace()"""
+        obj = AceGroup()
         for line, req in [
             (REMARK, Remark(REMARK)),
             (PERMIT_IP, Ace(PERMIT_IP)),
@@ -222,32 +503,56 @@ class Test(Helpers):
             ("", None),
             ("typo", None),
         ]:
-            result = aceg_o._line_to_ace(line)
+            if req:
+                result = obj._line_to_ace(line)
+                self.assertEqual(result, req, msg=f"{line=}")
+            else:
+                with self.assertRaises(ValueError, msg=f"{line=}"):
+                    obj._line_to_ace(line)
+
+            result = obj._line_to_oace(line)
             self.assertEqual(result, req, msg=f"{line=}")
 
-    def test_valid__check_platform(self):
-        """AceGroup._check_platform()"""
-        for platform, ace_o, req in [
-            ("ios", Ace(PERMIT_IP, platform="ios"), True),
-            ("nxos", Ace(PERMIT_IP, platform="nxos"), True),
-            ("nxos", Ace(PERMIT_IP, platform="cnx"), True),
-            ("cnx", Ace(PERMIT_IP, platform="nxos"), True),
-            ("cnx", Ace(PERMIT_IP, platform="cnx"), True),
+    def test_valid__split_ports(self):
+        """AceGroup.split_ports()"""
+        for line, req in [
+            ("permit tcp any any", "permit tcp any any"),
+            ("permit tcp any eq 1 any eq 2", "permit tcp any eq 1 any eq 2"),
+            ("permit tcp any eq 1 2 any", "permit tcp any eq 1 any\npermit tcp any eq 2 any"),
+            ("permit tcp any eq 1 2 any eq 3 4", "permit tcp any eq 1 any eq 3\n"
+                                                 "permit tcp any eq 1 any eq 4\n"
+                                                 "permit tcp any eq 2 any eq 3\n"
+                                                 "permit tcp any eq 2 any eq 4"),
+            ("permit tcp any eq 1 any eq 2\npermit tcp any eq 3 any eq 4",
+             "permit tcp any eq 1 any eq 2\npermit tcp any eq 3 any eq 4"),
+            ("permit tcp any eq 1 2 any eq 3 4\npermit tcp any eq 1 2 any eq 1 2",
+             "permit tcp any eq 1 any eq 3\npermit tcp any eq 1 any eq 4\n"
+             "permit tcp any eq 2 any eq 3\npermit tcp any eq 2 any eq 4\n"
+             "permit tcp any eq 1 any eq 1\npermit tcp any eq 1 any eq 2\n"
+             "permit tcp any eq 2 any eq 1\npermit tcp any eq 2 any eq 2"),
         ]:
-            aceg_o = AceGroup(platform=platform)
-            result = aceg_o._check_platform(ace_o)
-            self.assertEqual(result, req, msg=f"{platform=} {ace_o=}")
+            obj = AceGroup(line, platform="ios")
+            obj.ungroup_ports()
+            result = obj.line
+            self.assertEqual(result, req, msg=f"{line=}")
 
-    def test_invalid__check_platform(self):
-        """AceGroup._check_platform()"""
-        for platform, ace_o, error in [
-            ("ios", Ace(PERMIT_IP, platform="nxos"), ValueError),
-            ("nxos", Ace(PERMIT_IP, platform="ios"), ValueError),
-            ("cnx", Ace(PERMIT_IP, platform="ios"), ValueError),
+    # =========================== helpers ============================
+
+    def test_valid__convert_any_to_aces(self):
+        """AceGroup._convert_any_to_aces()"""
+        items0 = [Remark(REMARK), Ace(PERMIT_IP1)]
+        items1 = [Ace(PERMIT_IP1), Ace(DENY_IP2)]
+        items2 = [Ace(DENY_IP2), Ace(PERMIT_IP1)]
+        for items, req_d in [
+            (items0, dict(line=f"{REMARK}\n{PERMIT_IP1}", sequence=0)),
+            (items1, dict(line=f"{PERMIT_IP1}\n{DENY_IP2}", sequence=0)),
+            (items2, dict(line=f"{DENY_IP2}\n{PERMIT_IP1}", sequence=0)),
         ]:
-            aceg_o = AceGroup(platform=platform)
-            with self.assertRaises(error, msg=f"{platform=} {ace_o=}"):
-                aceg_o._check_platform(ace_o)
+            obj = AceGroup(items=items)
+            self._test_attrs(obj=obj, req_d=req_d, msg=f"{items=}")
+            # setter
+            obj.items = items
+            self._test_attrs(obj=obj, req_d=req_d, msg=f"{items=}")
 
 
 if __name__ == "__main__":

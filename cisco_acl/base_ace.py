@@ -1,45 +1,76 @@
-"""Base - Parent of: AceBase, Address, Port, Protocol
-BaseAce - Parent of: Ace, Remark"""
+"""BaseAce - Parent of: Ace, Remark, AceGroup"""
 
+from abc import ABC, abstractmethod
+
+from cisco_acl import helpers as h
 from cisco_acl.base import Base
-from cisco_acl.sequence import Sequence
-from cisco_acl.types_ import StrInt
+from cisco_acl.types_ import StrInt, DAny
+from cisco_acl.wildcard import Wildcard
 
 
-class BaseAce(Base):
-    """BaseAce - Parent of: Ace, Remark"""
+class BaseAce(Base, ABC):
+    """BaseAce - Parent of: Ace, Remark, AceGroup"""
 
-    __slots__ = ("_platform", "_note", "_line", "_sequence", "_protocol_nr", "_port_nr")
-
-    def __init__(self, line, **kwargs):
-        """BaseAce - Parent of: Ace, Remark
-        :param line: ACE line, can contain index
+    def __init__(self, **kwargs):
+        """BaseAce - Parent of: Ace, Remark, AceGroup
         :param platform: Platform: "ios", "nxos" (default "ios")
-        :param bool protocol_nr: Well-known ip protocols as numbers
+        :type platform: str
+
+        Helpers
+        :param note: Object description
+        :type note: Any
+
+        :param max_ncwb: Max count of non-contiguous wildcard bits
+        :type max_ncwb: int
+
+        :param protocol_nr: Well-known ip protocols as numbers
             True  - all ip protocols as numbers
             False - well-known ip protocols as names (default)
-        :param bool port_nr: Well-known TCP/UDP ports as numbers
+        :type protocol_nr: bool
+
+        :param port_nr: Well-known TCP/UDP ports as numbers
             True  - all tcp/udp ports as numbers
             False - well-known tcp/udp ports as names (default)
-        :param note: Object description (can be used for ACEs sorting)
+        :type port_nr: bool
+
+        Alternate way to get `name` and ACEs `items`, if `line` absent
+        :param str type: ACL type: "extended", "standard" (default "extended")
         """
-        super().__init__(**kwargs)
-        self._protocol_nr = bool(kwargs.get("protocol_nr"))
-        self._port_nr = bool(kwargs.get("port_nr"))
-        self.sequence = 0
-        self.line = line
+        self._line: str = ""
+        self._sequence: int = 0
+        self._type: str = "extended"
+        self._protocol_nr: bool = False
+        self._port_nr: bool = False
+        # noinspection PyProtectedMember
+        self.max_ncwb: int = Wildcard._init_max_ncwb(**kwargs)
+        super().__init__(**kwargs)  # platform, note
+        if kwargs.get("type"):
+            self._type = h.init_type(**kwargs)
+        if sequence := kwargs.get("sequence"):
+            self._sequence = h.init_int(sequence)
+        if protocol_nr := kwargs.get("protocol_nr"):
+            self._protocol_nr = bool(protocol_nr)
+        if port_nr := kwargs.get("port_nr"):
+            self._port_nr: bool = bool(port_nr)
+
+    def __hash__(self) -> int:
+        return self.line.__hash__()
+
+    def __eq__(self, other) -> bool:
+        """== equality"""
+        if self.__class__ == other.__class__:
+            return self.__hash__() == other.__hash__()
+        return False
+
+    def __repr__(self):
+        params = self._repr__params()
+        params = self._repr__add_param("protocol_nr", params)
+        params = self._repr__add_param("port_nr", params)
+        kwargs = ", ".join(params)
+        name = self.__class__.__name__
+        return f"{name}({kwargs})"
 
     # =========================== property ===========================
-
-    @property
-    def line(self) -> str:
-        """Dummy"""
-        return ""
-
-    @line.setter
-    def line(self, line: str):
-        """Dummy"""
-        return
 
     @property
     def port_nr(self) -> bool:
@@ -47,9 +78,10 @@ class BaseAce(Base):
         return self._port_nr
 
     @port_nr.setter
-    def port_nr(self, port_nr: bool):
+    def port_nr(self, port_nr: bool) -> None:
         self._port_nr = bool(port_nr)
-        self.line = self.line
+        data = self.data(uuid=True)
+        self.__init__(**data)  # type: ignore
 
     @property
     def protocol_nr(self) -> bool:
@@ -57,29 +89,61 @@ class BaseAce(Base):
         return self._protocol_nr
 
     @protocol_nr.setter
-    def protocol_nr(self, protocol_nr: bool):
+    def protocol_nr(self, protocol_nr: bool) -> None:
         self._protocol_nr = bool(protocol_nr)
-        self.line = self.line
+        data = self.data(uuid=True)
+        self.__init__(**data)  # type: ignore
 
     @property
-    def sequence(self) -> Sequence:
-        """Sequence object. ACE sequence number in ACL
+    def sequence(self) -> int:
+        """ACE sequence number in ACL
         :return: Sequence number
 
         :example: Ace without sequence number
-            Ace("permit ip any any")
-            return: Sequence("0")
+            self: Ace("permit ip any any")
+            return: 0
 
         :example: Ace with sequence number
-            Ace("10 permit ip any any")
-            return: Sequence("10")
+            self: Ace("10 permit ip any any")
+            return: 10
         """
         return self._sequence
 
     @sequence.setter
     def sequence(self, sequence: StrInt) -> None:
-        self._sequence = Sequence(sequence)
+        self._sequence = h.init_int(sequence)
 
-    @sequence.deleter
-    def sequence(self) -> None:
-        self._sequence = Sequence()
+    @property
+    def type(self) -> str:
+        """ACL type: standard, extended"""
+        return self._type
+
+    @type.setter
+    def type(self, type_: str) -> None:
+        self._type = h.init_type(type=type_, platform=self.platform)
+        data = self.data(uuid=True)
+        self.__init__(**data)  # type: ignore
+
+    # =========================== methods ============================
+
+    def copy(self):
+        """Copies the self object"""
+        kwargs = self.data()
+        return self.__class__(**kwargs)
+
+    @abstractmethod
+    def data(self, uuid: bool = False) -> DAny:
+        """Converts self object to *dict*
+        :param uuid: Returns self.uuid in data
+        :type uuid: bool
+
+        :return: data in *dict* format
+        """
+
+    # =========================== helpers ============================
+
+    def _sequence_s(self) -> str:
+        """Returns string of sequence, empty string if sequence==0"""
+        if self._sequence:
+            return str(self._sequence)
+        return ""

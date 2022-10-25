@@ -6,7 +6,6 @@ import unittest
 from datetime import datetime
 
 # noinspection PyProtectedMember
-from cisco_acl import __title__
 from setup import PACKAGE_, ROOT, README
 
 CHANGELOG = "CHANGELOG.rst"
@@ -79,7 +78,7 @@ class Test(unittest.TestCase):
         path = os.path.join(ROOT, README)
         with open(path) as fh:
             text = fh.read()
-            regex = __title__ + r"-(.+)\.tar\.gz"
+            regex = r"/tags/(.+)\.tar\.gz"
             versions_readme = re.findall(regex, text, re.M)
             for version_readme in versions_readme:
                 self.assertEqual(version_readme, version, msg=f"version in {path=}")

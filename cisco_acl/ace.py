@@ -4,82 +4,81 @@ from __future__ import annotations
 from functools import total_ordering
 from typing import List
 
-import netports
-
 from cisco_acl import helpers as h
 from cisco_acl.address import Address
 from cisco_acl.base_ace import BaseAce
+from cisco_acl.option import Option
 from cisco_acl.port import Port
 from cisco_acl.protocol import Protocol
-from cisco_acl.sequence import Sequence
-from cisco_acl.types_ import LStr, LInt
+from cisco_acl.types_ import DAny, OBool, DStr, LStr
 
 
 @total_ordering
 class Ace(BaseAce):
     """ACE - Access Control Entry"""
 
-    __slots__ = ("_platform", "_note", "_line", "_protocol_nr", "_port_nr",
-                 "_sequence", "_action", "_protocol", "_srcaddr",
-                 "_srcport",
-                 "_dstaddr", "_dstport", "option")
-
     def __init__(self, line: str, **kwargs):
         """ACE - Access Control Entry
-        :param str line: ACE config line
-        :param str platform: Platform: "ios", "nxos" (default "ios")
-        :param bool protocol_nr: Well-known ip protocols as numbers
+        :param line: ACE config, "show running-config" output
+        :type line: str
+
+        :param platform: Platform: "ios", "nxos" (default "ios")
+        :type platform: str
+
+        Helpers
+        :param note: Object description
+        :type note: Any
+
+        :param max_ncwb: Max count of non-contiguous wildcard bits
+        :type max_ncwb: int
+
+        :param protocol_nr: Well-known ip protocols as numbers
             True  - all ip protocols as numbers
             False - well-known ip protocols as names (default)
-        :param bool port_nr: Well-known TCP/UDP ports as numbers
+        :type protocol_nr: bool
+
+        :param port_nr: Well-known TCP/UDP ports as numbers
             True  - all tcp/udp ports as numbers
             False - well-known tcp/udp ports as names (default)
-        :param note: Object description. Not part of the ACE configuration,
-            can be used for ACEs sorting
+        :type port_nr: bool
 
         :example:
-            line: "10 permit tcp host 10.0.0.1 eq 179 10.0.0.0 0.0.0.3 eq 80 443 log"
-            platform: "ios"
-            note: "allow web"
-            result:
-                self.line = "10 permit tcp host 10.0.0.1 10.0.0.0 0.0.0.3 eq www 443 log"
-                self.platform = "ios"
-                self.sequence = Sequence("10")
-                self.action = "permit"
-                self.protocol = Protocol("tcp")
-                self.srcaddr = Address("host 10.0.0.1")
-                self.srcport = Port("eq bgp")
-                self.dstaddr = Address("10.0.0.0 0.0.0.3")
-                self.dstport = Port("eq www 443")
-                self.option = "log"
-                self.note = "allow web"
+            ace=Ace("10 permit tcp host 10.0.0.1 eq 179 10.0.0.0 0.0.0.3 eq 80 443 log")
+
+            ace.line == "10 permit tcp host 10.0.0.1 10.0.0.0 0.0.0.3 eq www 443 log"
+            ace.platform == "ios"
+            ace.sequence == 10
+            ace.action == "permit"
+            ace.protocol == Protocol("tcp")
+            ace.srcaddr == Address("host 10.0.0.1")
+            ace.srcport == Port("eq bgp")
+            ace.dstaddr == Address("10.0.0.0 0.0.0.3")
+            ace.dstport == Port("eq www 443")
+            ace.option == Option("log")
         """
-        self._sequence = Sequence()
         self._action = ""
         self._protocol = Protocol()
-        self._srcaddr = Address()
+        self._srcaddr = Address("any")
         self._srcport = Port()
-        self._dstaddr = Address()
+        self._dstaddr = Address("any")
         self._dstport = Port()
-        self.option = ""
-        super().__init__(line, **kwargs)
+        self._option = Option()
+        super().__init__(**kwargs)  # platform, note, protocol_nr, port_nr, max_ncwb
+        if srcaddr := kwargs.get("srcaddr") or {}:
+            self._srcaddr = Address(**srcaddr)
+        if dstaddr := kwargs.get("dstaddr") or {}:
+            self._dstaddr = Address(**dstaddr)
+        self.line = line
 
-    def __hash__(self) -> int:
-        return self.line.__hash__()
-
-    def __eq__(self, other) -> bool:
-        """== equality"""
-        if self.__class__ == other.__class__:
-            return self.__hash__() == other.__hash__()
-        return False
+    # ========================== redefined ===========================
 
     # noinspection DuplicatedCode
     def __lt__(self, other) -> bool:
         """< less than"""
         if hasattr(other, "sequence"):
             # sequence
-            if self._sequence.number != other.sequence.number:
-                return self._sequence.number < other.sequence.number
+            if self._sequence != other.sequence:
+                return self._sequence < other.sequence
             # object
             if other.__class__.__name__ == "Remark":
                 return False
@@ -87,41 +86,26 @@ class Ace(BaseAce):
                 return True
             if isinstance(other, Ace):
                 # protocol
-                if self.protocol.number != other.protocol.number:
-                    return self.protocol.number < other.protocol.number
+                if self._protocol.number != other.protocol.number:
+                    return self._protocol.number < other.protocol.number
                 # srcaddr
-                if self.srcaddr.ipnet != other.srcaddr.ipnet:
-                    if self.srcaddr.ipnet and other.srcaddr.ipnet:
-                        return self.srcaddr.ipnet < other.srcaddr.ipnet
-                    if self.srcaddr.ipnet and not other.srcaddr.ipnet:
-                        return True
-                    return False
+                if self._srcaddr.ipnet != other.srcaddr.ipnet:
+                    return self._lt__srcaddr(other)
                 # srcport
-                if self.srcport.operator and other.srcport.operator:
-                    if self.srcport.operator != other.srcport.operator:
-                        return self.srcport.operator < other.srcport.operator
-                    if self.srcport.items[0] != other.srcport.items[0]:
-                        return self.srcport.items[0] < other.srcport.items[0]
-                    if self.srcport.items[-1] != other.srcport.items[-1]:
-                        return self.srcport.items[-1] < other.srcport.items[-1]
+                if self._srcport.operator and other.srcport.operator:
+                    is_lt = self._lt__srcport(other)
+                    if isinstance(is_lt, bool):
+                        return is_lt
                 # dstaddr
-                if self.dstaddr.ipnet != other.dstaddr.ipnet:
-                    if self.dstaddr.ipnet and other.dstaddr.ipnet:
-                        return self.dstaddr.ipnet < other.dstaddr.ipnet
-                    if self.dstaddr.ipnet and not other.dstaddr.ipnet:
-                        return True
-                    return False
+                if self._dstaddr.ipnet != other.dstaddr.ipnet:
+                    return self._lt__dstaddr(other)
                 # dstport
-                if self.dstport.operator and other.dstport.operator:
-                    if self.dstport.operator != other.dstport.operator:
-                        return self.dstport.operator < other.dstport.operator
-                    if self.dstport.items[0] != other.dstport.items[0]:
-                        return self.dstport.items[0] < other.dstport.items[0]
-                    if self.dstport.items[-1] != other.dstport.items[-1]:
-                        return self.dstport.items[-1] < other.dstport.items[-1]
+                if self._dstport.operator and other.dstport.operator:
+                    is_lt = self._lt__dstport(other)
+                    if isinstance(is_lt, bool):
+                        return is_lt
                 # option, addrgroup
                 return self.line < other.line
-            raise TypeError(f"{other=} {Ace} expected")
         return False
 
     # =========================== property ===========================
@@ -131,17 +115,10 @@ class Ace(BaseAce):
         """ACE action: "permit", "deny"
         :return: ACE action
         :example:
-            Ace("10 permit ip any any")
+            self: Ace("10 permit ip any any")
             return: "permit"
         """
         return self._action
-
-    @action.setter
-    def action(self, action: str):
-        expected = ["permit", "deny"]
-        if action not in expected:
-            raise ValueError(f"invalid {action=}, {expected=}")
-        self._action = action
 
     @property
     def dstaddr(self) -> Address:
@@ -150,20 +127,14 @@ class Ace(BaseAce):
         :return: ACE destination Address object
 
         :example: ios
-            Ace("permit ip host 1.1.1.1 any")
+            self: Ace("permit ip host 1.1.1.1 any")
             return: Address("host 1.1.1.1")
 
         :example: nxos
-            Ace("10 permit ip host 1.1.1.1 any", platform="nxos")
+            self: Ace("10 permit ip host 1.1.1.1 any", platform="nxos")
             return: Address("1.1.1.1/32")
         """
         return self._dstaddr
-
-    @dstaddr.setter
-    def dstaddr(self, dstaddr: Address):
-        if not isinstance(dstaddr, Address):
-            raise TypeError(f"{dstaddr=} {Address} expected")
-        self._dstaddr = dstaddr
 
     @property
     def dstport(self) -> Port:
@@ -171,16 +142,10 @@ class Ace(BaseAce):
         :return: ACE destination Port object
 
         :example:
-            Ace("permit tcp host 1.1.1.1 eq www 443 any eq 1025 log")
+            self: Ace("permit tcp host 1.1.1.1 eq www 443 any eq 1025 log")
             return: Port("eq 1025")
         """
         return self._dstport
-
-    @dstport.setter
-    def dstport(self, dstport: Port):
-        if not isinstance(dstport, Port):
-            raise TypeError(f"{dstport=} {Port} expected")
-        self._dstport = dstport
 
     @property
     def line(self) -> str:
@@ -188,73 +153,93 @@ class Ace(BaseAce):
         :return: ACE config line
 
         :example:
-            Ace("10 permit ip any any")
+            self: Ace("10 permit ip any any")
             return: "10 permit ip any any"
         """
-        items = [
-            self._sequence.line,
-            self.action,
-            self.protocol.line,
-            self.srcaddr.line,
-            self.srcport.line,
-            self.dstaddr.line,
-            self.dstport.line,
-            self.option,
-        ]
+        if self._type == "extended":
+            items = [
+                self._sequence_s(),
+                self._action,
+                self._protocol.line,
+                self._srcaddr.line,
+                self._srcport.line,
+                self._dstaddr.line,
+                self._dstport.line,
+                self._option.line,
+            ]
+        else:  # standard
+            items = [
+                self._sequence_s(),
+                self._action,
+                self._srcaddr.line,
+                self._option.line,
+            ]
         return " ".join([s for s in items if s])
 
     @line.setter
-    def line(self, line: str):
-        line = self._init_line(line)
-        h.check_line_length(line)
-        ace_d = h.parse_ace(line)
-        self.sequence.line = ace_d["sequence"]
-        self.action = ace_d["action"]
-        self.srcaddr = Address(ace_d["srcaddr"], platform=self.platform)
-        self.dstaddr = Address(ace_d["dstaddr"], platform=self.platform)
-        protocol = Protocol(line=ace_d["protocol"],
-                            platform=self.platform,
-                            port_nr=self.port_nr,
-                            protocol_nr=self.protocol_nr)
-        kwargs_port = dict(platform=self.platform, protocol=protocol.name, port_nr=self.port_nr)
-        self.srcport = Port(ace_d["srcport"], **kwargs_port)
-        self.dstport = Port(ace_d["dstport"], **kwargs_port)
-        protocol.has_port = bool(self.srcport.line or self.dstport.line)
-        self.protocol = protocol
-        self.option = ace_d["option"]
+    def line(self, line: str) -> None:
+        line = h.init_line(line)
+
+        # parse line to dict
+        if ace_d := h.parse_ace_extended(line):
+            self._type = "extended"
+        else:
+            if ace_d := h.parse_ace_standard(line):
+                self._type = "standard"
+            else:
+                raise ValueError(f"invalid {line=}")
+        self._check_parsed_elements(data=ace_d, line=line)
+
+        self._sequence = h.init_int(ace_d["sequence"])
+        self._action = h.init_ace_action(ace_d["action"])
+        self._srcaddr = Address(ace_d["srcaddr"],
+                                platform=self._platform,
+                                items=self._srcaddr.items,
+                                max_ncwb=self.max_ncwb)
+        self._dstaddr = Address(ace_d["dstaddr"],
+                                platform=self._platform,
+                                items=self._dstaddr.items,
+                                max_ncwb=self.max_ncwb)
+        protocol_o = Protocol(line=ace_d["protocol"],
+                              platform=self._platform,
+                              port_nr=self._port_nr,
+                              protocol_nr=self._protocol_nr)
+        kwargs_port = dict(platform=self._platform, protocol=protocol_o.name, port_nr=self._port_nr)
+        self._srcport = Port(ace_d["srcport"], **kwargs_port)
+        self._dstport = Port(ace_d["dstport"], **kwargs_port)
+        protocol_o.has_port = bool(self._srcport.line or self._dstport.line)
+        self._protocol = protocol_o
+        self._option = Option(ace_d["option"], platform=self._platform)
+
+    @property
+    def option(self) -> Option:
+        """ACE option: "syn", "ack", "log", etc
+        :return: ACE option
+        :example:
+            self: Ace("10 permit ip any any log")
+            return: "log"
+        """
+        return self._option
 
     @property
     def platform(self) -> str:
-        """Platform
-        - "ios" - Cisco IOS (extended ACL)
-        - "nxos" Cisco Nexus NX-OS
-        """
+        """Platform: "ios" Cisco IOS, "nxos" Cisco Nexus NX-OS"""
         return self._platform
 
     @platform.setter
-    def platform(self, platform: str):
-        platform = self._init_platform(platform=platform)
-        if platform == self.platform:
-            return
-
-        self._platform = platform
-        self.protocol.platform = platform
-        self.srcaddr.platform = platform
-        self.srcport.platform = platform
-        self.dstaddr.platform = platform
-        self.dstport.platform = platform
-        items = [
-            self._sequence.line,
-            self.action,
-            self.protocol.line,
-            self.srcaddr.line,
-            self.srcport.line,
-            self.dstaddr.line,
-            self.dstport.line,
-            self.option,
-        ]
-        items = [s for s in items if s]
-        self.line = " ".join(items)
+    def platform(self, platform: str) -> None:
+        """Changes platform, normalizes self.items regarding the new platform
+        :param platform: Platform: "ios", "nxos" (default "ios")
+        """
+        self._platform = h.init_platform(platform=platform)
+        self._protocol.platform = self._platform
+        self._srcaddr.platform = self._platform
+        self._srcport.platform = self._platform
+        self._dstaddr.platform = self._platform
+        self._dstport.platform = self._platform
+        self._option.platform = self._platform
+        data = self.data(uuid=True)
+        self.__init__(**data)  # type: ignore
 
     @property
     def protocol(self) -> Protocol:
@@ -262,16 +247,10 @@ class Ace(BaseAce):
         :return: ACE Protocol object
 
         :example:
-            Ace("10 permit ip any any")
+            self: Ace("10 permit ip any any")
             return: Protocol("ip")
         """
         return self._protocol
-
-    @protocol.setter
-    def protocol(self, protocol: Protocol):
-        if not isinstance(protocol, Protocol):
-            raise TypeError(f"{protocol=} {Protocol} expected")
-        self._protocol = protocol
 
     @property
     def srcaddr(self) -> Address:
@@ -280,21 +259,14 @@ class Ace(BaseAce):
         :return: ACE source Address object
 
         :example: ios
-            Ace("permit ip host 1.1.1.1 any")
+            self: Ace("permit ip host 1.1.1.1 any")
             return: Address("host 1.1.1.1")
 
         :example: nxos
-            Ace("10 permit ip host 1.1.1.1 any", platform="nxos")
+            self: Ace("10 permit ip host 1.1.1.1 any", platform="nxos")
             return: Address("1.1.1.1/32")
         """
         return self._srcaddr
-
-    @srcaddr.setter
-    def srcaddr(self, srcaddr: Address):
-        if not isinstance(srcaddr, Address):
-            raise TypeError(f"{srcaddr=} {Address} expected")
-
-        self._srcaddr = srcaddr
 
     @property
     def srcport(self) -> Port:
@@ -302,231 +274,317 @@ class Ace(BaseAce):
         :return: ACE source Port object
 
         :example:
-            Ace("permit tcp host 1.1.1.1 eq www 443 any eq 1025 log")
+            self: Ace("permit tcp host 1.1.1.1 eq www 443 any eq 1025 log")
             return: Port("eq www 443")
         """
         return self._srcport
 
-    @srcport.setter
-    def srcport(self, srcport: Port):
-        if not isinstance(srcport, Port):
-            raise TypeError(f"{srcport=} {Port} expected")
-        self._srcport = srcport
+    @property
+    def type(self) -> str:
+        """ACL type: standard, extended"""
+        return self._type
+
+    @type.setter
+    def type(self, type_: str) -> None:
+        type_ = h.init_type(type=type_, platform=self.platform)
+        if self._type == "extended" and type_ == "standard":
+            if self._srcaddr.addrgroup:
+                addrgroup = self._srcaddr.addrgroup
+                raise ValueError(f"mutually exclusive: type={type_!r}, {addrgroup=}")
+            self._protocol.line = "ip"
+            self._srcport.line = ""
+            self._dstaddr.line = "any"
+            self._dstport.line = ""
+            self.option.line = ""
+        self._type = type_
+        data = self.data(uuid=True)
+        self.__init__(**data)  # type: ignore
 
     # =========================== methods ============================
 
-    def copy(self) -> Ace:
-        """Copies the self object
-        :return: A shallow copy of self
-        """
-        ace = Ace(line=self.line,
-                  platform=self.platform,
-                  protocol_nr=self.protocol_nr,
-                  port_nr=self.port_nr,
-                  note=self.note)
-        return ace
+    def data(self, uuid: bool = False) -> DAny:
+        """Converts *Ace* object to *dict*
+        :param uuid: Returns self.uuid in data
+        :type uuid: bool
 
-    def range(self, protocol: str = "", srcport: str = "", dstport: str = "",
-              protocol_nr: bool = False, port_nr: bool = False) -> LAce:
-        """Generates range of protocols and TCP/UDP source/destination ports
-        :param protocol: Range of ip protocols
-        :param srcport: Range of source TCP/UDP ports
-        :param dstport: Range of destination TCP/UDP ports
-        :param bool protocol_nr: Well-known ip protocols as numbers
-            True  - all ip protocols as numbers
-            False - well-known ip protocols as names (default)
-        :param bool port_nr: Well-known TCP/UDP ports as numbers
-            True  - all tcp/udp ports as numbers
-            False - well-known tcp/udp ports as names (default)
-        :return: Newly generated *Ace* objects
-
-        :example: Generates range of protocols
-            protocol: "1-2,6"
-            self.line: "permit ip any any"
-            return: ["permit icmp any any",
-                     "permit igmp any any",
-                     "permit tcp any any"]
-
-        :example: Generates range of source TCP ports
-            srcport: "21-23"
-            self.line: "permit tcp host 10.0.0.1 any"
-            return: ["permit tcp host 10.0.0.1 eq ftp any",
-                     "permit tcp eq 22 host 10.0.0.1 any",
-                     "permit tcp eq telnet host 10.0.0.1 any"]
-        """
-        if protocol and srcport:
-            raise ValueError(f"mutually exclusive {protocol=} {srcport=}")
-        if protocol and dstport:
-            raise ValueError(f"mutually exclusive {protocol=} {dstport=}")
-        aces: LAce = []  # return
-        aces_ = self._range__protocol(range_=protocol, protocol_nr=protocol_nr)
-        aces.extend(aces_)
-        aces_ = self._range__port(sdst="src", range_=srcport, port_nr=port_nr)
-        aces.extend(aces_)
-        aces_ = self._range__port(sdst="dst", range_=dstport, port_nr=port_nr)
-        aces.extend(aces_)
-        return aces
-
-    # noinspection PyIncorrectDocstring
-    @classmethod
-    def rule(cls, **kwargs) -> LAce:
-        """Converts data of Rule to Ace objects
-        :param str platform: Platform: "ios", "nxos" (default "ios")
-        :param str action: ACE action: "permit", "deny"
-        :param List[str] srcaddrs: Source addresses
-        :param List[str] dstaddrs: Destination addresses
-        :param List[str] protocols: Protocols
-        :param List[int] tcp_srcports: TCP source ports
-        :param List[int] tcp_dstports: TCP destination ports
-        :param List[int] udp_srcports: UDP source ports
-        :param List[int] udp_dstports: UDP destination ports
-        :return: List of Ace objects
+        :return: ACE data
 
         :example:
-            platform: "ios"
-            action: "permit"
-            srcaddrs: ["10.0.0.1/32"]
-            dstaddrs: ["10.0.0.0/30"]
-            protocols: ["tcp"]
-            tcp_srcports: []
-            tcp_dstports: [80, 443]
-            udp_srcports: []
-            udp_dstports: []
-            options: ["log"]
-            return: [Ace("permit tcp host 10.0.0.1 10.0.0.0 0.0.0.3 eq www 443 log")]
+            ace = Ace("10 permit tcp host 10.0.0.1 10.0.0.0 0.0.0.3 eq 80 443 log")
+            ace.data() -> {
+                "line": "10 permit tcp host 10.0.0.1 10.0.0.0 0.0.0.3 eq www log",
+                "platform": "ios",
+                "type": "extended",
+                "sequence": 10,
+                "action": "permit",
+                "protocol": {"line": "tcp",
+                             "platform": "ios",
+                             "note": "",
+                             "protocol_nr": False,
+                             "has_port": True,
+                             "name": "tcp",
+                             "number": 6},
+                "srcaddr": {"line": "host 10.0.0.1",
+                            "platform": "ios",
+                            "items": [],
+                            "note": "",
+                            "addrgroup": "",
+                            "ipnet": IPv4Network("10.0.0.1/32"),
+                            "prefix": "10.0.0.1/32",
+                            "subnet": "10.0.0.1 255.255.255.255",
+                            "wildcard": "10.0.0.1 0.0.0.0"},
+                "srcport": {"line": "",
+                            "platform": "ios",
+                            "protocol": "",
+                            "note": "",
+                            "port_nr": False,
+                            "items": [],
+                            "operator": "",
+                            "ports": [],
+                            "sport": ""},
+                "dstaddr": {"line": "10.0.0.0 0.0.0.3",
+                            "platform": "ios",
+                            "items": [],
+                            "note": "",
+                            "addrgroup": "",
+                            "ipnet": IPv4Network("10.0.0.0/30"),
+                            "prefix": "10.0.0.0/30",
+                            "subnet": "10.0.0.0 255.255.255.252",
+                            "wildcard": "10.0.0.0 0.0.0.3"},
+                "dstport": {"line": "eq www 443",
+                            "platform": "ios",
+                            "protocol": "tcp",
+                            "note": "",
+                            "port_nr": False,
+                            "items": [80,
+                            443],
+                            "operator": "eq",
+                            "ports": [80,
+                            443],
+                            "sport": "80,443"},
+                "option": {"line": "log",
+                           "platform": "ios",
+                           "note": "",
+                           "flags": [],
+                           "logs": ["log"]},
+                "note": "a"}
         """
-        platform: str = BaseAce._init_platform(**kwargs)
-        action: str = kwargs["action"]
-        action = dict(allow="permit", deny="deny")[action]
-        options: LStr = kwargs.get("options") or []
+        data = dict(
+            # init
+            line=self.line,
+            platform=self._platform,
+            type=self._type,
+            note=self.note,
+            max_ncwb=self.max_ncwb,
+            protocol_nr=self._protocol_nr,
+            port_nr=self._port_nr,
+            # property
+            sequence=self._sequence,
+            action=self._action,
+            protocol=self._protocol.data(uuid=uuid),
+            srcaddr=self._srcaddr.data(uuid=uuid),
+            srcport=self._srcport.data(uuid=uuid),
+            dstaddr=self._dstaddr.data(uuid=uuid),
+            dstport=self._dstport.data(uuid=uuid),
+            option=self._option.data(uuid=uuid),
+        )
+        if uuid:
+            data["uuid"] = self.uuid
+        return data
 
-        srcaddrs: LStr = kwargs.get("srcaddrs") or ["0.0.0.0/0"]
-        dstaddrs: LStr = kwargs.get("dstaddrs") or ["0.0.0.0/0"]
-        if not (srcaddrs and dstaddrs):
-            raise ValueError(f"absent {srcaddrs=} {dstaddrs=}")
-        srcaddrs = [h.make_wildcard(s) for s in srcaddrs]
-        dstaddrs = [h.make_wildcard(s) for s in dstaddrs]
+    def shadow_of(self, other: Ace, skip: LStr = None) -> bool:
+        """Checks is ACE in the shadow of other ACE
+        NOTES:
+        - Method compare *Ace* with the same action. ACEs where self.action=="permit" and
+            other.action=="deny" not taken into account (skip checking)
+        :param other: Other *Ace* object (rule in the top)
+        :param skip: Skips checking specified address type: "addrgroup", "nc_wildcard"
 
-        protocols: LStr = kwargs.get("protocols") or ["ip"]
-        tcp_srcports: LInt = kwargs.get("tcp_srcports") or []
-        tcp_dstports: LInt = kwargs.get("tcp_dstports") or []
-        udp_srcports: LInt = kwargs.get("udp_srcports") or []
-        udp_dstports: LInt = kwargs.get("udp_dstports") or []
-        if "tcp" in protocols and not (tcp_srcports or tcp_dstports):
-            raise ValueError(f"absent {tcp_srcports=} {tcp_dstports=}")
-        if "udp" in protocols and not (udp_srcports or udp_dstports):
-            raise ValueError(f"absent {udp_srcports=} {udp_dstports=}")
-        if "tcp" not in protocols and (tcp_srcports or tcp_dstports):
-            raise ValueError(f"protocol tcp is required for {tcp_srcports=} {tcp_dstports=}")
-        if "udp" not in protocols and (udp_srcports or udp_dstports):
-            raise ValueError(f"protocol udp is required for {udp_srcports=} {udp_dstports=}")
+        :return: True - self *Ace* is in the shadow of other *Ace*
+        :raises ValueError: addrgroup without addresses, non-contiguous wildcard
 
-        aces: LStr = []
-        for srcaddr in srcaddrs:
-            for dstaddr in dstaddrs:
-                for proto in protocols:
-                    aces_: LStr = [f"{action} {proto} {srcaddr}"]
-                    if proto == "tcp" and tcp_srcports:
-                        aces_ = _split_by_ports(aces_, tcp_srcports, platform)
-                    if proto == "udp" and udp_srcports:
-                        aces_ = _split_by_ports(aces_, udp_srcports, platform)
-                    aces_ = [f"{s} {dstaddr}" for s in aces_]
-                    if proto == "tcp" and tcp_dstports:
-                        aces_ = _split_by_ports(aces_, tcp_dstports, platform)
-                    if proto == "udp" and udp_dstports:
-                        aces_ = _split_by_ports(aces_, udp_dstports, platform)
-                    if options:
-                        aces_ = [_join_option(s, options) for s in aces_]
-                    aces.extend(aces_)
-        return sorted([Ace(s, platform=platform) for s in aces])
+        :example: self is in the shadow of other, because tcp=2 is in tcp=[1, 2, 3]
+            other.line == "permit tcp any any range 1 3"
+            self.line == "permit tcp any any eq 2"
+            return: True
+        """
+        if self._action != other.action:
+            return False
+        if not self._shadow_of__protocol(other):
+            return False
+        if not self._shadow_of__srcaddr(other=other, skip=skip):
+            return False
+        if not self._shadow_of__dstaddr(other=other, skip=skip):
+            return False
+        if not self._shadow_of__srcport(other):
+            return False
+        if not self._shadow_of__dstport(other):
+            return False
+        if not self._shadow_of__option(other):
+            return False
+        return True
+
+    def ungroup_ports(self) -> LAce:
+        """If self.srcport or self.dstport has "eq" or "neq" with multiple ports,
+            then split them to multiple *Ace*
+        :return: List of *Ace* with single port in each line
+        :example:
+            ace = Ace("permit tcp any eq 1 2 any eq 3 4", platform="ios")
+            ace.split_ports -> [Ace("permit tcp any eq 1 any eq 3"),
+                                Ace("permit tcp any eq 1 any eq 4"),
+                                Ace("permit tcp any eq 2 any eq 3"),
+                                Ace("permit tcp any eq 2 any eq 4")]
+        """
+        _aces: LAce = []
+        if self.srcport.operator in ["eq", "neq"]:
+            for item in self.srcport.items:
+                ace_o = self.copy()
+                ace_o.srcport.items = [item]
+                _aces.append(ace_o)
+        else:
+            _aces.append(self.copy())
+
+        aces = []  # result
+        for ace_o_ in _aces:
+            if ace_o_.dstport.operator in ["eq", "neq"]:
+                for item in ace_o_.dstport.items:
+                    ace_o = ace_o_.copy()
+                    ace_o.dstport.items = [item]
+                    aces.append(ace_o)
+            else:
+                aces.append(ace_o_.copy())
+        if len(aces) == 1:
+            return [self]
+        return aces
 
     # =========================== helpers ============================
 
-    def _range__port(self, sdst: str, range_: str, port_nr: bool) -> LAce:
-        """Generates range of TCP/UDP source/destination ports
-        :param sdst: "src", "dst"
-        :param range_: Range of src/dst ports
-        :param bool port_nr: Well-known TCP/UDP ports as numbers
-        :return: Newly generated *Ace* objects
+    @staticmethod
+    def _check_parsed_elements(line: str, data: DStr) -> bool:
+        """Checks parsed ACE elements
+        :return: True if all elements are valid
+        :raises: ValueError - some element in line is invalid
         """
-        aces: LAce = []  # return
-        ports: LInt = netports.itcp(range_)
-        for port in ports:
-            ace: Ace = self.copy()
-            ace.port_nr = port_nr
-            ace.protocol.has_port = True
-            port_o: Port = getattr(ace, f"{sdst}port")
-            operator = port_o.operator or "eq"
-            expected = ("eq", "gt", "lt", "neq")
-            if operator not in expected:
-                raise ValueError(f"invalid {operator=}, {expected=}")
-            port_o._operator = operator
-            port_o._items = [port]
-            aces.append(ace)
-        return aces
+        protocol = data["protocol"]
+        srcport = data["srcport"]
+        dstport = data["dstport"]
+        if not (protocol or srcport or dstport):
+            raise ValueError(f"invalid {line=}, required one of: {protocol=} {srcport=} {dstport=}")
+        if protocol == "ip" and srcport:
+            raise ValueError(f"invalid {line=}, mutually exclusive {protocol=} {srcport=}")
+        if protocol == "ip" and dstport:
+            raise ValueError(f"invalid {line=}, mutually exclusive {protocol=} {dstport=}")
+        return True
 
-    def _range__protocol(self, range_: str, protocol_nr: bool) -> LAce:
-        """Generates range of protocols
-        :param range_: Range of src/dst ports
-        :param bool protocol_nr: Well-known ip protocols as numbers
-        :return: Newly generated *Ace* objects
+    # noinspection DuplicatedCode
+    def _shadow_of__srcaddr(self, other: Ace, skip: LStr = None) -> bool:
+        """True if bottom address is in the shadow of the top address
+        :param other: *Ace* in the top
+        :param skip: Skips checking specified address type: "addrgroup", "nc_wildcard"
         """
-        aces: LAce = []  # return
-        protocols: LInt = netports.iip(range_)
-        for proto in protocols:
-            ace: Ace = self.copy()
-            ace.protocol = Protocol(str(proto), protocol_nr=protocol_nr)
-            aces.append(ace)
-        return aces
+        skip = skip or []
+        if "addrgroup" in skip:
+            if "addrgroup" in [self.srcaddr.type, other.srcaddr.type]:
+                return False
+        elif "nc_wildcard" in skip:
+            if "wildcard" in [self.srcaddr.type, other.srcaddr.type]:
+                if not (self.srcaddr.ipnet and other.srcaddr.ipnet):
+                    return False
 
+        tops = other.srcaddr.ipnets()
+        bottoms = self._srcaddr.ipnets()
+        is_subnet = h.subnet_of(tops=tops, bottoms=bottoms)
+        return is_subnet
 
-# =========================== helpers ============================
+    # noinspection DuplicatedCode
+    def _shadow_of__dstaddr(self, other: Ace, skip: LStr = None) -> bool:
+        """True if bottom address is in the shadow of the top address
+        :param other: *Ace* in the top
+        :param skip: Skips checking specified address type: "addrgroup", "nc_wildcard"
+        """
+        skip = skip or []
+        if "addrgroup" in skip:
+            if "addrgroup" in [self.dstaddr.type, other.dstaddr.type]:
+                return False
+        elif "nc_wildcard" in skip:
+            if "wildcard" in [self.dstaddr.type, other.dstaddr.type]:
+                if not (self.dstaddr.ipnet and other.dstaddr.ipnet):
+                    return False
 
-def _split_by_ports(aces: LStr, ports: LInt, platform: str) -> LStr:
-    """If platform="ios", join ports to string and append to aces lines
-    If platform="nxos", make multiple ACE lines, each port in separate ace line
-    :param aces: List of ACE lines, ready for split
-    :param ports: List of ports
-    :param platform: Platform: "ios", "nxos"
-    :return: Split list of ACE lines
+        tops = other.dstaddr.ipnets()
+        bottoms = self._dstaddr.ipnets()
+        return h.subnet_of(tops=tops, bottoms=bottoms)
 
-    :example: source ports for nxos
-        aces: "permit tcp any"
-        ports: [1, 2]
-        platform: "nxos"
-        return: ["permit tcp any eq 1", "permit tcp any  eq 2"]
+    def _shadow_of__protocol(self, other: Ace) -> bool:
+        """True if self.protocol is in the shadow of the  other.protocol"""
+        if other.protocol.name == "ip":
+            return True
+        return other.protocol.number == self._protocol.number
 
-    :example: destination ports fo nxos
-        aces: "permit tcp any eq 1 any"
-        ports: [3, 4]
-        platform: "nxos"
-        return: ["permit tcp any eq 1 any eq 3", "permit tcp any eq 1 any eq 4"]
+    def _shadow_of__srcport(self, other: Ace) -> bool:
+        """True if self.srcport is in the shadow of the  other.srcport"""
+        if top := set(other.srcport.ports):
+            if bottom := set(self._srcport.ports):
+                diff = bottom.intersection(top)
+                return diff == bottom
+            return False
+        return True
 
-    :example: source ports for ios
-        aces: "permit tcp any"
-        ports: [1, 2, 3]
-        platform: "ios"
-        return: ["permit tcp any eq 1 2 3"]
-    """
-    aces_: LStr = []
-    for ace in aces:
-        if platform == "nxos":
-            aces_.extend([_join_ports(ace=ace, ports=[i]) for i in ports])
-        else:
-            aces_.append(_join_ports(ace=ace, ports=ports))
-    return aces_
+    def _shadow_of__dstport(self, other: Ace) -> bool:
+        """True if self.dstport is in the shadow of the  other.dstport"""
+        if top := set(other.dstport.ports):
+            if bottom := set(self._dstport.ports):
+                diff = bottom.intersection(top)
+                return diff == bottom
+            return False
+        return True
 
+    def _shadow_of__option(self, other: Ace) -> bool:
+        """True if self.dstport is in the shadow of the  other.dstport"""
+        if top := set(other.option.flags):
+            if bottom := set(self._option.flags):
+                diff = bottom.intersection(top)
+                return diff == bottom
+            return False
+        return True
 
-def _join_ports(ace: str, ports: list) -> str:
-    """Adds ports to ace line"""
-    ports_ = " ".join([str(i) for i in ports])
-    return f"{ace} eq {ports_}"
+    def _lt__srcaddr(self, other: Ace) -> bool:
+        """< less than, srcaddr"""
+        if self._srcaddr.ipnet and other.srcaddr.ipnet:
+            return self._srcaddr.ipnet < other.srcaddr.ipnet
+        if self._srcaddr.ipnet and not other.srcaddr.ipnet:
+            return True
+        return False
 
+    def _lt__dstaddr(self, other: Ace) -> bool:
+        """< less than, dstaddr"""
+        if self._dstaddr.ipnet and other.dstaddr.ipnet:
+            return self._dstaddr.ipnet < other.dstaddr.ipnet
+        if self._dstaddr.ipnet and not other.dstaddr.ipnet:
+            return True
+        return False
 
-def _join_option(ace: str, options: LStr) -> str:
-    """Adds options to ace line"""
-    option = " ".join(options)
-    return f"{ace} {option}"
+    # noinspection DuplicatedCode
+    def _lt__srcport(self, other: Ace) -> OBool:
+        """< less than, srcport"""
+        if self._srcport.operator != other.srcport.operator:
+            return self._srcport.operator < other.srcport.operator
+        if self._srcport.items[0] != other.srcport.items[0]:
+            return self._srcport.items[0] < other.srcport.items[0]
+        if self._srcport.items[-1] != other.srcport.items[-1]:
+            return self._srcport.items[-1] < other.srcport.items[-1]
+        return None
+
+    # noinspection DuplicatedCode
+    def _lt__dstport(self, other: Ace) -> OBool:
+        """< less than, dstport"""
+        if self._dstport.operator != other.dstport.operator:
+            return self._dstport.operator < other.dstport.operator
+        if self._dstport.items[0] != other.dstport.items[0]:
+            return self._dstport.items[0] < other.dstport.items[0]
+        if self._dstport.items[-1] != other.dstport.items[-1]:
+            return self._dstport.items[-1] < other.dstport.items[-1]
+        return None
 
 
 LAce = List[Ace]
