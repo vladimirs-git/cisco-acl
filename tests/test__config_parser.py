@@ -95,21 +95,20 @@ class Test(unittest.TestCase):
                     platform="nxos",
                     type="extended")
 
-        for kwargs, names, req in [
-            (dict(config=""), None, []),
-            (dict(config=POL1), None, [acl1, acl2]),
-            (dict(config=POL1), [], []),
-            (dict(config=POL1), ["typo"], []),
-            (dict(config=POL1), ["ACL_NAME"], [acl1]),
-            (dict(config=POL1), ["UNUSED"], [acl2]),
-            (dict(config=POL1), ["UNUSED", "ACL_NAME"], [acl1, acl2]),
-
+        for config, names, req in [
+            ("", None, []),
+            (POL1, None, [acl1, acl2]),
+            (POL1, [], []),
+            (POL1, ["typo"], []),
+            (POL1, ["ACL_NAME"], [acl1]),
+            (POL1, ["UNUSED"], [acl2]),
+            (POL1, ["UNUSED", "ACL_NAME"], [acl1, acl2]),
         ]:
-            parser = ConfigParser(platform="nxos", **kwargs)
+            parser = ConfigParser(config, platform="nxos")
             parser.parse_config()
             result: LDAny = parser.acls(names=names)
             diff = list(dictdiffer.diff(first=result, second=req))
-            self.assertEqual(diff, [], msg=f"{kwargs=}")
+            self.assertEqual(diff, [], msg=f"{config=}")
 
 
 if __name__ == "__main__":

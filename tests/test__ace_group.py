@@ -144,43 +144,43 @@ class Test(Helpers):
         addgr_ios = "permit ip object-group NAME any"
         addgr_cnx = "permit ip addrgroup NAME any"
 
-        for platform, platform_new, line, req in [
+        for platform, platform_new, line, req, req_new in [
             # ios to ios
-            ("ios", "ios", any_port, any_port),
-            ("ios", "ios", host, host),
-            ("ios", "ios", wild30, wild30),
-            ("ios", "ios", wild32, host),
-            ("ios", "ios", addgr_ios, addgr_ios),
+            ("ios", "ios", any_port, any_port, any_port),
+            ("ios", "ios", host, host, host),
+            ("ios", "ios", wild30, wild30, wild30),
+            ("ios", "ios", wild32, host, host),
+            ("ios", "ios", addgr_ios, addgr_ios, addgr_ios),
             # ios to nxos
-            ("ios", "nxos", any_port, any_port),
-            ("ios", "nxos", host, prefix32),
-            ("ios", "nxos", wild30, prefix30),
-            ("ios", "nxos", wild32, prefix32),
-            ("ios", "nxos", addgr_ios, addgr_cnx),
+            ("ios", "nxos", any_port, any_port, any_port),
+            ("ios", "nxos", host, host, host),
+            ("ios", "nxos", wild30, wild30, prefix30),
+            ("ios", "nxos", wild32, host, host),
+            ("ios", "nxos", addgr_ios, addgr_ios, addgr_cnx),
             # nxos to nxos
-            ("nxos", "nxos", any_port, any_port),
-            ("nxos", "nxos", host, prefix32),
-            ("nxos", "nxos", wild30, prefix30),
-            ("nxos", "nxos", wild32, prefix32),
-            ("nxos", "nxos", prefix30, prefix30),
-            ("nxos", "nxos", prefix32, prefix32),
-            ("nxos", "nxos", addgr_cnx, addgr_cnx),
+            ("nxos", "nxos", any_port, any_port, any_port),
+            ("nxos", "nxos", host, host, host),
+            ("nxos", "nxos", wild30, prefix30, prefix30),
+            ("nxos", "nxos", wild32, host, host),
+            ("nxos", "nxos", prefix30, prefix30, prefix30),
+            ("nxos", "nxos", prefix32, host, host),
+            ("nxos", "nxos", addgr_cnx, addgr_cnx, addgr_cnx),
             # nxos to ios
-            ("nxos", "ios", any_port, any_port),
-            ("nxos", "ios", host, host),
-            ("nxos", "ios", wild30, wild30),
-            ("nxos", "ios", wild32, host),
-            ("nxos", "ios", prefix30, wild30),
-            ("nxos", "ios", prefix32, host),
-            ("nxos", "ios", addgr_cnx, addgr_ios),
+            ("nxos", "ios", any_port, any_port, any_port),
+            ("nxos", "ios", host, host, host),
+            ("nxos", "ios", wild30, prefix30, wild30),
+            ("nxos", "ios", wild32, host, host),
+            ("nxos", "ios", prefix30, prefix30, wild30),
+            ("nxos", "ios", prefix32, host, host),
+            ("nxos", "ios", addgr_cnx, addgr_cnx, addgr_ios),
         ]:
             obj = AceGroup(line, platform=platform)
             result = obj.line
-            self.assertEqual(result, line, msg=f"{platform=} {platform_new=} {line=}")
+            self.assertEqual(result, req, msg=f"{platform=} {platform_new=} {line=}")
             # platform
             obj.platform = platform_new
             result = obj.line
-            self.assertEqual(result, req, msg=f"{platform=} {platform_new=} {line=}")
+            self.assertEqual(result, req_new, msg=f"{platform=} {platform_new=} {line=}")
 
     def test_valid__platform__addrgroup_items(self):
         """AceGroup.platform()"""

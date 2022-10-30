@@ -21,11 +21,6 @@ assert addr.line == "10.0.0.0 255.255.255.252"
 addr.platform = "nxos"
 assert addr.line == "10.0.0.0/30"
 
-addr = AddressAg("host 10.0.0.1", platform="ios")
-assert addr.line == "host 10.0.0.1"
-addr.platform = "nxos"
-assert addr.line == "10.0.0.1/32"
-
 # AddressAg with items
 addr = AddressAg("group-object NAME", items=["host 10.0.0.1", "host 10.0.0.2"])
 print("line", addr.line)

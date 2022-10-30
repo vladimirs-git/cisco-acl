@@ -1,6 +1,5 @@
 """BaseAddress - Parent of: Address, AddressAg"""
 
-import re
 from abc import abstractmethod
 from functools import total_ordering
 from ipaddress import IPv4Network
@@ -9,7 +8,7 @@ from typing import Optional
 from cisco_acl import helpers as h
 from cisco_acl.base import Base
 from cisco_acl.types_ import DAny, OIpNet, LIpNet, LStr
-from cisco_acl.wildcard import Wildcard
+from cisco_acl.wildcard import Wildcard, init_max_ncwb
 
 
 @total_ordering  # type: ignore
@@ -18,7 +17,7 @@ class BaseAddress(Base):
 
     def __init__(self, **kwargs):
         """BaseAddress
-        :param platform: Platform: "ios", "nxos" (default "ios")
+        :param platform: Platform: "ios" (default), "nxos"
         :type platform: str
 
         Helpers
@@ -34,7 +33,7 @@ class BaseAddress(Base):
         self._wildcard = None
         super().__init__(**kwargs)  # platform, note
         # noinspection PyProtectedMember
-        self.max_ncwb: int = Wildcard._init_max_ncwb(**kwargs)
+        self.max_ncwb: int = init_max_ncwb(**kwargs)
 
     def __repr__(self):
         params = self._repr__params()
@@ -169,7 +168,7 @@ class BaseAddress(Base):
             return: "host 10.0.0.0.1"
         """
         if self._type == "addrgroup":
-            return f"{self._cmd_addrgroup()}{self._addrgroup}"
+            return f"{self._cmd_addrgroup()} {self._addrgroup}"
         if self._type == "any":
             return "any"
         if self._type == "host":
@@ -187,12 +186,12 @@ class BaseAddress(Base):
         line = h.init_line(line)
         if self._is_address_any(line):
             self._line__any()
-        elif self._is_address_host(line):
-            self._line__host(line)
         elif self._is_address_prefix(line):
             self._line__prefix(line)
         elif self._is_address_wildcard(line):
             self._line__wildcard(line)
+        elif self._is_address_host(line):
+            self._line__host(line)
         elif self._is_addrgroup(line):
             self._line_addrgroup(line)
         else:
@@ -206,7 +205,7 @@ class BaseAddress(Base):
     @platform.setter
     def platform(self, platform: str) -> None:  # pylint: disable=too-many-branches)
         """Changes platform, normalizes self regarding the new platform
-        :param platform: Platform: "ios", "nxos" (default "ios")
+        :param platform: Platform: "ios" (default), "nxos"
         """
         line = self.line
         self._platform = h.init_platform(platform=platform)
@@ -432,19 +431,11 @@ class BaseAddress(Base):
 
     def _cmd_addrgroup(self) -> str:
         """Address group line beginning
-        :return: "object-group " or "addrgroup "
-
-        :example:
-            self.platform: "ios"
-            return: "object-group "
-
-        :example:
-            self.platform: "nxos"
-            return: "addrgroup "
+        :return: nxos: "addrgroup", ios: "object-group"
         """
         if self._platform == "nxos":
-            return "addrgroup "
-        return "object-group "
+            return "addrgroup"
+        return "object-group"
 
     @staticmethod
     def _get_ipnet(obj) -> OIpNet:
@@ -471,42 +462,27 @@ class BaseAddress(Base):
 
     def _is_addrgroup(self, line: str) -> bool:
         """True if address is group "object-group NAME" or "addrgroup NAME" """
-        regex = f"^{self._cmd_addrgroup()}(.+)"
-        return bool(re.match(regex, line))
+        addrgroup_ = self._cmd_addrgroup()
+        return line.startswith(addrgroup_)
 
     @staticmethod
     def _is_address_host(line: str) -> bool:
         """True if address is "host A.B.C.D" """
-        regex = f"host {h.OCTETS}"
-        return bool(re.match(regex, line))
+        return line.startswith("host ")
 
     @staticmethod
     def _is_address_prefix(line: str) -> bool:
         """True if address is prefix "A.B.C.D/LEN" """
-        regex = h.OCTETS + r"/\d+$"
-        return bool(re.match(regex, line))
-
-    @staticmethod
-    def _is_address_subnet(line: str) -> bool:
-        """True if address is subnet: "A.B.C.D A.B.C.D" """
-        regex = f"{h.OCTETS} {h.OCTETS}"
-        if re.match(regex, line):
-            try:
-                IPv4Network(line.replace(" ", "/"))
-            except ValueError:
-                return False
-            return True
-        return False
+        return line.find("/") != -1
 
     @staticmethod
     def _is_address_wildcard(line: str) -> bool:
         """True if address is wildcard: "A.B.C.D A.B.C.D" """
-        regex = f"{h.OCTETS} {h.OCTETS}"
-        return bool(re.match(regex, line))
+        return bool(line) and line[0].isdigit() and line.find(" ") != -1
 
     def _line_addrgroup(self, line):
         """Sets attributes for address group: "object-group NAME" or "addrgroup NAME" """
-        regex = f"^{self._cmd_addrgroup()}(.+)"
+        regex = f"^{self._cmd_addrgroup()} (.+)"
         addrgroup = h.findall1(regex, line)
         h.check_name(addrgroup)
         self._type = "addrgroup"
@@ -530,15 +506,21 @@ class BaseAddress(Base):
 
     def _line__prefix(self, line: str) -> None:
         """Sets attributes for prefix: A.B.C.D/LEN"""
-        ipnet = h.prefix_to_ipnet(line)
-
         self._type = "prefix"
-        if self.platform == "ios":
-            self._type = "wildcard"
-
         self._addrgroup = ""
+        ipnet = h.prefix_to_ipnet(line)
         wildcard = ipnet.with_hostmask.replace("/", " ")
         self._wildcard = Wildcard(wildcard, platform=self._platform, max_ncwb=self.max_ncwb)
+
+        if ipnet.prefixlen == 32:
+            self._type = "host"
+            return
+        if self.platform == "nxos":
+            if str(ipnet) == "0.0.0.0/0":
+                self._type = "any"
+            return
+        if self.platform == "ios":
+            self._type = "wildcard"
 
     def _line__wildcard(self, line: str) -> None:
         """Sets attributes for wildcard: A.B.C.D A.B.C.D"""
@@ -546,9 +528,16 @@ class BaseAddress(Base):
         self._addrgroup = ""
         self._wildcard = Wildcard(line, platform=self._platform, max_ncwb=self.max_ncwb)
 
+        if isinstance(self._wildcard.ipnet, IPv4Network):
+            if self._wildcard.ipnet.prefixlen == 32:
+                self._type = "host"
+            elif str(self._wildcard.ipnet) == "0.0.0.0/0":
+                self._type = "any"
+            elif self._platform == "nxos":
+                self._type = "prefix"
+
 
 # ============================ functions =============================
-
 
 def collapse_(addresses: list) -> list:
     """Collapses *LAddress*, *LAddressAg*

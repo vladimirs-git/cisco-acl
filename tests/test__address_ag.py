@@ -18,33 +18,25 @@ from tests.helpers_test import (
     Helpers,
     IOS_ADDGR,
     PREFIX00,
-    PREFIX00_32_D,
     PREFIX00_D,
     PREFIX30,
     PREFIX30_D,
     PREFIX32,
-    PREFIX32_D,
     SUBNET00,
-    SUBNET00_32_D,
+    SUBNET00_D,
     SUBNET30,
     SUBNET30_D,
     SUBNET32,
-    SUBNET32_D,
     UUID,
     UUID_R,
     UUID_R2,
     WILD00,
-    WILD00_32_D,
     WILD30,
-    WILD30_D,
     WILD32,
-    WILD32_D,
     WILD_NC252,
     WILD_NC252_D,
-    WILD_NC3_D,
     WILD_NC3,
-    WILD_ANY_D,
-    SUBNET00_D,
+    WILD_NC3_D,
 )
 
 
@@ -105,39 +97,39 @@ class Test(Helpers):
         """AddressAg.line"""
         for kwargs, req_d in [
             # ios
-            (dict(line=PREFIX00, platform="ios"), {}),
-            (dict(line=PREFIX30, platform="ios"), SUBNET30_D),
-            (dict(line=PREFIX32, platform="ios"), SUBNET32_D),
-            (dict(line=SUBNET00, platform="ios"), {}),
-            (dict(line=SUBNET30, platform="ios"), SUBNET30_D),
-            (dict(line=SUBNET32, platform="ios"), SUBNET32_D),
-            (dict(line=WILD00, platform="ios"), SUBNET00_32_D),
-            (dict(line=WILD30, platform="ios"), {}),
-            (dict(line=WILD32, platform="ios"), SUBNET00_D),
-            (dict(line=WILD_NC3, platform="ios"), {}),
-            (dict(line=WILD_NC252, platform="ios"), SUBNET30_D),
-            (dict(line=ANY, platform="ios"), {}),
-            (dict(line=HOST, platform="ios"), HOST_D),
-            (dict(line=GROUPOBJ, platform="ios"), GROUPOBJ_D),
-            (dict(line=IOS_ADDGR, platform="ios"), {}),
-            (dict(line=CNX_ADDGR, platform="ios"), {}),
+            (dict(platform="ios", line=PREFIX00), {}),
+            (dict(platform="ios", line=PREFIX30), SUBNET30_D),
+            (dict(platform="ios", line=PREFIX32), HOST_D),
+            (dict(platform="ios", line=SUBNET00), {}),
+            (dict(platform="ios", line=SUBNET30), SUBNET30_D),
+            (dict(platform="ios", line=SUBNET32), HOST_D),
+            (dict(platform="ios", line=WILD00), HOST_0_D),
+            (dict(platform="ios", line=WILD30), {}),
+            (dict(platform="ios", line=WILD32), SUBNET00_D),
+            (dict(platform="ios", line=WILD_NC3), {}),
+            (dict(platform="ios", line=WILD_NC252), SUBNET30_D),
+            (dict(platform="ios", line=ANY), {}),
+            (dict(platform="ios", line=HOST), HOST_D),
+            (dict(platform="ios", line=GROUPOBJ), GROUPOBJ_D),
+            (dict(platform="ios", line=IOS_ADDGR), {}),
+            (dict(platform="ios", line=CNX_ADDGR), {}),
             # nxos
-            (dict(line=PREFIX00, platform="nxos"), PREFIX00_D),
-            (dict(line=PREFIX30, platform="nxos"), PREFIX30_D),
-            (dict(line=PREFIX32, platform="nxos"), PREFIX32_D),
-            (dict(line=SUBNET00, platform="nxos"), WILD00_32_D),
-            (dict(line=SUBNET30, platform="nxos"), WILD_NC252_D),
-            (dict(line=SUBNET32, platform="nxos"), WILD_ANY_D),
-            (dict(line=WILD00, platform="nxos"), WILD_ANY_D),
-            (dict(line=WILD30, platform="nxos"), WILD30_D),
-            (dict(line=WILD32, platform="nxos"), WILD32_D),
-            (dict(line=WILD_NC3, platform="nxos"), WILD_NC3_D),
-            (dict(line=WILD_NC252, platform="nxos"), WILD_NC252_D),
-            (dict(line=ANY, platform="nxos"), {}),
-            (dict(line=HOST, platform="nxos"), HOST_D),
-            (dict(line=GROUPOBJ, platform="nxos"), {}),
-            (dict(line=IOS_ADDGR, platform="nxos"), {}),
-            (dict(line=CNX_ADDGR, platform="nxos"), {}),
+            (dict(platform="nxos", line=PREFIX00), PREFIX00_D),
+            (dict(platform="nxos", line=PREFIX30), PREFIX30_D),
+            (dict(platform="nxos", line=PREFIX32), HOST_D),
+            (dict(platform="nxos", line=SUBNET00), HOST_0_D),
+            (dict(platform="nxos", line=SUBNET30), WILD_NC252_D),
+            (dict(platform="nxos", line=SUBNET32), PREFIX00_D),
+            (dict(platform="nxos", line=WILD00), PREFIX00_D),
+            (dict(platform="nxos", line=WILD30), PREFIX30_D),
+            (dict(platform="nxos", line=WILD32), HOST_D),
+            (dict(platform="nxos", line=WILD_NC3), WILD_NC3_D),
+            (dict(platform="nxos", line=WILD_NC252), WILD_NC252_D),
+            (dict(platform="nxos", line=ANY), PREFIX00_D),
+            (dict(platform="nxos", line=HOST), HOST_D),
+            (dict(platform="nxos", line=GROUPOBJ), {}),
+            (dict(platform="nxos", line=IOS_ADDGR), {}),
+            (dict(platform="nxos", line=CNX_ADDGR), {}),
         ]:
             msg = f"{kwargs=}"
             # error
@@ -166,52 +158,52 @@ class Test(Helpers):
 
     def test_valid__platform(self):
         """AddressAg.platform"""
-        for platform, line, req_d, platform_new, req_new_d in [
+        for kwargs, req_d, platform_new, req_new_d in [
             # ios to ios
-            ("ios", PREFIX30, SUBNET30_D, "ios", SUBNET30_D),
-            ("ios", PREFIX32, SUBNET32_D, "ios", HOST_D),
-            ("ios", SUBNET30, SUBNET30_D, "ios", SUBNET30_D),
-            ("ios", SUBNET32, SUBNET32_D, "ios", HOST_D),
-            ("ios", WILD00, SUBNET00_32_D, "ios", HOST_0_D),
-            ("ios", WILD_NC252, SUBNET30_D, "ios", SUBNET30_D),
-            ("ios", HOST, HOST_D, "ios", HOST_D),
-            ("ios", GROUPOBJ, GROUPOBJ_D, "ios", GROUPOBJ_D),
+            (dict(platform="ios", line=PREFIX30), SUBNET30_D, "ios", SUBNET30_D),
+            (dict(platform="ios", line=PREFIX32), HOST_D, "ios", HOST_D),
+            (dict(platform="ios", line=SUBNET30), SUBNET30_D, "ios", SUBNET30_D),
+            (dict(platform="ios", line=SUBNET32), HOST_D, "ios", HOST_D),
+            (dict(platform="ios", line=WILD00), HOST_0_D, "ios", HOST_0_D),
+            (dict(platform="ios", line=WILD_NC252), SUBNET30_D, "ios", SUBNET30_D),
+            (dict(platform="ios", line=HOST), HOST_D, "ios", HOST_D),
+            (dict(platform="ios", line=GROUPOBJ), GROUPOBJ_D, "ios", GROUPOBJ_D),
             # ios to nxos
-            ("ios", PREFIX30, SUBNET30_D, "nxos", PREFIX30_D),
-            ("ios", PREFIX32, SUBNET32_D, "nxos", PREFIX32_D),
-            ("ios", SUBNET30, SUBNET30_D, "nxos", PREFIX30_D),
-            ("ios", SUBNET32, SUBNET32_D, "nxos", PREFIX32_D),
-            ("ios", WILD00, SUBNET00_32_D, "nxos", PREFIX00_32_D),
-            ("ios", WILD_NC252, SUBNET30_D, "nxos", PREFIX30_D),
-            ("ios", HOST, HOST_D, "nxos", PREFIX32_D),
-            ("ios", GROUPOBJ, GROUPOBJ_D, "nxos", {}),
+            (dict(platform="ios", line=PREFIX30), SUBNET30_D, "nxos", PREFIX30_D),
+            (dict(platform="ios", line=PREFIX32), HOST_D, "nxos", HOST_D),
+            (dict(platform="ios", line=SUBNET30), SUBNET30_D, "nxos", PREFIX30_D),
+            (dict(platform="ios", line=SUBNET32), HOST_D, "nxos", HOST_D),
+            (dict(platform="ios", line=WILD00), HOST_0_D, "nxos", HOST_0_D),
+            (dict(platform="ios", line=WILD_NC252), SUBNET30_D, "nxos", PREFIX30_D),
+            (dict(platform="ios", line=HOST), HOST_D, "nxos", HOST_D),
+            (dict(platform="ios", line=GROUPOBJ), GROUPOBJ_D, "nxos", {}),
             # nxos to nxos
-            ("nxos", PREFIX00, PREFIX00_D, "nxos", PREFIX00_D),
-            ("nxos", PREFIX30, PREFIX30_D, "nxos", PREFIX30_D),
-            ("nxos", PREFIX32, PREFIX32_D, "nxos", PREFIX32_D),
-            ("nxos", SUBNET00, WILD00_32_D, "nxos", PREFIX00_32_D),
-            ("nxos", SUBNET30, WILD_NC252_D, "nxos", WILD_NC252_D),
-            ("nxos", WILD00, WILD_ANY_D, "nxos", PREFIX00_D),
-            ("nxos", WILD30, WILD30_D, "nxos", PREFIX30_D),
-            ("nxos", WILD32, WILD32_D, "nxos", PREFIX32_D),
-            ("nxos", WILD_NC3, WILD_NC3_D, "nxos", WILD_NC3_D),
-            ("nxos", WILD_NC252, WILD_NC252_D, "nxos", WILD_NC252_D),
-            ("nxos", HOST, HOST_D, "nxos", PREFIX32_D),
+            (dict(platform="nxos", line=PREFIX00), PREFIX00_D, "nxos", PREFIX00_D),
+            (dict(platform="nxos", line=PREFIX30), PREFIX30_D, "nxos", PREFIX30_D),
+            (dict(platform="nxos", line=PREFIX32), HOST_D, "nxos", HOST_D),
+            (dict(platform="nxos", line=SUBNET00), HOST_0_D, "nxos", HOST_0_D),
+            (dict(platform="nxos", line=SUBNET30), WILD_NC252_D, "nxos", WILD_NC252_D),
+            (dict(platform="nxos", line=WILD00), PREFIX00_D, "nxos", PREFIX00_D),
+            (dict(platform="nxos", line=WILD30), PREFIX30_D, "nxos", PREFIX30_D),
+            (dict(platform="nxos", line=WILD32), HOST_D, "nxos", HOST_D),
+            (dict(platform="nxos", line=WILD_NC3), WILD_NC3_D, "nxos", WILD_NC3_D),
+            (dict(platform="nxos", line=WILD_NC252), WILD_NC252_D, "nxos", WILD_NC252_D),
+            (dict(platform="nxos", line=HOST), HOST_D, "nxos", HOST_D),
             # nxos to ios
-            ("nxos", PREFIX00, PREFIX00_D, "ios", {}),
-            ("nxos", PREFIX30, PREFIX30_D, "ios", SUBNET30_D),
-            ("nxos", PREFIX32, PREFIX32_D, "ios", HOST_D),
-            ("nxos", SUBNET00, WILD00_32_D, "ios", HOST_0_D),
-            ("nxos", SUBNET30, WILD_NC252_D, "ios", {}),
-            ("nxos", WILD00, WILD_ANY_D, "ios", {}),
-            ("nxos", WILD30, WILD30_D, "ios", SUBNET30_D),
-            ("nxos", WILD32, WILD32_D, "ios", HOST_D),
-            ("nxos", WILD_NC3, WILD_NC3_D, "ios", {}),
-            ("nxos", WILD_NC252, WILD_NC252_D, "ios", {}),
-            ("nxos", HOST, HOST_D, "ios", HOST_D),
+            (dict(platform="nxos", line=PREFIX00), PREFIX00_D, "ios", {}),
+            (dict(platform="nxos", line=PREFIX30), PREFIX30_D, "ios", SUBNET30_D),
+            (dict(platform="nxos", line=PREFIX32), HOST_D, "ios", HOST_D),
+            (dict(platform="nxos", line=SUBNET00), HOST_0_D, "ios", HOST_0_D),
+            (dict(platform="nxos", line=SUBNET30), WILD_NC252_D, "ios", {}),
+            (dict(platform="nxos", line=WILD00), PREFIX00_D, "ios", {}),
+            (dict(platform="nxos", line=WILD30), PREFIX30_D, "ios", SUBNET30_D),
+            (dict(platform="nxos", line=WILD32), HOST_D, "ios", HOST_D),
+            (dict(platform="nxos", line=WILD_NC3), WILD_NC3_D, "ios", {}),
+            (dict(platform="nxos", line=WILD_NC252), WILD_NC252_D, "ios", {}),
+            (dict(platform="nxos", line=HOST), HOST_D, "ios", HOST_D),
         ]:
-            msg = f"{platform=} {line=} {platform_new=}"
-            obj = AddressAg(line=line, platform=platform, max_ncwb=30)
+            msg = f"{kwargs=} {platform_new=}"
+            obj = AddressAg(max_ncwb=30, **kwargs)
             self._test_attrs(obj=obj, req_d=req_d, msg=msg)
             # platform error
             if not req_new_d:
@@ -247,11 +239,11 @@ class Test(Helpers):
             # ios
             ("ios", PREFIX00, {}),
             ("ios", PREFIX30, SUBNET30_D),
-            ("ios", PREFIX32, SUBNET32_D),
+            ("ios", PREFIX32, HOST_D),
             # nxos
             ("nxos", PREFIX00, PREFIX00_D),
             ("nxos", PREFIX30, PREFIX30_D),
-            ("nxos", PREFIX32, PREFIX32_D),
+            ("nxos", PREFIX32, HOST_D),
         ]:
             obj = AddressAg(line="host 10.0.0.2", platform=platform)
             # error
@@ -395,7 +387,6 @@ class Test(Helpers):
     def test_valid__collapse(self):
         """address_ag.collapse()"""
         host1 = "host 10.0.0.1"
-        pr1_32 = "10.0.0.1/32"
         pr0_29 = "10.0.0.0/29"
         pr0_30 = "10.0.0.0/30"
         pr4_30 = "10.0.0.4/30"
@@ -422,14 +413,14 @@ class Test(Helpers):
             ([pr4_30, pr4_30], [pr4_30]),
             ([pr4_30, pr0_30, pr4_30], [pr0_29]),
             ([pr4_30, pr8_30], [pr4_30, pr8_30]),
-            ([pr4_30, host1], [pr1_32, pr4_30]),
+            ([pr4_30, host1], [host1, pr4_30]),
             # 10.0.0.8/30
             ([pr8_30, pr0_29], [pr0_29, pr8_30]),
             ([pr8_30, pr0_30], [pr0_30, pr8_30]),
             ([pr8_30, pr4_30], [pr4_30, pr8_30]),
             ([pr8_30, pr0_30, pr4_30], [pr0_29, pr8_30]),
             ([pr8_30, pr8_30], [pr8_30]),
-            ([pr8_30, host1], [pr1_32, pr8_30]),
+            ([pr8_30, host1], [host1, pr8_30]),
         ]:
             addresses = [AddressAg(s, platform="nxos") for s in lines]
             result_ = address_ag.collapse(addresses)

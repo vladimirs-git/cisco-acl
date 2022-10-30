@@ -9,11 +9,17 @@ from time import time
 from typing import Any, List, NamedTuple
 
 from cisco_acl.port_name import all_known_names
-from cisco_acl.static import ACTIONS, IOS, MAX_LINE_LENGTH, OPERATORS, PLATFORMS, SEQUENCE_MAX
 from cisco_acl.types_ import DStr, LStr, StrInt, LInt, OInt, SInt, T2Str, T3Str, DInt, SStr, LIpNet
 
-ALL_KNOWN_TUDP_NAMES = all_known_names()
+IOS = "ios"
+MAX_LINE_LENGTH = 100
+SEQUENCE_MAX = 4294967295
+PLATFORMS = ("ios", "nxos")
+ACTIONS = ("remark", "permit", "deny")
+OPERATORS = ("eq", "gt", "lt", "neq", "range")
 
+ALL_KNOWN_TUDP_NAMES = all_known_names()
+DEF_INDENT = "  "
 OCTETS = r"\d+\.\d+\.\d+\.\d+"
 
 
@@ -112,6 +118,16 @@ def init_ace_action(action: str = "permit") -> str:
     return action
 
 
+def init_indent(**kwargs) -> str:
+    """Init ACE lines indentation (default "  ")"""
+    indent = kwargs.get("indent")
+    if indent is None:
+        indent = DEF_INDENT
+    if not isinstance(indent, str):
+        raise TypeError(f"{indent=} {str} expected")
+    return indent
+
+
 def init_line(line: str) -> str:
     """Init line, replace spaces to one space, checks length <= 100 chars"""
     if not isinstance(line, str):
@@ -205,14 +221,14 @@ def init_remark_text(text: str) -> str:
 # noinspection PyIncorrectDocstring
 def init_type(**kwargs) -> str:
     """Init ACL type: "extended", "standard"
-    :param platform: Platform: "ios", "nxos" (default "ios")
+    :param platform: Platform: "ios" (default), "nxos"
     :param type: Not checked ACL type: "extended", "standard", "ip access-list extended", etc
     """
     platform = init_platform(**kwargs)
     _type = str(kwargs.get("type") or "").strip()
-    if re.match("ip access-list extended ", _type):
+    if _type.startswith("ip access-list extended "):
         _type = "extended"
-    if re.match("ip access-list standard ", _type):
+    if _type.startswith("ip access-list standard "):
         _type = "standard"
     if _type not in ["extended", "standard"]:
         _type = "standard"
@@ -234,6 +250,23 @@ def int_to_str(line: StrInt) -> str:
         raise TypeError(f"{line=} {str} expected")
     line = replace_spaces(line)
     return line
+
+
+def is_line_for_acl(line: str) -> bool:
+    """True if line ready for ACL, starts with "allow", "deny", "remark"
+    `startswith` + `split` faster than `re`
+    """
+    if line.startswith("permit "):
+        return True
+    if line.startswith("remark "):
+        return True
+    if line.startswith("deny "):
+        return True
+
+    digit, *items = line.split(" ", 1)
+    if digit.isdigit() and items:
+        return is_line_for_acl(items[0])
+    return False
 
 
 def lines_wo_spaces(line: str) -> LStr:
@@ -578,8 +611,14 @@ def string_to_ports(ports: str) -> LInt:
         return: [1, 3, 4, 5]
     """
     values = [s for s in ports.split(",") if s]
-    ints: SInt = {int(s) for s in values if re.match(r"\d+$", s)}
-    ranges = {s for s in values if re.match(r"\d+-\d+$", s)}
+    ints: SInt = {int(s) for s in values if s.isdigit()}
+
+    ranges = set()
+    for value in values:
+        items = value.split("-")
+        if len(items) == 2 and items[0].isdigit() and items[1].isdigit():
+            ranges.add(value)
+
     ranges_t = _port_range_min_max(ranges)
     ports_calc = {i for o in ranges_t for i in o.range}  # ports in all ranges
     ports_calc.update(ints)

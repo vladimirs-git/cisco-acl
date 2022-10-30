@@ -11,15 +11,19 @@ from cisco_acl.types_ import DAny, DLStr, DStr, LDAny, LStr, OLStr
 class ConfigParser(ABC):
     """CISCO config parser"""
 
-    def __init__(self, **kwargs):
+    def __init__(self, config: str = "", **kwargs):
         """CISCO config parser
         :param config: Cisco config, "show running-config" output
-        :param platform: Platform: "ios", "nxos"
+        :type config: str
+
+        :param platform: Platform: "ios" (default), "nxos"
+        :type platform: str
+
         :param version: Software version (not implemented, planned for compatability)
         """
+        self.config: str = str(config)  # raw config
         self.platform: str = h.init_platform(**kwargs)
         self.version: str = str(kwargs.get("version") or "")
-        self.config: str = str(kwargs.get("config") or "")  # not parsed config
 
         self.lines: LStr = []  # config in *list* format
         self.dic: DLStr = {}  # config in *dict* format, commands as *LStr*
@@ -37,7 +41,7 @@ class ConfigParser(ABC):
 
     def addgrs(self) -> LDAny:
         """Parses address groups from config
-        :return: *dict* ready for AddrGroup
+        :return: data ready for AddrGroup
 
         :example:
             config: "object-group ip address NAME
@@ -134,7 +138,7 @@ class ConfigParser(ABC):
         self.mdic_text - config in multidimensional *dict* format, commands as *str*
         """
         config_l = [s.rstrip() for s in self.config.splitlines()]
-        config_l = [s for s in config_l if not re.match(r"!|$", s)]
+        config_l = [s for s in config_l if s and not s.startswith("!")]
         if config_l:
             config_l[0] = config_l[0].strip()
         self.lines = self._parse_lines(config_l)
@@ -171,9 +175,9 @@ class ConfigParser(ABC):
         """Config in dictionary format (indented strings in dictionary)
         :example:
             data: {"interface Ethernet1/1": ["ip address 1.1.1.1/24",
-                                              "no shutdown",
-                                              "hsrp 5",
-                                              "ip 1.1.1.2"]}
+                                             "no shutdown",
+                                             "hsrp 5",
+                                             "ip 1.1.1.2"]}
         """
         data: DLStr = {}
         key = ""

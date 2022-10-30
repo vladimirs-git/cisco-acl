@@ -1,7 +1,6 @@
 """AddressAg - Address of AddrGroup. A "group-object" item of "object-group network " command"""
 from __future__ import annotations
 
-import re
 from functools import total_ordering
 from ipaddress import IPv4Network
 from typing import Iterable, List, Optional, Union
@@ -30,7 +29,7 @@ class AddressAg(BaseAddress):
             A.B.C.D/LEN         nxos        Network prefix and length
         :type line: str
 
-        :param platform: Platform: "ios", "nxos" (default "ios")
+        :param platform: Platform: "ios" (default), "nxos"
         :type platform: str
 
         Helpers
@@ -115,8 +114,11 @@ class AddressAg(BaseAddress):
         line = line_d["address"]
         self._sequence = h.init_int(line_d["sequence"])
 
-        if self._is_address_host(line):
-            self._line__host(line)
+        if self._is_address_any(line):
+            if self._platform == "nxos":
+                self._line__prefix("0.0.0.0/0")
+            else:
+                raise ValueError(f"invalid address {line=}")
         elif self._is_address_prefix(line):
             self._line__prefix(line)
         elif self._is_address_wildcard(line):
@@ -124,6 +126,8 @@ class AddressAg(BaseAddress):
                 self._line__wildcard(line)
             else:  # ios
                 self._line__subnet(line)
+        elif self._is_address_host(line):
+            self._line__host(line)
         elif self._is_addrgroup(line):
             self._line_addrgroup(line)
         else:
@@ -137,7 +141,7 @@ class AddressAg(BaseAddress):
     @platform.setter
     def platform(self, platform: str) -> None:
         """Changes platform, normalizes self regarding the new platform
-        :param platform: Platform: "ios", "nxos" (default "ios")
+        :param platform: Platform: "ios" (default), "nxos"
         """
         line = self.line
         self._platform = h.init_platform(platform=platform)
@@ -145,22 +149,23 @@ class AddressAg(BaseAddress):
         if self._is_addrgroup(line):
             self._type = "addrgroup"
 
+        elif isinstance(self.ipnet, IPv4Network):
+            if str(self.ipnet) == "0.0.0.0/0":
+                self._type = "any"
+            elif self.ipnet.prefixlen == 32:
+                self._type = "host"
+            elif self._platform == "ios":
+                self._type = "subnet"
+                self._sequence = 0
+            elif self._platform == "nxos":
+                self._type = "prefix"
+
         elif self._platform == "ios":
-            if isinstance(self.ipnet, IPv4Network):
-                if self.ipnet.prefixlen == 32:
-                    self._type = "host"
-                else:
-                    self._type = "subnet"
-            else:  # wildcard
-                msg = f"non-contiguous wildcard={line!r} can not be transformed to subnet"
-                raise ValueError(msg)
-            self._sequence = 0
+            msg = f"non-contiguous wildcard={line!r} can not be transformed to subnet"
+            raise ValueError(msg)
 
         elif self._platform == "nxos":
-            if isinstance(self.ipnet, IPv4Network):
-                self._type = "prefix"
-            else:
-                self._type = "wildcard"
+            self._type = "wildcard"
 
         for item in self._items:
             item.platform = self._platform
@@ -204,14 +209,13 @@ class AddressAg(BaseAddress):
 
     def _cmd_addrgroup(self) -> str:
         """Address group line beginning
-        :return: "group-object "
+        :return: "group-object"
         """
-        return "group-object "
+        return "group-object"
 
     def _is_addrgroup(self, line: str) -> bool:
         """True if address is group "group-object NAME" """
-        regex = "^group-object (.+)"
-        return bool(re.match(regex, line))
+        return line.startswith("group-object")
 
     def _line_addrgroup(self, line):
         """Sets attributes for address group: "group-object NAME" """
@@ -225,26 +229,43 @@ class AddressAg(BaseAddress):
 
     def _line__prefix(self, line: str) -> None:
         """Sets attributes for prefix: A.B.C.D/LEN"""
+        self._addrgroup = ""
         ipnet = h.prefix_to_ipnet(line)
+        wildcard = ipnet.with_hostmask.replace("/", " ")
 
-        self._type = "prefix"
-        if self._platform == "ios":
+        if ipnet.prefixlen == 32:
+            self._type = "host"
+            self._wildcard = Wildcard(wildcard, platform=self._platform, max_ncwb=self.max_ncwb)
+
+        elif self._platform == "ios":
             subnet = ipnet.with_netmask.replace("/", " ")
             self._line__subnet(subnet)
-            return
 
-        self._addrgroup = ""
-        wildcard = ipnet.with_hostmask.replace("/", " ")
-        self._wildcard = Wildcard(wildcard, platform=self._platform, max_ncwb=self.max_ncwb)
+        elif self._platform == "nxos":
+            self._type = "prefix"
+            self._wildcard = Wildcard(wildcard, platform=self._platform, max_ncwb=self.max_ncwb)
 
     def _line__subnet(self, line: str) -> None:
         """Sets attributes for subnet "A.B.C.D A.B.C.D" """
         if line == "0.0.0.0 0.0.0.0" and self._platform == "ios":
             raise ValueError(f"{line!r} is denied for platform={self._platform!r}")
 
-        self._type = "subnet"
-        self._wildcard = Wildcard.fsubnet(line, platform=self._platform, max_ncwb=self.max_ncwb)
         self._addrgroup = ""
+        self._wildcard = Wildcard.fsubnet(line, platform=self._platform, max_ncwb=self.max_ncwb)
+
+        self._type = "subnet"
+        if isinstance(self.ipnet, IPv4Network):
+            if self.ipnet.prefixlen == 32:
+                self._type = "host"
+
+    def _line__wildcard(self, line: str) -> None:
+        """Sets attributes for wildcard: A.B.C.D A.B.C.D"""
+        super()._line__wildcard(line)
+        if self._type == "any":
+            if self._platform == "ios":
+                raise ValueError(f"{line!r} is denied for platform={self._platform!r}")
+            if self._platform == "nxos":
+                self._type = "prefix"
 
 
 IAddressAg = Iterable[AddressAg]

@@ -4,6 +4,14 @@
 CHANGELOG
 =========
 
+3.0.0 (2022-10-30)
+------------------
+* [new] kwargs for cisco_acl.acls() cisco_acl.aces() cisco_acl.addrgroups()
+* [change] Address "nxos" + "0.0.0.0/0" = "any"
+* [change] Address "nxos" + "0.0.0.0/32" = "host 0.0.0.0"
+* [fix] AceGroup._line_to_oace(), known_skip = ["statistics ", "description ", "ignore "]
+
+
 2.1.0 (2022-10-25)
 ------------------
 * [change] Ace.data(uuid=True)
@@ -11,7 +19,6 @@ CHANGELOG
 * [fix] Acl.delete_shadow()
 * [fix] Address.platform = "nxos", lost addrgroup items
 * [fix] uuid the same after platform change
-* [new] Aclg
 * [new] Address.subnet_of() AddressAg.subnet_of()
 * [new] address.collapse() address_ag.collapse()
 * [new] skip: "addrgroup", "nc_wildcard" in Ace.is_shadow_by(skip) Acl.shading()

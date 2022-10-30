@@ -12,8 +12,8 @@ from cisco_acl.address_ag import AddressAg, OAddressAg, LUSAddressAg
 from cisco_acl.address_ag import LAddressAg
 from cisco_acl.base import Base
 from cisco_acl.group import Group
-from cisco_acl.static import INDENTATION
 from cisco_acl.types_ import LStr, LIpNet, DAny
+from cisco_acl.wildcard import init_max_ncwb
 
 
 @total_ordering
@@ -26,7 +26,7 @@ class AddrGroup(Base, Group):
         :param line: Address group config line
         :type line: str
 
-        :param platform: Platform: "ios", "nxos" (default "ios")
+        :param platform: Platform: "ios" (default), "nxos"
         :type platform: str
 
         Helpers
@@ -59,7 +59,8 @@ class AddrGroup(Base, Group):
         self._items: LAddressAg = []
         Base.__init__(self, **kwargs)  # platform, note
         Group.__init__(self)
-        self._indent = str(kwargs.get("indent") or INDENTATION)
+        self._indent = h.init_indent(**kwargs)
+        self.max_ncwb: int = init_max_ncwb(**kwargs)
         if name := str(kwargs.get("name") or ""):
             self.name = name
         if items := kwargs.get("items") or []:
@@ -116,9 +117,7 @@ class AddrGroup(Base, Group):
 
     @indent.setter
     def indent(self, indent: Any) -> None:
-        if indent is None:
-            indent = INDENTATION
-        self._indent = str(indent)
+        self._indent = h.init_indent(indent=indent)
 
     @property
     def items(self) -> LAddressAg:
@@ -143,8 +142,7 @@ class AddrGroup(Base, Group):
             elif isinstance(item, str):
                 line = h.init_line(item)
                 # description
-                if item.startswith("description "):
-                    logging.info("todo description in AddGroup")
+                if item.startswith("description "):  # todo description
                     continue
                 # AddressAg
                 item_: OAddressAg = self._line_to_address(line)
@@ -227,7 +225,7 @@ class AddrGroup(Base, Group):
     @platform.setter
     def platform(self, platform: str) -> None:
         """Changes platform, normalizes self.items regarding the new platform
-        :param platform: Platform: "ios", "nxos" (default "ios")
+        :param platform: Platform: "ios" (default), "nxos"
         """
         self._platform = h.init_platform(platform=platform)
 
@@ -373,7 +371,7 @@ class AddrGroup(Base, Group):
             h.parse_address(line)
         except ValueError:
             return None
-        addr_o = AddressAg(line=line, platform=self._platform)
+        addr_o = AddressAg(line=line, platform=self._platform, max_ncwb=self.max_ncwb)
         return addr_o
 
 

@@ -6,8 +6,8 @@ from typing import List
 
 from cisco_acl import helpers as h
 from cisco_acl.base import Base
+from cisco_acl.helpers import OPERATORS
 from cisco_acl.port_name import PortName
-from cisco_acl.static import OPERATORS
 from cisco_acl.types_ import LInt, LStr, IInt, DAny, StrInt
 
 
@@ -20,7 +20,7 @@ class Port(Base):
         :param line: TCP/UDP ports line
         :type line: str
 
-        :param platform: Platform: "ios", "nxos" (default "ios")
+        :param platform: Platform: "ios" (default), "nxos"
         :type platform: str
 
         :param protocol: ACL protocol: "tcp", "udp", ""

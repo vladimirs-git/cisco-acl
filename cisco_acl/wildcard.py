@@ -10,9 +10,10 @@ from cisco_acl import helpers as h
 from cisco_acl.base import Base
 from cisco_acl.types_ import LIpNet, LInt, DAny, OIpNet, T2IpAddr, TLintInt
 
-MAX_NCWB = 16  # Default max count of non-contiguous wildcard bits
 PREFIX_LEN = 32  # IPv4 prefix length
 ALL_ONES = (2 ** PREFIX_LEN) - 1
+DEF_NCWB = 16  # Default count of non-contiguous wildcard bits
+MAX_NCWB = 30  # Maximum allowed count of non-contiguous wildcard bits
 
 
 class Wildcard(Base):
@@ -22,9 +23,9 @@ class Wildcard(Base):
         """Wildcard
         :param line: Network with wildcard mask
         :param max_ncwb: Max count of non-contiguous wildcard bits. Allowed in range 0..30
-            0 - contiguous wildcard (generic prefix), 1 prefix
-            30 - max possible, 1073741824 prefixes
-            default - 16 bits, 65536 prefixes
+            0  - contiguous wildcard, 1 prefix
+            30 - max allowed, 1073741824 prefixes
+            16 - default, 65536 prefixes
         :type max_ncwb: int
 
         Helpers
@@ -40,14 +41,14 @@ class Wildcard(Base):
         self._ncwb: LInt = []  # non-contiguous wildcard bits
         self._prefixlen: int = 0  # Prefix length of contiguous wildcard
         super().__init__(**kwargs)  # platform, note
-        self.max_ncwb: int = self._init_max_ncwb(**kwargs)
+        self.max_ncwb: int = init_max_ncwb(**kwargs)
         self.line = line
 
     def __repr__(self):
         params = self._repr__params()
 
         max_ncwb = self.max_ncwb
-        if max_ncwb != MAX_NCWB:
+        if max_ncwb != DEF_NCWB:
             params.append(f"{max_ncwb=!r}")
 
         name = self.__class__.__name__
@@ -56,16 +57,6 @@ class Wildcard(Base):
 
     def __str__(self):
         return self.line
-
-    # ============================= init =============================
-
-    @staticmethod
-    def _init_max_ncwb(**kwargs) -> int:
-        """Init max non-contiguous wildcard bits count"""
-        max_ncwb = kwargs.get("max_ncwb")
-        if max_ncwb is None:
-            max_ncwb = MAX_NCWB
-        return max_ncwb
 
     # =========================== property ===========================
 
@@ -87,19 +78,18 @@ class Wildcard(Base):
 
     @property
     def max_ncwb(self) -> int:
-        """Max count of non-contiguous wildcard bits (default 16 bits, 65536 prefixes)
-        allowed range: 1..30
-        """
+        """Max count of non-contiguous wildcard bits"""
         return self._max_ncwb
 
     @max_ncwb.setter
     def max_ncwb(self, max_ncwb: int) -> None:
-        if not isinstance(max_ncwb, int):
-            raise TypeError(f"{max_ncwb=} {int} expected")
-        min_, max_ = 0, PREFIX_LEN - 2
-        if not min_ <= max_ncwb <= max_:
-            raise ValueError(f"invalid {max_ncwb=}, expected in range {min_}..{max_}")
-        self._max_ncwb = max_ncwb
+        """Max count of non-contiguous wildcard bits
+        :param max_ncwb: Max count of non-contiguous wildcard bits. Allowed in range 0..30
+            0  - contiguous wildcard, 1 prefix
+            30 - max allowed, 1073741824 prefixes
+            16 - default, 65536 prefixes
+        """
+        self._max_ncwb = init_max_ncwb(max_ncwb=max_ncwb)
 
     @property
     def prefix(self) -> str:
@@ -290,6 +280,24 @@ class Wildcard(Base):
 
 
 # ============================ functions =============================
+
+# noinspection PyIncorrectDocstring
+def init_max_ncwb(**kwargs) -> int:
+    """Init max non-contiguous wildcard bits count
+    :param max_ncwb: Max count of non-contiguous wildcard bits. Allowed in range 0..30
+        0  - contiguous wildcard, 1 prefix
+        30 - max allowed, 1073741824 prefixes
+        16 - default, 65536 prefixes
+    """
+    max_ncwb = kwargs.get("max_ncwb")
+    if max_ncwb is None:
+        max_ncwb = DEF_NCWB
+    if not isinstance(max_ncwb, int):
+        raise TypeError(f"{max_ncwb=} {int} expected")
+    if not 0 <= max_ncwb <= MAX_NCWB:
+        raise ValueError(f"invalid {max_ncwb=}, allowed in range 0..{MAX_NCWB}")
+    return max_ncwb
+
 
 def invert_mask(mask: str) -> str:
     """Inverts mask to wildcard and vice versa

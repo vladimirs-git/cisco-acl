@@ -5,7 +5,7 @@ from ipaddress import IPv4Network
 
 import cisco_acl
 from cisco_acl import Acl, AceGroup
-from cisco_acl.static import INDENTATION
+from cisco_acl.helpers import DEF_INDENT
 from cisco_acl.types_ import DAny
 
 UUID = "ID1"
@@ -37,6 +37,7 @@ PERMIT_UDP = "permit udp any any"
 PERMIT_TCP1 = "permit tcp any any eq 1"
 PERMIT_TCP2 = "permit tcp any any eq 2"
 PERMIT_UDP1 = "permit udp any any eq 1"
+PERMIT_WILD_252 = "permit ip 0.0.0.0 255.255.255.252 0.0.0.0 255.255.255.252"
 
 REMARK = "remark TEXT"
 REMARK1 = "1 remark TEXT"
@@ -314,7 +315,7 @@ def make_acl(line: str, **kwargs) -> Acl:
         acl_name = "ACL_NAME"
         lines = [s.strip() for s in line.split("\n")]
         lines = [s for s in lines if s]
-        lines = [f"{INDENTATION}{s}" for s in lines]
+        lines = [f"{DEF_INDENT}{s}" for s in lines]
         cmd_acl_name = f"ip access-list extended {acl_name}"
         if platform == "nxos":
             cmd_acl_name = f"ip access-list {acl_name}"

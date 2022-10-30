@@ -6,10 +6,69 @@ from typing import List
 
 from cisco_acl import helpers as h
 from cisco_acl.base import Base
-from cisco_acl.static import NR_TO_PROTOCOL, ANY_PROTOCOLS
 from cisco_acl.types_ import StrInt, DAny
 
 PROTOCOL_IP = 0
+
+OPTIONS = (
+    "ack",
+    "dscp",
+    "fin",
+    "log",
+    "log-input",
+    "match-all",
+    "match-any",
+    "precedence",
+    "psh",
+    "rst",
+    "time-range",
+    "tos",
+    "ttl",
+    "urg",
+)
+IOS_PROTOCOLS = {
+    "ah": 51,
+    "ahp": 51,
+    "egp": 8,
+    "eigrp": 88,
+    "esp": 50,
+    "gre": 47,
+    "icmp": 1,
+    "igmp": 2,
+    "ip": 0,
+    "ipip": 4,
+    "ipv6": 41,
+    "nos": 94,
+    "ospf": 89,
+    "pcp": 108,
+    "pim": 103,
+    "tcp": 6,
+    "udp": 17,
+}
+NXOS_PROTOCOLS = {
+    "ahp": 51,
+    "eigrp": 88,
+    "esp": 50,
+    "gre": 47,
+    "icmp": 1,
+    "igmp": 2,
+    "ip": 0,
+    "nos": 94,
+    "ospf": 89,
+    "pcp": 108,
+    "pim": 103,
+    "tcp": 6,
+    "udp": 17,
+}
+ANY_PROTOCOLS = {**IOS_PROTOCOLS, **NXOS_PROTOCOLS}
+PROTOCOL_TO_NR = dict(
+    ios=IOS_PROTOCOLS,
+    nxos=NXOS_PROTOCOLS,
+)
+NR_TO_PROTOCOL = dict(
+    ios={i: s for s, i in IOS_PROTOCOLS.items()},
+    nxos={i: s for s, i in NXOS_PROTOCOLS.items()},
+)
 
 
 @total_ordering
@@ -21,7 +80,7 @@ class Protocol(Base):
         :param line: IP protocol line
         :type line: str
 
-        :param platform: Platform: "ios", "nxos" (default "ios")
+        :param platform: Platform: "ios" (default), "nxos"
         :type platform: str
 
         Helpers

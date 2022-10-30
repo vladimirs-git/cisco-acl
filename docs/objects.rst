@@ -8,14 +8,14 @@ cisco-acl Objects
 
 Acl
 ---
-ACL - Access Control List.
+ACL - Access Control List. Support lines that starts with "allow", "deny", "remark".
 This class implements most of the Python list methods: append(), extend(), sort(), etc.
 
 =============== ============ =======================================================================
 Parameter       Type         Description
 =============== ============ =======================================================================
 line            *str*        ACL config, "show running-config" output
-platform        *str*        Platform: "ios", "nxos" (default "ios")
+platform        *str*        Platform: "ios" (default), "nxos"
 input           *str*        Interfaces, where Acl is used on input
 output          *str*        Interfaces, where Acl is used on output
 note            *Any*        Object description
@@ -168,8 +168,8 @@ ACE - Access Control Entry
 =============== ============ =======================================================================
 Parameter       Type         Description
 =============== ============ =======================================================================
-line            *str*        ACE config, "show running-config" output
-platform        *str*        Platform: "ios", "nxos" (default "ios")
+line            *str*        ACE config, a line that starts with "allow" or "deny"
+platform        *str*        Platform: "ios" (default), "nxos"
 note            *Any*        Object description
 protocol_nr     *bool*       Well-known ip protocols as numbers, True  - all ip protocols as numbers, False - well-known ip protocols as names (default)
 port_nr         *bool*       Well-known TCP/UDP ports as numbers, True  - all tcp/udp ports as numbers, False - well-known tcp/udp ports as names (default)
@@ -185,7 +185,7 @@ Attributes      Type         Description
 action          *str*        ACE action: "permit", "deny"
 dstaddr         *Address*    ACE source address: "any", "host A.B.C.D", "A.B.C.D A.B.C.D", "A.B.C.D/24",
 dstport         *Port*       ACE destination ports: "eq www 443", ""neq 1 2", "lt 2", "gt 2", "range 1 3"
-line            *str*        ACE config line
+line            *str*        ACE config, a line that starts with "allow" or "deny"
 note            *Any*        Object description
 option          *Option*     ACE option: "syn", "ack", "log", etc
 platform        *str*        Platform: "ios" Cisco IOS, "nxos" Cisco Nexus NX-OS
@@ -251,14 +251,15 @@ AceGroup
 Group of ACE (Access Control Entry).
 These are multiple ACEe items, which must be in a certain order.
 If you are changing *Ace* items order (sequence numbers) inside *Acl*,
-the AceGroup behaves like a ACE item and order of ACE items inside AceGroup is not changed.
+the AceGroup behaves like a single item and order of ACE items inside AceGroup is not changed.
 AceGroup is useful for freezing ACEs section, to hold "deny" after certain "permit".
+This class implements most of the Python list methods: append(), extend(), sort(), etc.
 
 =============== ============ =======================================================================
 Parameter       Type         Description
 =============== ============ =======================================================================
-line            *str*        string of ACEs
-platform        *str*        Platform: "ios", "nxos" (default "ios")
+line            *str*        String of ACEs, lines that starts with "allow", "deny", "remark".
+platform        *str*        Platform: "ios" (default), "nxos"
 note            *Any*        Object description
 protocol_nr     *bool*       Well-known ip protocols as numbers, True  - all ip protocols as numbers, False - well-known ip protocols as names (default)
 port_nr         *bool*       Well-known TCP/UDP ports as numbers, True  - all tcp/udp ports as numbers, False - well-known tcp/udp ports as names (default)
@@ -346,7 +347,7 @@ Remark - comments in ACL
 Parameter       Type         Description
 =============== ============ =======================================================================
 line            *str*        string of ACEs
-platform        *str*        Platform: "ios", "nxos" (default "ios")
+platform        *str*        Platform: "ios" (default), "nxos"
 note            *Any*        Object description
 =============== ============ =======================================================================
 
@@ -390,7 +391,7 @@ Address - Source or destination address in ACE
 Parameter       Type         Description
 =============== ============ =======================================================================
 line            *str*        Address line: "A.B.C.D A.B.C.D", "A.B.C.D/LEN", "any", "host A.B.C.D", "object-group NAME", "addrgroup NAME"
-platform        *str*        Platform: "ios", "nxos" (default "ios")
+platform        *str*        Platform: "ios" (default), "nxos"
 note            *Any*        Object description
 items           *List[str]*  List of addresses for address group
 =============== ============ =======================================================================
@@ -508,7 +509,7 @@ AddressAg - Address of AddrGroup. A "group-object" item of "object-group network
 Parameter       Type         Description
 =============== ============ =======================================================================
 line            *str*        Address line
-platform        *str*        Platform: "ios", "nxos" (default "ios")
+platform        *str*        Platform: "ios" (default), "nxos"
 note            *Any*        Object description
 items           *List[str]*  List of addresses for address group
 =============== ============ =======================================================================
@@ -537,7 +538,7 @@ line            *str*               Address line
 addrgroup       *str*               Nested object-group name
 ipnet           *IpNetwork*         Address IPv4Network object
 items           *List[AddressAg]*   List of *AddressAg* objects for address group
-platform        *str*               Platform: "ios", "nxos" (default "ios")
+platform        *str*               Platform: "ios" (default), "nxos"
 prefix          *str*               Address prefix
 subnet          *str*               Address subnet
 wildcard        *str*               Address wildcard
@@ -627,7 +628,7 @@ AddrGroup - Group of *AddressAg* addresses configured in "object-group network" 
 Parameter       Type         Description
 =============== ============ =======================================================================
 line            *str*        Address group config line
-platform        *str*        Platform: "ios", "nxos" (default "ios")
+platform        *str*        Platform: "ios" (default), "nxos"
 note            *Any*        Object description
 indent          *str*        Address lines indentation (default "  ")
 name            *str*        Address group name (default from `line`)
@@ -645,7 +646,7 @@ line            *str*               Address group config line
 indent          *str*               Address lines indentation (default  "  ")
 items           *List[AddressAg]*   List of *AddressAg* objects
 name            *str*               Address group name
-platform        *str*               Platform: "ios", "nxos" (default "ios")
+platform        *str*               Platform: "ios" (default), "nxos"
 =============== =================== ================================================================
 
 
@@ -708,7 +709,7 @@ Port - ACE TCP/UDP source or destination port object
 Parameter       Type         Description
 =============== ============ =======================================================================
 line            *str*        TCP/UDP ports line
-platform        *str*        Platform: "ios", "nxos" (default "ios")
+platform        *str*        Platform: "ios" (default), "nxos"
 protocol        *str*        ACL protocol: "tcp", "udp", ""
 note            *Any*        Object description
 port_nr         *bool*       Well-known TCP/UDP ports as numbers, True  - all tcp/udp ports as numbers, False - well-known tcp/udp ports as names (default)
@@ -770,7 +771,7 @@ ACE IP protocol object
 Parameter       Type         Description
 =============== ============ =======================================================================
 line            *str*        IP protocol line
-platform        *str*        Platform: "ios", "nxos" (default "ios")
+platform        *str*        Platform: "ios" (default), "nxos"
 note            *Any*        Object description
 protocol_nr     *bool*       Well-known ip protocols as numbers, True  - all ip protocols as numbers, False - well-known ip protocols as names (default)
 has_port        *bool*       ACL has tcp/udp src/dst ports True  - ACE has tcp/udp src/dst ports, False - ACL does not have tcp/udp src/dst ports (default)

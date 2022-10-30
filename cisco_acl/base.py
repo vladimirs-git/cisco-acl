@@ -5,7 +5,7 @@ from typing import Any
 from uuid import uuid1
 
 from cisco_acl import helpers as h
-from cisco_acl.static import IOS
+from cisco_acl.helpers import IOS
 from cisco_acl.types_ import LStr, DAny
 
 
@@ -14,7 +14,7 @@ class Base(ABC):
 
     def __init__(self, **kwargs):
         """Base
-        :param platform: Platform: "ios", "nxos" (default "ios")
+        :param platform: Platform: "ios" (default), "nxos"
         :type platform: str
 
         Helpers
@@ -72,7 +72,7 @@ class Base(ABC):
     @platform.setter
     def platform(self, platform: str) -> None:
         """Changes platform
-        :param platform: Platform: "ios", "nxos" (default "ios")
+        :param platform: Platform: "ios" (default), "nxos"
         """
         self._platform = h.init_platform(platform=platform)
         uuid = self.uuid

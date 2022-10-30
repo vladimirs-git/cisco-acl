@@ -1,8 +1,7 @@
 """Unittest ace.py"""
-import re
 # pylint: disable=too-many-lines
+import re
 import unittest
-from ipaddress import IPv4Network
 
 import dictdiffer  # type: ignore
 
@@ -20,6 +19,7 @@ from tests.helpers_test import (
     UUID,
     WILD30,
 )
+from tests.test__ace__helpers import REQ_DATA1, REQ_COPY1, REQ_COPY2
 
 
 # noinspection DuplicatedCode
@@ -203,6 +203,17 @@ class Test(Helpers):
         udp_n_d = {**udp_d,
                    **{"line": udp_n, "srcport": "lt 514", "dstport": "range 67 69"}}
 
+        prefix0 = "permit ip 0.0.0.0/0 0.0.0.0/0"
+        any_d = dict(line=PERMIT_IP,
+                     sequence=0,
+                     action="permit",
+                     protocol="ip",
+                     srcaddr="any",
+                     srcport="",
+                     dstaddr="any",
+                     dstport="",
+                     option="")
+
         for kwargs, req_d in [
             # indexes
             (dict(line=icmp), icmp_d),
@@ -234,6 +245,8 @@ class Test(Helpers):
             (dict(line=tcp_n, protocol_nr=True, port_nr=True), tcp_n_d),
             (dict(line=udp, protocol_nr=True, port_nr=True), udp_n_d),
             (dict(line=udp_n, protocol_nr=True, port_nr=True), udp_n_d),
+            # convert 0.0.0.0/0 to any
+            (dict(line=prefix0, platform="nxos"), any_d),
         ]:
             obj = Ace(**kwargs)
             self._test_attrs(obj=obj, req_d=req_d, msg=f"{kwargs=}")
@@ -274,7 +287,7 @@ class Test(Helpers):
         """Ace.platform"""
         prefix00 = "permit ip 0.0.0.0/0 0.0.0.0/0"
         prefix30 = "permit ip 10.0.0.0/30 10.0.0.0/30"
-        prefix32 = "permit ip 10.0.0.1/32 10.0.0.1/32"
+        prefix32 = "permit ip host 10.0.0.1 host 10.0.0.1"
         wild00 = "permit ip 0.0.0.0 255.255.255.255 0.0.0.0 255.255.255.255"
         wild30 = "permit ip 10.0.0.0 0.0.0.3 10.0.0.0 0.0.0.3"
         wild32 = "permit ip 10.0.0.1 0.0.0.0 10.0.0.1 0.0.0.0"
@@ -287,62 +300,62 @@ class Test(Helpers):
         eq_neq = "permit tcp any eq 1 any neq 3 log"
         gt_lt = "permit tcp any gt 65533 any lt 3 log"
 
-        for platform, platform_new, line, req_new in [
+        for platform, platform_new, line, req, req_new in [
             # ios to ios
-            ("ios", "ios", wild00, any_),
-            ("ios", "ios", wild30, wild30),
-            ("ios", "ios", wild32, host),
-            ("ios", "ios", wild_3_3, wild_3_3),
-            ("ios", "ios", wild_252, wild_252),
-            ("ios", "ios", host, host),
-            ("ios", "ios", any_, any_),
-            ("ios", "ios", ios_addgr, ios_addgr),
-            ("ios", "ios", eq_neq, eq_neq),
-            ("ios", "ios", gt_lt, gt_lt),
+            ("ios", "ios", wild00, any_, any_),
+            ("ios", "ios", wild30, wild30, wild30),
+            ("ios", "ios", wild32, host, host),
+            ("ios", "ios", wild_3_3, wild_3_3, wild_3_3),
+            ("ios", "ios", wild_252, wild_252, wild_252),
+            ("ios", "ios", host, host, host),
+            ("ios", "ios", any_, any_, any_),
+            ("ios", "ios", ios_addgr, ios_addgr, ios_addgr),
+            ("ios", "ios", eq_neq, eq_neq, eq_neq),
+            ("ios", "ios", gt_lt, gt_lt, gt_lt),
             # ios to nxos
-            ("ios", "nxos", wild00, any_),
-            ("ios", "nxos", wild30, prefix30),
-            ("ios", "nxos", wild32, prefix32),
-            ("ios", "nxos", wild_3_3, wild_3_3),
-            ("ios", "nxos", wild_252, wild_252),
-            ("ios", "nxos", host, prefix32),
-            ("ios", "nxos", any_, any_),
-            ("ios", "nxos", ios_addgr, cnx_addgr),
-            ("ios", "nxos", eq_neq, eq_neq),
-            ("ios", "nxos", gt_lt, gt_lt),
+            ("ios", "nxos", wild00, any_, any_),
+            ("ios", "nxos", wild30, wild30, prefix30),
+            ("ios", "nxos", wild32, host, host),
+            ("ios", "nxos", wild_3_3, wild_3_3, wild_3_3),
+            ("ios", "nxos", wild_252, wild_252, wild_252),
+            ("ios", "nxos", host, host, host),
+            ("ios", "nxos", any_, any_, any_),
+            ("ios", "nxos", ios_addgr, ios_addgr, cnx_addgr),
+            ("ios", "nxos", eq_neq, eq_neq, eq_neq),
+            ("ios", "nxos", gt_lt, gt_lt, gt_lt),
             # nxos to nxos
-            ("nxos", "nxos", prefix00, any_),
-            ("nxos", "nxos", prefix30, prefix30),
-            ("nxos", "nxos", prefix32, prefix32),
-            ("nxos", "nxos", wild00, any_),
-            ("nxos", "nxos", wild30, prefix30),
-            ("nxos", "nxos", wild32, prefix32),
-            ("nxos", "nxos", wild_3_3, wild_3_3),
-            ("nxos", "nxos", wild_252, wild_252),
-            ("nxos", "nxos", host, prefix32),
-            ("nxos", "nxos", any_, any_),
-            ("nxos", "nxos", cnx_addgr, cnx_addgr),
-            ("nxos", "nxos", eq_neq, eq_neq),
-            ("nxos", "nxos", gt_lt, gt_lt),
+            ("nxos", "nxos", prefix00, any_, any_),
+            ("nxos", "nxos", prefix30, prefix30, prefix30),
+            ("nxos", "nxos", prefix32, host, host),
+            ("nxos", "nxos", wild00, any_, any_),
+            ("nxos", "nxos", wild30, prefix30, prefix30),
+            ("nxos", "nxos", wild32, host, host),
+            ("nxos", "nxos", wild_3_3, wild_3_3, wild_3_3),
+            ("nxos", "nxos", wild_252, wild_252, wild_252),
+            ("nxos", "nxos", host, host, host),
+            ("nxos", "nxos", any_, any_, any_),
+            ("nxos", "nxos", cnx_addgr, cnx_addgr, cnx_addgr),
+            ("nxos", "nxos", eq_neq, eq_neq, eq_neq),
+            ("nxos", "nxos", gt_lt, gt_lt, gt_lt),
             # nxos to ios
-            ("nxos", "ios", prefix00, any_),
-            ("nxos", "ios", prefix30, wild30),
-            ("nxos", "ios", prefix32, host),
-            ("nxos", "ios", wild00, any_),
-            ("nxos", "ios", wild30, wild30),
-            ("nxos", "ios", wild32, host),
-            ("nxos", "ios", wild_3_3, wild_3_3),
-            ("nxos", "ios", wild_252, wild_252),
-            ("nxos", "ios", host, host),
-            ("nxos", "ios", any_, any_),
-            ("nxos", "ios", cnx_addgr, ios_addgr),
-            ("nxos", "ios", eq_neq, eq_neq),
-            ("nxos", "ios", gt_lt, gt_lt),
+            ("nxos", "ios", prefix00, any_, any_),
+            ("nxos", "ios", prefix30, prefix30, wild30),
+            ("nxos", "ios", prefix32, host, host),
+            ("nxos", "ios", wild00, any_, any_),
+            ("nxos", "ios", wild30, prefix30, wild30),
+            ("nxos", "ios", wild32, host, host),
+            ("nxos", "ios", wild_3_3, wild_3_3, wild_3_3),
+            ("nxos", "ios", wild_252, wild_252, wild_252),
+            ("nxos", "ios", host, host, host),
+            ("nxos", "ios", any_, any_, any_),
+            ("nxos", "ios", cnx_addgr, cnx_addgr, ios_addgr),
+            ("nxos", "ios", eq_neq, eq_neq, eq_neq),
+            ("nxos", "ios", gt_lt, gt_lt, gt_lt),
         ]:
             msg = f"{platform=} {platform_new=} {line=}"
             obj = Ace(line, platform=platform, max_ncwb=30)
             result = obj.line
-            self.assertEqual(result, line, msg=msg)
+            self.assertEqual(result, req, msg=msg)
 
             # platform
             obj.platform = platform_new
@@ -439,96 +452,13 @@ class Test(Helpers):
         for arg, value in new_obj1_kwargs.items():
             setattr(obj1, arg, value)
 
-        req1_d = dict(line="20 deny udp any eq 80 10.0.0.0/24 range 2 3",
-                      platform="nxos",
-                      sequence=20,
-                      action="deny",
-                      protocol="udp",
-                      srcaddr="any",
-                      srcport="eq 80",
-                      dstaddr="10.0.0.0/24",
-                      dstport="range 2 3",
-                      option="",
-                      protocol_nr=False,
-                      port_nr=False,
-                      note="b")
-        req2_d = dict(line="10 permit tcp host 10.0.0.1 10.0.0.0 0.0.0.3 eq 80 443 log",
-                      platform="ios",
-                      sequence=10,
-                      action="permit",
-                      protocol="tcp",
-                      srcaddr="host 10.0.0.1",
-                      srcport="",
-                      dstaddr="10.0.0.0 0.0.0.3",
-                      dstport="eq 80 443",
-                      option="log",
-                      protocol_nr=True,
-                      port_nr=True,
-                      note="a")
-        self._test_attrs(obj1, req1_d, msg="obj1 does not depend on obj2")
-        self._test_attrs(obj2, req2_d, msg="obj2 copied from obj1")
+        self._test_attrs(obj1, REQ_COPY1, msg="obj1 does not depend on obj2")
+        self._test_attrs(obj2, REQ_COPY2, msg="obj2 copied from obj1")
 
     def test_valid__data(self):
         """Ace.data()"""
         line1 = "10 permit tcp host 10.0.0.1 10.0.0.0 0.0.0.3 eq 80 443 log"
         kwargs1 = dict(line=line1, platform="ios", note="a")
-        req1 = dict(line="10 permit tcp host 10.0.0.1 10.0.0.0 0.0.0.3 eq www 443 log",
-                    platform="ios",
-                    type="extended",
-                    sequence=10,
-                    action="permit",
-                    protocol=dict(line="tcp",
-                                  platform="ios",
-                                  note="",
-                                  protocol_nr=False,
-                                  has_port=True,
-                                  name="tcp",
-                                  number=6),
-                    srcaddr=dict(line="host 10.0.0.1",
-                                 platform="ios",
-                                 items=[],
-                                 note="",
-                                 max_ncwb=16,
-                                 type="host",
-                                 addrgroup="",
-                                 ipnet=IPv4Network("10.0.0.1/32"),
-                                 prefix="10.0.0.1/32",
-                                 subnet="10.0.0.1 255.255.255.255",
-                                 wildcard="10.0.0.1 0.0.0.0"),
-                    srcport=dict(line="",
-                                 platform="ios",
-                                 protocol="",
-                                 note="",
-                                 port_nr=False,
-                                 items=[],
-                                 operator="",
-                                 ports=[],
-                                 sport=""),
-                    dstaddr=dict(line="10.0.0.0 0.0.0.3",
-                                 platform="ios",
-                                 items=[],
-                                 note="",
-                                 max_ncwb=16,
-                                 type="wildcard",
-                                 addrgroup="",
-                                 ipnet=IPv4Network("10.0.0.0/30"),
-                                 prefix="10.0.0.0/30",
-                                 subnet="10.0.0.0 255.255.255.252",
-                                 wildcard="10.0.0.0 0.0.0.3"),
-                    dstport=dict(line="eq www 443",
-                                 platform="ios",
-                                 protocol="tcp",
-                                 note="",
-                                 port_nr=False,
-                                 items=[80, 443],
-                                 operator="eq",
-                                 ports=[80, 443],
-                                 sport="80,443"),
-                    option=dict(line="log", platform="ios", note="", flags=[], logs=["log"]),
-                    note="a",
-                    max_ncwb=16,
-                    protocol_nr=False,
-                    port_nr=False)
         req_uuid1 = [("remove", "protocol", [("uuid", "ID1")]),
                      ("remove", "srcaddr", [("uuid", "ID1")]),
                      ("remove", "srcport", [("uuid", "ID1")]),
@@ -538,7 +468,7 @@ class Test(Helpers):
                      ("remove", "", [("uuid", "ID1")])]
 
         for kwargs, req_d, req_uuid in [
-            (kwargs1, req1, req_uuid1),
+            (kwargs1, REQ_DATA1, req_uuid1),
         ]:
             obj = Ace(**kwargs)
             obj.uuid = UUID

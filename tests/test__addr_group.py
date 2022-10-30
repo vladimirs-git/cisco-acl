@@ -249,12 +249,12 @@ class Test(Helpers):
         # nxos
         nxos_prefix00 = f"{NAME_CNX}\n  {PREFIX00}"
         nxos_prefix30 = f"{NAME_CNX}\n  {PREFIX30}"
-        nxos_prefix30_32 = f"{NAME_CNX}\n  {PREFIX30}\n  {PREFIX32}"
         nxos_prefix32 = f"{NAME_CNX}\n  {PREFIX32}"
+        nxos_prefix30_32 = f"{NAME_CNX}\n  {PREFIX30}\n  {PREFIX32}"
+        nxos_prefix30_host = f"{NAME_CNX}\n  {PREFIX30}\n  {HOST}"
         nxos_wild30 = f"{NAME_CNX}\n  {WILD30}"
-        nxos_wild32 = f"{NAME_CNX}\n  {WILD30}"
-        nxos_wild2 = f"{NAME_CNX}\n  {WILD30}"
-        nxos_wild3 = f"{NAME_CNX}\n  {WILD30}"
+        nxos_wild32 = f"{NAME_CNX}\n  {WILD32}"
+        nxos_host = f"{NAME_CNX}\n  {HOST}"
 
         for kwargs, req_d, in [
             # ios
@@ -269,15 +269,13 @@ class Test(Helpers):
             # nxos
             (dict(line=nxos_prefix00, platform="nxos"), dict(line=nxos_prefix00, name="NAME")),
             (dict(line=nxos_prefix30, platform="nxos"), dict(line=nxos_prefix30, name="NAME")),
-            (dict(line=nxos_prefix32, platform="nxos"), dict(line=nxos_prefix32, name="NAME")),
-            (dict(line=nxos_prefix30_32, platform="nxos"), dict(line=nxos_prefix30_32)),
-            (dict(line=nxos_wild30, platform="nxos"), dict(line=nxos_wild30, name="NAME")),
-            (dict(line=nxos_wild32, platform="nxos"), dict(line=nxos_wild32, name="NAME")),
-            (dict(line=nxos_wild2, platform="nxos"), dict(line=nxos_wild2, name="NAME")),
-            (dict(line=nxos_wild3, platform="nxos"), dict(line=nxos_wild3, name="NAME")),
+            (dict(line=nxos_prefix32, platform="nxos"), dict(line=nxos_host, name="NAME")),
+            (dict(line=nxos_prefix30_32, platform="nxos"), dict(line=nxos_prefix30_host)),
+            (dict(line=nxos_wild30, platform="nxos"), dict(line=nxos_prefix30, name="NAME")),
+            (dict(line=nxos_wild32, platform="nxos"), dict(line=nxos_host, name="NAME")),
             # items
             (dict(platform="nxos", name="NAME", items=[PREFIX30, PREFIX32]),
-             dict(line=nxos_prefix30_32, name="NAME")),
+             dict(line=nxos_prefix30_host, name="NAME")),
         ]:
             obj = AddrGroup(**kwargs)
             self._test_attrs(obj=obj, req_d=req_d, msg=f"{kwargs=}")
@@ -329,7 +327,7 @@ class Test(Helpers):
         for arg, value in new_obj1_kwargs.items():
             setattr(obj1, arg, value)
 
-        req1_d = dict(line="object-group ip address NAME2\n  10.0.0.1/32",
+        req1_d = dict(line="object-group ip address NAME2\n  host 10.0.0.1",
                       platform="nxos",
                       name="NAME2",
                       items=[AddressAg(line=HOST, platform="nxos")])
@@ -435,11 +433,11 @@ class Test(Helpers):
     def test_invalid__resequence(self):
         """AddrGroup.resequence()"""
         for items, kwargs, req in [
-            ([PREFIX30, PREFIX32], {}, [f"10 {PREFIX30}", f"20 {PREFIX32}"]),
-            ([PREFIX30, PREFIX32], dict(start=2, step=3), [f"2 {PREFIX30}", f"5 {PREFIX32}"]),
-            ([PREFIX30, PREFIX32], dict(start=0), [PREFIX30, PREFIX32]),
-            ([PREFIX30, PREFIX32], dict(start=0, step=3), [PREFIX30, PREFIX32]),
-            ([f"10 {PREFIX30}", f"20 {PREFIX32}"], dict(start=0), [PREFIX30, PREFIX32]),
+            ([PREFIX30, PREFIX32], {}, [f"10 {PREFIX30}", f"20 {HOST}"]),
+            ([PREFIX30, PREFIX32], dict(start=2, step=3), [f"2 {PREFIX30}", f"5 {HOST}"]),
+            ([PREFIX30, PREFIX32], dict(start=0), [PREFIX30, HOST]),
+            ([PREFIX30, PREFIX32], dict(start=0, step=3), [PREFIX30, HOST]),
+            ([f"10 {PREFIX30}", f"20 {PREFIX32}"], dict(start=0), [PREFIX30, HOST]),
         ]:
             obj = AddrGroup(name="NAME", platform="nxos", items=items)
             obj.resequence(**kwargs)

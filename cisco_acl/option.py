@@ -19,7 +19,7 @@ class Option(Base):
         :param line: Option line
         :type line: str
 
-        :param platform: Platform: "ios", "nxos" (default "ios")
+        :param platform: Platform: "ios" (default), "nxos"
         :type platform: str
 
         Helpers

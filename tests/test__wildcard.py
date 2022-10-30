@@ -240,6 +240,26 @@ class Test(Helpers):
 
     # =========================== functions ============================
 
+    def test_valid__init_max_ncwb(self):
+        """wildcard.init_max_ncwb()"""
+        for kwargs, req in [
+            ({}, 16),
+            (dict(max_ncwb=0), 0),
+            (dict(max_ncwb=30), 30),
+        ]:
+            result = wildcard.init_max_ncwb(**kwargs)
+            self.assertEqual(result, req, msg=f"{kwargs=}")
+
+    def test_invalid__init_max_ncwb(self):
+        """wildcard.init_max_ncwb()"""
+        for kwargs, error in [
+            (dict(max_ncwb="1"), TypeError),
+            (dict(max_ncwb=-1), ValueError),
+            (dict(max_ncwb=31), ValueError),
+        ]:
+            with self.assertRaises(error, msg=f"{kwargs=}"):
+                wildcard.init_max_ncwb(**kwargs)
+
     def test_valid__invert_mask(self):
         """wildcard.invert_mask()"""
         for subnet, req in [

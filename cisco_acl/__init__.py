@@ -31,14 +31,3 @@ __all__ = [
     "acls",
     "addrgroups",
 ]
-
-__version__ = "2.1.0"
-__date__ = "2022-10-25"
-__title__ = "cisco-acl"
-
-__summary__ = "Python package to parse and manage Cisco ACL (Access Control List)"
-__author__ = "Vladimir Prusakov"
-__email__ = "vladimir.prusakovs@gmail.com"
-__url__ = "https://github.com/vladimirs-git/cisco-acl"
-__download_url__ = f"{__url__}/archive/refs/tags/{__version__}.tar.gz"
-__license__ = "MIT"

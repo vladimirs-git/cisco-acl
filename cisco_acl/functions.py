@@ -1,5 +1,6 @@
 """Functions to create *Acl* objects From the "show running-config" output"""
 import logging
+from ipaddress import IPv4Network
 from typing import Union
 
 import netports
@@ -14,7 +15,8 @@ from cisco_acl.address_ag import AddressAg
 from cisco_acl.config_parser import ConfigParser
 from cisco_acl.port import Port
 from cisco_acl.protocol import Protocol
-from cisco_acl.types_ import LDAny, LInt, LStr
+from cisco_acl.types_ import LDAny, LInt, LStr, DAny
+from cisco_acl.wildcard import init_max_ncwb
 
 UAddress = Union[Address, AddressAg]
 
@@ -23,20 +25,36 @@ UAddress = Union[Address, AddressAg]
 def acls(config: str, **kwargs) -> LAcl:
     """Creates *Acl* objects based on the "show running-config" output.
     Support address group objects.
-    Each ACE line is treated as an independent *Ace* element (default) or ACE lines can be
+    Each ACE line is treated as an independent *Ace* (default) or ACE lines can be
     grouped to *AceGroup* by text in remarks (param `group_by`)
 
     :param config: Cisco config, "show running-config" output
     :type config: str
 
-    :param platform: Platform: "ios", "nxos" (default "ios")
+    :param platform: Platform: "ios" (default), "nxos"
     :type platform: str
 
     :param version: Software version (not implemented, planned for compatability)
     :type version: str
 
-    :param names: Parse only ACLs with specified names
+    :param names: Parses only ACLs with specified names, skips any other
     :type names: List[str]
+
+    :param max_ncwb: Max count of non-contiguous wildcard bits
+    :type max_ncwb: int
+
+    :param indent: ACE lines indentation (default "  ")
+    :type indent: str
+
+    :param protocol_nr: Well-known ip protocols as numbers
+        True  - all ip protocols as numbers
+        False - well-known ip protocols as names (default)
+    :type protocol_nr: bool
+
+    :param port_nr: Well-known TCP/UDP ports as numbers
+        True  - all tcp/udp ports as numbers
+        False - well-known tcp/udp ports as names (default)
+    :type port_nr: bool
 
     :param group_by: Startswith in remark line. ACEs group, starting from the Remark,
         where line startswith `group_by`, will be applied to the same AceGroup,
@@ -50,17 +68,22 @@ def acls(config: str, **kwargs) -> LAcl:
     version = str(kwargs.get("version") or "")
     group_by = str(kwargs.get("group_by") or "")
     names = kwargs.get("names")
+    indent: str = h.init_indent(**kwargs)
+    max_ncwb: int = init_max_ncwb(**kwargs)
+    protocol_nr = bool(kwargs.get("protocol_nr"))
+    port_nr = bool(kwargs.get("port_nr"))
+    acl_kwargs = dict(indent=indent, max_ncwb=max_ncwb, protocol_nr=protocol_nr, port_nr=port_nr)
 
     parser = ConfigParser(config=config, platform=platform, version=version)
     parser.parse_config()
-    parsed_acls = parser.acls(names=names)
+    parsed_acls: LDAny = parser.acls(names=names)
 
-    _acls: LAcl = [Acl(**d) for d in parsed_acls]
-    _add_addgr_to_aces(_acls, parser)
+    acls_: LAcl = [Acl(**acl_kwargs, **d) for d in parsed_acls]  # type: ignore
+    _add_addgr_to_aces(acls_, parser)
     if group_by:
-        for acl_o in _acls:
+        for acl_o in acls_:
             acl_o.group(group_by=group_by)
-    return _acls
+    return acls_
 
 
 # noinspection PyIncorrectDocstring,DuplicatedCode
@@ -70,11 +93,24 @@ def aces(config: str, **kwargs) -> LUAceg:
     :param config: Cisco config, "show running-config" output
     :type config: str
 
-    :param platform: Platform: "ios", "nxos" (default "ios")
+    :param platform: Platform: "ios" (default), "nxos"
     :type platform: str
 
     :param version: Software version (not implemented, planned for compatability)
     :type version: str
+
+    :param max_ncwb: Max count of non-contiguous wildcard bits
+    :type max_ncwb: int
+
+    :param protocol_nr: Well-known ip protocols as numbers
+        True  - all ip protocols as numbers
+        False - well-known ip protocols as names (default)
+    :type protocol_nr: bool
+
+    :param port_nr: Well-known TCP/UDP ports as numbers
+        True  - all tcp/udp ports as numbers
+        False - well-known tcp/udp ports as names (default)
+    :type port_nr: bool
 
     :param group_by: Startswith in remark line. ACEs group, starting from the Remark,
         where line startswith `group_by`, will be applied to the same AceGroup,
@@ -87,10 +123,15 @@ def aces(config: str, **kwargs) -> LUAceg:
     platform = h.init_platform(**kwargs)
     version = str(kwargs.get("version") or "")
     group_by = str(kwargs.get("group_by") or "")
+    max_ncwb: int = init_max_ncwb(**kwargs)
+    protocol_nr = bool(kwargs.get("protocol_nr"))
+    port_nr = bool(kwargs.get("port_nr"))
+    acl_kwargs = dict(max_ncwb=max_ncwb, protocol_nr=protocol_nr, port_nr=port_nr)
+
     parser = ConfigParser(config=config, platform=platform, version=version)
     parser.parse_config()
 
-    acl_o = Acl(platform=platform)
+    acl_o = Acl(platform=platform, **acl_kwargs)  # type: ignore
     for line in parser.lines:
         # noinspection PyProtectedMember
         if ace_o := acl_o._line_to_oace(line):
@@ -108,22 +149,32 @@ def addrgroups(config: str, **kwargs) -> LAddrGroup:
     :param config: Cisco config, "show running-config" output
     :type config: str
 
-    :param platform: Platform: "ios", "nxos" (default "ios")
+    :param platform: Platform: "ios" (default), "nxos"
     :type platform: str
 
     :param version: Software version (not implemented, planned for compatability)
     :type version: str
+
+    :param max_ncwb: Max count of non-contiguous wildcard bits
+    :type max_ncwb: int
+
+    :param indent: Address lines indentation (default "  ")
+    :type indent: str
 
     :return: List of *AddrGroup* objects
     :rtype: List[AddrGroup]
     """
     platform = h.init_platform(**kwargs)
     version = str(kwargs.get("version") or "")
+    max_ncwb: int = init_max_ncwb(**kwargs)
+    indent: str = h.init_indent(**kwargs)
+    ag_kwargs = dict(max_ncwb=max_ncwb, indent=indent)
+
     parser = ConfigParser(config=config, platform=platform, version=version)
     parser.parse_config()
 
     parsed_addgrs: LDAny = parser.addgrs()
-    addgrs: LAddrGroup = [AddrGroup(**d) for d in parsed_addgrs]
+    addgrs: LAddrGroup = [AddrGroup(**ag_kwargs, **d) for d in parsed_addgrs]  # type: ignore
     return addgrs
 
 
@@ -141,7 +192,7 @@ def range_ports(**kwargs) -> LStr:
         (default "permit tcp any any", operator "eq")
     :type line: str
 
-    :param platform: Platform: "ios", "nxos" (default "ios")
+    :param platform: Platform: "ios" (default), "nxos"
     :type platform: str
 
     :param port_nr: Well-known TCP/UDP ports as numbers
@@ -180,7 +231,7 @@ def range_protocols(**kwargs) -> LStr:
         (default "permit ip any any")
     :type line: str
 
-    :param platform: Platform: "ios", "nxos" (default "ios")
+    :param platform: Platform: "ios" (default), "nxos"
     :type platform: str
 
     :param protocol_nr: Well-known ip protocols as numbers
@@ -279,8 +330,22 @@ def _add_addgr_to_aces(acls_: LAcl, parser: ConfigParser) -> None:
                         continue
                     address_ag_o.sequence = 0
                     address_ag_d = address_ag_o.data()
+                    _convert_ios_addr(address_ag_d)
                     addr_item_o = Address(**address_ag_d)
                     addr_ace_o.items.append(addr_item_o)
+
+
+def _convert_ios_addr(address_ag_d: DAny) -> None:
+    """Converts data of IOS *AddressAg* to data ready for *Address*
+    :result: Side effect `address_ag_d`"""
+    if address_ag_d["platform"] != "ios":
+        return
+    ipnet = address_ag_d["ipnet"]
+    if not isinstance(ipnet, IPv4Network):
+        raise TypeError(f"invalid {ipnet=} {IPv4Network} expected")
+    wildcard = f"{ipnet.network_address} {ipnet.hostmask}"
+    address_ag_d["line"] = wildcard
+
 
 
 def _check_addgr(ace_o, addgrs, address_o, parser) -> bool:

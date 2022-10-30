@@ -19,10 +19,10 @@ class Ace(BaseAce):
 
     def __init__(self, line: str, **kwargs):
         """ACE - Access Control Entry
-        :param line: ACE config, "show running-config" output
+        :param line: ACE config, a line that starts with "allow" or "deny"
         :type line: str
 
-        :param platform: Platform: "ios", "nxos" (default "ios")
+        :param platform: Platform: "ios" (default), "nxos"
         :type platform: str
 
         Helpers
@@ -149,8 +149,8 @@ class Ace(BaseAce):
 
     @property
     def line(self) -> str:
-        """ACE config line
-        :return: ACE config line
+        """ACE config, a line that starts with "allow" or "deny"
+        :return: ACE config, a line that starts with "allow" or "deny"
 
         :example:
             self: Ace("10 permit ip any any")
@@ -229,7 +229,7 @@ class Ace(BaseAce):
     @platform.setter
     def platform(self, platform: str) -> None:
         """Changes platform, normalizes self.items regarding the new platform
-        :param platform: Platform: "ios", "nxos" (default "ios")
+        :param platform: Platform: "ios" (default), "nxos"
         """
         self._platform = h.init_platform(platform=platform)
         self._protocol.platform = self._platform

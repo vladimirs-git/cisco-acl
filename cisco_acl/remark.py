@@ -18,7 +18,7 @@ class Remark(BaseAce):
         :param line: string of ACEs
         :type line: str
 
-        :param platform: Platform: "ios", "nxos" (default "ios")
+        :param platform: Platform: "ios" (default), "nxos"
         :type platform: str
 
         Helpers

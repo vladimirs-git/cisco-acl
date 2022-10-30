@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 from cisco_acl import helpers as h
 from cisco_acl.base import Base
 from cisco_acl.types_ import StrInt, DAny
-from cisco_acl.wildcard import Wildcard
+from cisco_acl.wildcard import init_max_ncwb
 
 
 class BaseAce(Base, ABC):
@@ -13,7 +13,7 @@ class BaseAce(Base, ABC):
 
     def __init__(self, **kwargs):
         """BaseAce - Parent of: Ace, Remark, AceGroup
-        :param platform: Platform: "ios", "nxos" (default "ios")
+        :param platform: Platform: "ios" (default), "nxos"
         :type platform: str
 
         Helpers
@@ -42,7 +42,7 @@ class BaseAce(Base, ABC):
         self._protocol_nr: bool = False
         self._port_nr: bool = False
         # noinspection PyProtectedMember
-        self.max_ncwb: int = Wildcard._init_max_ncwb(**kwargs)
+        self.max_ncwb: int = init_max_ncwb(**kwargs)
         super().__init__(**kwargs)  # platform, note
         if kwargs.get("type"):
             self._type = h.init_type(**kwargs)

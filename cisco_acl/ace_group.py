@@ -1,23 +1,25 @@
 """Group of ACE (Access Control Entry).
 These are multiple ACEe items, which must be in a certain order.
 If you are changing *Ace* items order (sequence numbers) inside *Acl*,
-the AceGroup behaves like a ACE item and order of ACE items inside AceGroup is not changed.
+the AceGroup behaves like a single item and order of ACE items inside AceGroup is not changed.
 AceGroup is useful for freezing ACEs section, to hold "deny" after certain "permit".
+This class implements most of the Python list methods: append(), extend(), sort(), etc.
 """
 from __future__ import annotations
 
 import logging
 from functools import total_ordering
+from ipaddress import NetmaskValueError
 from typing import List, Optional, Union
 
 from cisco_acl import helpers as h
 from cisco_acl.ace import Ace, LAce
 from cisco_acl.base_ace import BaseAce
 from cisco_acl.group import Group
+from cisco_acl.helpers import ACTIONS
 from cisco_acl.remark import Remark, LRemark
-from cisco_acl.static import ACTIONS
 from cisco_acl.types_ import DAny
-from cisco_acl.wildcard import Wildcard
+from cisco_acl.wildcard import init_max_ncwb
 
 UAce = Union[Ace, Remark]
 USAce = Union[Ace, Remark, str]
@@ -34,11 +36,12 @@ class AceGroup(BaseAce, Group):
     """Group of ACE (Access Control Entry)"""
 
     def __init__(self, line: str = "", **kwargs):
-        """Group of ACE (Access Control Entry)
-        :param line: string of ACEs
+        """Group of ACE (Access Control Entry).
+        This class implements most of the Python list methods: append(), extend(), sort(), etc.
+        :param line: String of ACEs, lines that starts with "allow", "deny", "remark".
         :type line: str
 
-        :param platform: Platform: "ios", "nxos" (default "ios")
+        :param platform: Platform: "ios" (default), "nxos"
         :type platform: str
 
         Helpers
@@ -92,7 +95,7 @@ class AceGroup(BaseAce, Group):
         if group_by := str(kwargs.get("group_by") or ""):
             self._group_by = group_by
         # noinspection PyProtectedMember
-        self.max_ncwb: int = Wildcard._init_max_ncwb(**kwargs)
+        self.max_ncwb: int = init_max_ncwb(**kwargs)
         if items := kwargs.get("items") or []:
             self.items = items
             return
@@ -190,7 +193,7 @@ class AceGroup(BaseAce, Group):
     @platform.setter
     def platform(self, platform: str) -> None:
         """Changes platform, normalizes self.items regarding the new platform
-        :param platform: Platform: "ios", "nxos" (default "ios")
+        :param platform: Platform: "ios" (default), "nxos"
         """
         self._platform = h.init_platform(platform=platform)
 
@@ -377,20 +380,30 @@ class AceGroup(BaseAce, Group):
 
     def _line_to_oace(self, line: str, warning: bool = False) -> OUAce:
         """Converts config line to object: *Ace*, *Remark*, None"""
-        skip = ["", "statistics per-entry"]
-        if line in skip:
+        if not line:
             return None
-        try:
-            ace_o = self._line_to_ace(line)
-        except ValueError:
-            if warning:
-                msg = f"{line=} does not match ACE pattern"
-                logging.warning(msg)
-            ace_o = None
-        return ace_o
 
+        if h.is_line_for_acl(line):
+            try:
+                ace_o: UAce = self._line_to_ace(line)
+            except NetmaskValueError:
+                raise
+            except ValueError as ex:
+                if warning:
+                    msg = f"{type(ex).__name__}: {ex}. {line=} does not match ACE pattern"
+                    logging.warning(msg)
+                return None
+            return ace_o
 
-# ============================= helpers ==============================
+        known_skip = ["statistics ", "description ", "ignore "]
+        for skip in known_skip:
+            if line.startswith(skip):
+                return None
+
+        if warning:
+            msg = f"{line=} does not match ACE pattern"
+            logging.warning(msg)
+        return None
 
 
 LAceGroup = List[AceGroup]

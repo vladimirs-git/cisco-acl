@@ -1,4 +1,6 @@
-"""ACL - Access Control List"""
+"""ACL - Access Control List
+This class implements most of the Python list methods: append(), extend(), sort(), etc.
+"""
 from __future__ import annotations
 
 from functools import total_ordering
@@ -7,8 +9,8 @@ from typing import Dict, Generator, List, Union
 from cisco_acl import helpers as h
 from cisco_acl.ace import Ace, LAce
 from cisco_acl.ace_group import AceGroup, UAceg, UAce, LUAceg, OUAce, LUAce
+from cisco_acl.helpers import DEF_INDENT
 from cisco_acl.remark import Remark
-from cisco_acl.static import INDENTATION
 from cisco_acl.types_ import LStr, UStr, DAny, DLStr, SStr, T2Str
 
 
@@ -18,12 +20,12 @@ class Acl(AceGroup):
 
     def __init__(self, line: str = "", **kwargs):
         """ACL - Access Control List.
-        This class implements most of the Python list methods: append(), extend(), sort(), etc.
+        Support lines that starts with "allow", "deny", "remark".
 
         :param line: ACL config, "show running-config" output
         :type line: str
 
-        :param platform: Platform: "ios", "nxos" (default "ios")
+        :param platform: Platform: "ios" (default), "nxos"
         :type platform: str
 
         :param input: Interfaces, where Acl is used on input
@@ -86,7 +88,7 @@ class Acl(AceGroup):
         if "items" in kwargs:
             del kwargs["items"]
 
-        self._indent: str = self._init_indent(**kwargs)
+        self._indent: str = h.init_indent(**kwargs)
         self.input: LStr = kwargs.get("input") or []
         self.output: LStr = kwargs.get("output") or []
         super().__init__(**kwargs)  # name, group_by, items, max_ncwb
@@ -124,21 +126,13 @@ class Acl(AceGroup):
         params = self._repr__params()
         params = self._repr__add_param("input", params)
         params = self._repr__add_param("output", params)
-        if self._indent != INDENTATION:
+        if self._indent != DEF_INDENT:
             params = self._repr__add_param("indent", params)
         params = self._repr__add_param("protocol_nr", params)
         params = self._repr__add_param("port_nr", params)
         kwargs = ", ".join(params)
         name = self.__class__.__name__
         return f"{name}({kwargs})"
-
-    @staticmethod
-    def _init_indent(**kwargs) -> str:
-        """Init indentation"""
-        indent = kwargs.get("indent")
-        if indent is None:
-            indent = INDENTATION
-        return str(indent)
 
     # =========================== property ===========================
 
@@ -150,7 +144,7 @@ class Acl(AceGroup):
     @indent.setter
     def indent(self, indent: str) -> None:
         if indent is None:
-            indent = INDENTATION
+            indent = DEF_INDENT
         self._indent = str(indent)
 
     @property
@@ -597,6 +591,9 @@ class Acl(AceGroup):
                 yield from self._ungroup(item.items)
             else:
                 yield item
+
+
+# ============================ functions =============================
 
 
 LAcl = List[Acl]

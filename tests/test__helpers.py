@@ -83,7 +83,7 @@ class Test(unittest.TestCase):
     # =============================== str ================================
 
     def test_valid__acl_help_to_name_port(self):
-        """acl_help_to_name_port()"""
+        """helpers.acl_help_to_name_port()"""
         output_all = """
         <0-65535>    Port number
         cmd          Remote commands (rcmd, 514)
@@ -99,7 +99,7 @@ class Test(unittest.TestCase):
             self.assertEqual(result, req, msg=f"{output=}")
 
     def test_valid__findall1(self):
-        """findall1()"""
+        """helpers.findall1()"""
         for pattern, string, req in [
             ("", "abcde", ""),
             ("typo", "abcde", ""),
@@ -112,7 +112,7 @@ class Test(unittest.TestCase):
             self.assertEqual(result, req, msg=f"{pattern=}")
 
     def test_valid__findall2(self):
-        """findall2()"""
+        """helpers.findall2()"""
         for pattern, string, req in [
             ("", "abcde", ("", "")),
             ("typo", "abcde", ("", "")),
@@ -126,7 +126,7 @@ class Test(unittest.TestCase):
             self.assertEqual(result, req, msg=f"{pattern=}")
 
     def test_valid__findall3(self):
-        """findall3()"""
+        """helpers.findall3()"""
         for pattern, string, req in [
             ("", "abcde", ("", "", "")),
             ("typo", "abcde", ("", "", "")),
@@ -142,7 +142,7 @@ class Test(unittest.TestCase):
             self.assertEqual(result, req, msg=f"{pattern=}")
 
     def test_valid__check_line_length(self):
-        """check_line_length()"""
+        """helpers.check_line_length()"""
         for line, req in [
             ("", True),
             ("a" * 100, True),
@@ -151,7 +151,7 @@ class Test(unittest.TestCase):
             self.assertEqual(result, req, msg=f"{line=}")
 
     def test_invalid__check_line_length(self):
-        """check_line_length()"""
+        """helpers.check_line_length()"""
         for line, error in [
             (1, TypeError),
             ("a" * 101, ValueError),
@@ -160,7 +160,7 @@ class Test(unittest.TestCase):
                 h.check_line_length(line)
 
     def test_valid__check_name(self):
-        """check_name()"""
+        """helpers.check_name()"""
         ascii_letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
         digits = "0123456789"
         punctuation = r"""!"#$%&"()*+,-./:;<=>@[\]^_`{|}~"""
@@ -177,7 +177,7 @@ class Test(unittest.TestCase):
             self.assertEqual(result, req, msg=f"{line=}")
 
     def test_invalid__check_name(self):
-        """check_name()"""
+        """helpers.check_name()"""
         for line, error in [
             ("", ValueError),
             ("a?", ValueError),
@@ -185,8 +185,27 @@ class Test(unittest.TestCase):
             with self.assertRaises(error, msg=f"{line=}"):
                 h.check_name(line)
 
+    def test_valid__init_indent(self):
+        """helpers.init_indent()"""
+        for kwargs, req in [
+            ({}, "  "),
+            (dict(indent=""), ""),
+            (dict(indent=" "), " "),
+            (dict(indent="\t"), "\t"),
+        ]:
+            result = h.init_indent(**kwargs)
+            self.assertEqual(result, req, msg=f"{kwargs=}")
+
+    def test_invalid__init_indent(self):
+        """helpers.init_indent()"""
+        for kwargs, error in [
+            (dict(indent=1), TypeError),
+        ]:
+            with self.assertRaises(error, msg=f"{kwargs=}"):
+                h.init_indent(**kwargs)
+
     def test_valid__init_number(self):
-        """init_number()"""
+        """helpers.init_number()"""
         for number, req in [
             (0, "0"),
             (1, "1"),
@@ -197,7 +216,7 @@ class Test(unittest.TestCase):
             self.assertEqual(result, req, msg=f"{result=}")
 
     def test_invalid__init_number(self):
-        """init_number()"""
+        """helpers.init_number()"""
         for number, error in [
             ("a", ValueError),
             ("1 a", ValueError),
@@ -209,7 +228,7 @@ class Test(unittest.TestCase):
                 h.init_number(number)
 
     def test_valid__init_platform(self):
-        """init_platform()"""
+        """helpers.init_platform()"""
         for platform, req in [
             (None, "ios"),
             ("", "ios"),
@@ -223,7 +242,7 @@ class Test(unittest.TestCase):
             self.assertEqual(result, req, msg=f"{platform=}")
 
     def test_invalid__init_platform(self):
-        """init_platform()"""
+        """helpers.init_platform()"""
         for platform, error in [
             (["ios"], TypeError),
             ("typo", ValueError),
@@ -232,7 +251,7 @@ class Test(unittest.TestCase):
                 h.init_platform(platform=platform)
 
     def test_valid__init_protocol(self):
-        """init_protocol()"""
+        """helpers.init_protocol()"""
         for kwargs, req in [
             (dict(line="", protocol="tcp"), ""),
             (dict(line="eq 1", protocol="icmp"), ""),
@@ -249,7 +268,7 @@ class Test(unittest.TestCase):
             self.assertEqual(result, req, msg=f"{kwargs=}")
 
     def test_valid__init_remark_text(self):
-        """init_remark_text()"""
+        """helpers.init_remark_text()"""
         for text, req in [
             ("a", "a"),
             ("\ta    b \n", "a    b"),
@@ -258,7 +277,7 @@ class Test(unittest.TestCase):
             self.assertEqual(result, req, msg=f"{text=}")
 
     def test_invalid__init_remark_text(self):
-        """init_remark_text()"""
+        """helpers.init_remark_text()"""
         for text, error in [
             ("", ValueError),
             ("    ", ValueError),
@@ -269,7 +288,7 @@ class Test(unittest.TestCase):
                 h.init_remark_text(text=text)
 
     def test_valid__init_type(self):
-        """init_type()"""
+        """helpers.init_type()"""
         for kwargs, req in [
             (dict(platform="ios", type=""), "standard"),
             (dict(platform="ios", type="extended"), "extended"),
@@ -284,7 +303,7 @@ class Test(unittest.TestCase):
             self.assertEqual(result, req, msg=f"{kwargs=}")
 
     def test_invalid__init_type(self):
-        """init_type()"""
+        """helpers.init_type()"""
         for kwargs, error in [
             (dict(platform="nxos", type="standard"), ValueError),
             (dict(platform="nxos", type="ip access-list standard NAME"), ValueError),
@@ -296,7 +315,7 @@ class Test(unittest.TestCase):
                 h.init_type(**kwargs)
 
     def test_valid__int_to_str(self):
-        """Base.int_to_str()"""
+        """helpers.int_to_str()"""
         for line, req in [
             ("a", "a"),
             ("\ta\n", "a"),
@@ -308,7 +327,7 @@ class Test(unittest.TestCase):
             self.assertEqual(result, req, msg=f"{line=}")
 
     def test_invalid__int_to_str(self):
-        """Base.int_to_str()"""
+        """helpers.int_to_str()"""
         for line, error in [
             ({}, TypeError),
             (["a"], TypeError),
@@ -316,8 +335,25 @@ class Test(unittest.TestCase):
             with self.assertRaises(error, msg=f"{line=}"):
                 h.int_to_str(line)
 
+    def test_valid__is_line_for_acl(self):
+        """helpers.is_line_for_acl()"""
+        for line, req in [
+            ("permit a", True),
+            ("deny a", True),
+            ("remark a", True),
+            ("1 permit a", True),
+            ("1 deny a", True),
+            ("1 remark a", True),
+            ("", False),
+            ("statistics a", False),
+            ("description a", False),
+            ("ignore a", False),
+        ]:
+            result = h.is_line_for_acl(line)
+            self.assertEqual(result, req, msg=f"{line=}")
+
     def test_valid__lines_wo_spaces(self):
-        """lines_wo_spaces()"""
+        """helpers.lines_wo_spaces()"""
         for line, req in [
             ("a", ["a"]),
             ("\ta\n \nb\n", ["a", "b"]),
@@ -326,7 +362,7 @@ class Test(unittest.TestCase):
             self.assertEqual(result, req, msg=f"{line=}")
 
     def test_invalid__lines_wo_spaces(self):
-        """lines_wo_spaces()"""
+        """helpers.lines_wo_spaces()"""
         for line, error in [
             (1, TypeError),
             (["a"], TypeError),
@@ -337,7 +373,7 @@ class Test(unittest.TestCase):
     # ============================= int ==============================
 
     def test_valid__int_(self):
-        """int_"""
+        """helpers.init_int()"""
         for line, req in [
             ("", 0),
             ("0", 0),
@@ -349,7 +385,7 @@ class Test(unittest.TestCase):
             self.assertEqual(result, req, msg=f"{line=}")
 
     def test_invalid__int_(self):
-        """int_"""
+        """helpers.init_int()"""
         for line, error in [
             ({}, TypeError),
             (-1, ValueError),
@@ -362,7 +398,7 @@ class Test(unittest.TestCase):
     # =============================== list ===============================
 
     def test_valid__convert_to_lstr(self):
-        """convert_to_lstr"""
+        """helpers.convert_to_lstr()"""
         for items, req in [
             (None, []),
             ("", []),
@@ -374,7 +410,7 @@ class Test(unittest.TestCase):
             self.assertEqual(result, req, msg=f"{items=}")
 
     def test_invalid__convert_to_lstr(self):
-        """convert_to_lstr"""
+        """helpers.convert_to_lstr()"""
         for items, error in [
             (1, TypeError),
             ([1], TypeError),
@@ -385,7 +421,7 @@ class Test(unittest.TestCase):
     # ============================= dict =============================
 
     def test_valid__parse_ace_extended(self):
-        """parse_ace_extended()"""
+        """helpers.parse_ace_extended()"""
         pattern = "{sequence} {action} {protocol} {srcaddr} {srcport} {dstaddr} {dstport} {option}"
         items: LDStr = self._generate_aces_req()
         for req_d in items:
@@ -398,7 +434,7 @@ class Test(unittest.TestCase):
                 self.assertEqual(result, req, msg=f"{line=} {key=}")
 
     def test_invalid__parse_ace_extended(self):
-        """parse_ace_extended()"""
+        """helpers.parse_ace_extended()"""
         for line, req in [
             ("permit host 10.0.0.1", {}),
             ("permit ip", {}),
@@ -411,7 +447,7 @@ class Test(unittest.TestCase):
             self.assertEqual(result, req, msg=f"{line=}")
 
     def test_valid__parse_ace_standard(self):
-        """parse_ace_standard()"""
+        """helpers.parse_ace_standard()"""
         base = dict(sequence="", action="permit", protocol="ip", srcaddr="",
                     srcport="", dstaddr="any", dstport="", option="")
         for line, req_d in [
@@ -426,7 +462,7 @@ class Test(unittest.TestCase):
             self.assertEqual(diff, [], msg=f"{line=}")
 
     def test_invalid__parse_ace_standard(self):
-        """parse_ace_standard()"""
+        """helpers.parse_ace_standard()"""
         for line, req in [
             ("permit ip", {}),
             ("remark permit ip any any", {}),
@@ -437,7 +473,7 @@ class Test(unittest.TestCase):
             self.assertEqual(result, req, msg=f"{line=}")
 
     def test_valid__parse_dstport_option(self):
-        """parse_dstport_option()"""
+        """helpers.parse_dstport_option()"""
         items: LDStr = self._generate_dstport_option_req()
         for req_d in items:
             line = "{dstport} {option}".format(**req_d)
@@ -449,7 +485,7 @@ class Test(unittest.TestCase):
                 self.assertEqual(result, req, msg=f"{line=} {key=}")
 
     def test_valid__parse_action(self):
-        """parse_action()"""
+        """helpers.parse_action()"""
         for line, req_d in [
             (REMARK, dict(sequence="", action="remark", text="TEXT")),
             (PERMIT_IP, dict(sequence="", action="permit", text="ip any any")),
@@ -464,7 +500,7 @@ class Test(unittest.TestCase):
             self.assertEqual(diff, [], msg=f"{line=}")
 
     def test_invalid__parse_action(self):
-        """parse_action()"""
+        """helpers.parse_action()"""
         for line, error in [
             ("", ValueError),
             ("remark", ValueError),
@@ -476,7 +512,7 @@ class Test(unittest.TestCase):
                 h.parse_action(line)
 
     def test_valid__parse_address(self):
-        """parse_address()"""
+        """helpers.parse_address()"""
         for line, req_d in [
             (HOST, dict(sequence="", address=HOST)),
             (PREFIX30, dict(sequence="", address=PREFIX30)),
@@ -498,7 +534,7 @@ class Test(unittest.TestCase):
     # ============================== ipnet ===============================
 
     def test_valid__prefix_to_ipnet(self):
-        """prefix_to_ipnet()"""
+        """helpers.prefix_to_ipnet()"""
         for prefix, req, req_log in [
             ("10.0.0.0/30", "10.0.0.0/30", []),
             ("10.0.0.1/30", "10.0.0.0/30", [WARNING]),
@@ -514,7 +550,7 @@ class Test(unittest.TestCase):
             self.assertEqual(str(result), req, msg=f"{prefix=}")
 
     def test_valid__subnet_of(self):
-        """subnet_of()"""
+        """helpers.subnet_of()"""
         for tops, bottoms, req in [
             ([], [], False),
             ([], ["10.0.0.0/30"], False),
@@ -558,7 +594,7 @@ class Test(unittest.TestCase):
     # ============================ ports =============================
 
     def test_valid__ports_to_string(self):
-        """ports_to_string()"""
+        """helpers.ports_to_string()"""
         for items, req in [
             ([], ""),
             ([1, 2], "1-2"),
@@ -572,7 +608,7 @@ class Test(unittest.TestCase):
             self.assertEqual(result, req, msg=f"{items=}")
 
     def test_valid__string_to_ports(self):
-        """_string_to_ports()"""
+        """helpers.string_to_ports()"""
         for line, req in [
             ("", []),
             ("1", [1]),
@@ -586,7 +622,7 @@ class Test(unittest.TestCase):
             self.assertEqual(result, req, msg=f"{line=}")
 
     def test_invalid__string_to_ports(self):
-        """_string_to_ports()"""
+        """helpers.string_to_ports()"""
         for line, error in [
             (1, AttributeError),
         ]:

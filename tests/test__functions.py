@@ -1,1115 +1,17 @@
 """unittest functions.py"""
-# pylint: disable=too-many-lines
+
 import unittest
-from ipaddress import IPv4Network
+from ipaddress import NetmaskValueError
 
 import dictdiffer  # type: ignore
 
 from cisco_acl import functions as f
-from tests.helpers_test import (
-    DENY_IP,
-    PERMIT_IP,
-    REMARK,
-)
-
-IOS_ADDGR_CFG = """
-hostname HOSTNAME
-
-object-group network AG_NAME
-  description TEXT
-  host 10.0.0.1
-  10.0.0.0 255.255.255.252
-"""
-IOS_ACL_EXT_CFG = """
-hostname HOSTNAME
-
-object-group network AG_NAME
-  host 10.0.0.1
-  
-ip access-list extended ACL_NAME1
-  remark === C-1
-  permit tcp 10.0.0.1 0.0.0.0 eq 1 10.0.0.0 0.0.0.3 eq 2
-  remark === C-2
-  deny ip object-group AG_NAME any
-  
-interface Ethernet1/1
-  ip access-group ACL_NAME1 in
-"""
-
-IOS_ACL_STD_CFG = """
-hostname HOSTNAME
-
-ip access-list standard ACL_NAME2
-  remark === C-11
-  permit host 10.0.0.1
-  remark === C-12
-  permit 10.0.0.0 0.0.0.3
-
-interface Ethernet1/2
-  ip access-group ACL_NAME2 in
-  ip access-group ACL_NAME2 out
-"""
-
-CNX_ACL_EXT_CFG = """
-hostname HOSTNAME
-
-object-group ip address AG_NAME
-  10 host 10.0.0.1
-
-ip access-list ACL_NAME1
-  statistics per-entry
-  10 remark === C-1
-  20 permit tcp 10.0.0.1/32 eq 1 10.0.0.0/8 eq 2
-  30 remark === C-2
-  40 deny ip addrgroup AG_NAME any
-
-interface Ethernet1/1
-  ip access-group ACL_NAME1 in
-"""
-
-IOS_ADDGR_D = [
-    dict(line="object-group network AG_NAME\n  host 10.0.0.1\n  10.0.0.0 255.255.255.252",
-         platform="ios",
-         note="",
-         indent="  ",
-         name="AG_NAME",
-         items=[
-             dict(line="host 10.0.0.1",
-                  platform="ios",
-                  items=[],
-                  note="",
-                  max_ncwb=16,
-                  sequence=0,
-                  type="host",
-                  addrgroup="",
-                  ipnet=IPv4Network("10.0.0.1/32"),
-                  prefix="10.0.0.1/32",
-                  subnet="10.0.0.1 255.255.255.255",
-                  wildcard="10.0.0.1 0.0.0.0"),
-             dict(line="10.0.0.0 255.255.255.252",
-                  platform="ios",
-                  items=[],
-                  note="",
-                  max_ncwb=16,
-                  sequence=0,
-                  type="subnet",
-                  addrgroup="",
-                  ipnet=IPv4Network("10.0.0.0/30"),
-                  prefix="10.0.0.0/30",
-                  subnet="10.0.0.0 255.255.255.252",
-                  wildcard="10.0.0.0 0.0.0.3"),
-         ])
-]
-# noinspection DuplicatedCode
-CNX_ACE_EXT_D = dict(
-    line="ip access-list ACL_NAME1\n"
-         "  10 remark === C-1\n"
-         "  20 permit tcp 10.0.0.1/32 eq 1 10.0.0.0/8 eq 2\n"
-         "  30 remark === C-2\n"
-         "  40 deny ip addrgroup AG_NAME any",
-    platform="nxos",
-    type="extended",
-    input=["interface Ethernet1/1"],
-    output=[],
-    group_by="",
-    note="",
-    max_ncwb=16,
-    indent="  ",
-    protocol_nr=False,
-    port_nr=False,
-    name="ACL_NAME1",
-    items=[
-        dict(line="10 remark === C-1",
-             platform="nxos",
-             note="",
-             sequence=10,
-             action="remark",
-             text="=== C-1"),
-        dict(line="20 permit tcp 10.0.0.1/32 eq 1 10.0.0.0/8 eq 2",
-             platform="nxos",
-             type="extended",
-             note="",
-             max_ncwb=16,
-             protocol_nr=False,
-             port_nr=False,
-             sequence=20,
-             action="permit",
-             protocol=dict(line="tcp",
-                           platform="nxos",
-                           note="",
-                           protocol_nr=False,
-                           has_port=True,
-                           name="tcp",
-                           number=6),
-             srcaddr=dict(line="10.0.0.1/32",
-                          platform="nxos",
-                          items=[],
-                          note="",
-                          max_ncwb=16,
-                          type="prefix",
-                          addrgroup="",
-                          ipnet=IPv4Network("10.0.0.1/32"),
-                          prefix="10.0.0.1/32",
-                          subnet="10.0.0.1 255.255.255.255",
-                          wildcard="10.0.0.1 0.0.0.0"),
-             srcport=dict(line="eq 1",
-                          platform="nxos",
-                          note="",
-                          protocol="tcp",
-                          port_nr=False,
-                          items=[1],
-                          operator="eq",
-                          ports=[1],
-                          sport="1"),
-             dstaddr=dict(line="10.0.0.0/8",
-                          platform="nxos",
-                          items=[],
-                          note="",
-                          max_ncwb=16,
-                          type="prefix",
-                          addrgroup="",
-                          ipnet=IPv4Network("10.0.0.0/8"),
-                          prefix="10.0.0.0/8",
-                          subnet="10.0.0.0 255.0.0.0",
-                          wildcard="10.0.0.0 0.255.255.255"),
-             dstport=dict(line="eq 2",
-                          platform="nxos",
-                          note="",
-                          protocol="tcp",
-                          port_nr=False,
-                          items=[2],
-                          operator="eq",
-                          ports=[2],
-                          sport="2"),
-             option=dict(line="", platform="nxos", note="", flags=[], logs=[])),
-        dict(line="30 remark === C-2",
-             platform="nxos",
-             note="",
-             sequence=30,
-             action="remark",
-             text="=== C-2"),
-        dict(line="40 deny ip addrgroup AG_NAME any",
-             platform="nxos",
-             type="extended",
-             note="",
-             max_ncwb=16,
-             protocol_nr=False,
-             port_nr=False,
-             sequence=40,
-             action="deny",
-             protocol=dict(line="ip",
-                           platform="nxos",
-                           note="",
-                           protocol_nr=False,
-                           has_port=False,
-                           name="ip",
-                           number=0),
-             srcaddr=dict(line="addrgroup AG_NAME",
-                          platform="nxos",
-                          items=[
-                              dict(line="host 10.0.0.1",
-                                   platform="nxos",
-                                   items=[],
-                                   note="",
-                                   max_ncwb=16,
-                                   type="host",
-                                   addrgroup="",
-                                   ipnet=IPv4Network("10.0.0.1/32"),
-                                   prefix="10.0.0.1/32",
-                                   subnet="10.0.0.1 255.255.255.255",
-                                   wildcard="10.0.0.1 0.0.0.0"),
-                          ],
-                          note="",
-                          max_ncwb=16,
-                          type="addrgroup",
-                          addrgroup="AG_NAME",
-                          ipnet=None,
-                          prefix="",
-                          subnet="",
-                          wildcard=""),
-             srcport=dict(line="",
-                          platform="nxos",
-                          note="",
-                          protocol="",
-                          port_nr=False,
-                          items=[],
-                          operator="",
-                          ports=[],
-                          sport=""),
-             dstaddr=dict(line="any",
-                          platform="nxos",
-                          items=[],
-                          note="",
-                          max_ncwb=16,
-                          type="any",
-                          addrgroup="",
-                          ipnet=IPv4Network("0.0.0.0/0"),
-                          prefix="0.0.0.0/0",
-                          subnet="0.0.0.0 0.0.0.0",
-                          wildcard="0.0.0.0 255.255.255.255"),
-             dstport=dict(line="",
-                          platform="nxos",
-                          note="",
-                          protocol="",
-                          port_nr=False,
-                          items=[],
-                          operator="",
-                          ports=[],
-                          sport=""),
-             option=dict(line="", platform="nxos", note="", flags=[], logs=[])),
-    ]
-)
-
-# noinspection DuplicatedCode
-CNX_ACEG_EXT_D = dict(
-    line="ip access-list ACL_NAME1\n"
-         "  10 remark === C-1\n"
-         "  20 permit tcp 10.0.0.1/32 eq 1 10.0.0.0/8 eq 2\n"
-         "  30 remark === C-2\n"
-         "  40 deny ip addrgroup AG_NAME any",
-    platform="nxos",
-    type="extended",
-    input=["interface Ethernet1/1"],
-    output=[],
-    name="ACL_NAME1",
-    items=[
-        dict(line="10 remark === C-1\n20 permit tcp 10.0.0.1/32 eq 1 10.0.0.0/8 eq 2",
-             platform="nxos",
-             type="extended",
-             name="=== C-1",
-             items=[
-                 dict(line="10 remark === C-1",
-                      platform="nxos",
-                      note="",
-                      sequence=10,
-                      action="remark",
-                      text="=== C-1"),
-                 dict(line="20 permit tcp 10.0.0.1/32 eq 1 10.0.0.0/8 eq 2",
-                      platform="nxos",
-                      type="extended",
-                      note="",
-                      max_ncwb=16,
-                      protocol_nr=False,
-                      port_nr=False,
-                      sequence=20,
-                      action="permit",
-                      protocol=dict(line="tcp",
-                                    platform="nxos",
-                                    note="",
-                                    protocol_nr=False,
-                                    has_port=True,
-                                    name="tcp",
-                                    number=6),
-                      srcaddr=dict(line="10.0.0.1/32",
-                                   platform="nxos",
-                                   items=[],
-                                   note="",
-                                   max_ncwb=16,
-                                   type="prefix",
-                                   addrgroup="",
-                                   ipnet=IPv4Network("10.0.0.1/32"),
-                                   prefix="10.0.0.1/32",
-                                   subnet="10.0.0.1 255.255.255.255",
-                                   wildcard="10.0.0.1 0.0.0.0"),
-                      srcport=dict(line="eq 1",
-                                   platform="nxos",
-                                   note="",
-                                   protocol="tcp",
-                                   port_nr=False,
-                                   items=[1],
-                                   operator="eq",
-                                   ports=[1],
-                                   sport="1"),
-                      dstaddr=dict(line="10.0.0.0/8",
-                                   platform="nxos",
-                                   items=[],
-                                   note="",
-                                   max_ncwb=16,
-                                   type="prefix",
-                                   addrgroup="",
-                                   ipnet=IPv4Network("10.0.0.0/8"),
-                                   prefix="10.0.0.0/8",
-                                   subnet="10.0.0.0 255.0.0.0",
-                                   wildcard="10.0.0.0 0.255.255.255"),
-                      dstport=dict(line="eq 2",
-                                   platform="nxos",
-                                   note="",
-                                   protocol="tcp",
-                                   port_nr=False,
-                                   items=[2],
-                                   operator="eq",
-                                   ports=[2],
-                                   sport="2"),
-                      option=dict(line="",
-                                  platform="nxos",
-                                  note="",
-                                  flags=[],
-                                  logs=[]))],
-             group_by="=== ",
-             note="",
-             protocol_nr=False,
-             port_nr=False,
-             sequence=0),
-        dict(line="30 remark === C-2\n40 deny ip addrgroup AG_NAME any",
-             platform="nxos",
-             type="extended",
-             name="=== C-2",
-             items=[
-                 dict(line="30 remark === C-2",
-                      platform="nxos",
-                      note="",
-                      sequence=30,
-                      action="remark",
-                      text="=== C-2"),
-                 dict(line="40 deny ip addrgroup AG_NAME any",
-                      platform="nxos",
-                      type="extended",
-                      note="",
-                      max_ncwb=16,
-                      protocol_nr=False,
-                      port_nr=False,
-                      sequence=40,
-                      action="deny",
-                      protocol=dict(line="ip",
-                                    platform="nxos",
-                                    note="",
-                                    protocol_nr=False,
-                                    has_port=False,
-                                    name="ip",
-                                    number=0),
-                      srcaddr=dict(line="addrgroup AG_NAME",
-                                   platform="nxos",
-                                   items=[
-                                       dict(line="host 10.0.0.1",
-                                            platform="nxos",
-                                            items=[],
-                                            note="",
-                                            max_ncwb=16,
-                                            type="host",
-                                            addrgroup="",
-                                            ipnet=IPv4Network("10.0.0.1/32"),
-                                            prefix="10.0.0.1/32",
-                                            subnet="10.0.0.1 255.255.255.255",
-                                            wildcard="10.0.0.1 0.0.0.0")],
-                                   note="",
-                                   max_ncwb=16,
-                                   type="addrgroup",
-                                   addrgroup="AG_NAME",
-                                   ipnet=None,
-                                   prefix="",
-                                   subnet="",
-                                   wildcard=""),
-                      srcport=dict(line="",
-                                   platform="nxos",
-                                   note="",
-                                   protocol="",
-                                   port_nr=False,
-                                   items=[],
-                                   operator="",
-                                   ports=[],
-                                   sport=""),
-                      dstaddr=dict(line="any",
-                                   platform="nxos",
-                                   items=[],
-                                   note="",
-                                   max_ncwb=16,
-                                   type="any",
-                                   addrgroup="",
-                                   ipnet=IPv4Network("0.0.0.0/0"),
-                                   prefix="0.0.0.0/0",
-                                   subnet="0.0.0.0 0.0.0.0",
-                                   wildcard="0.0.0.0 255.255.255.255"),
-                      dstport=dict(line="",
-                                   platform="nxos",
-                                   note="",
-                                   protocol="",
-                                   port_nr=False,
-                                   items=[],
-                                   operator="",
-                                   ports=[],
-                                   sport=""),
-                      option=dict(line="",
-                                  platform="nxos",
-                                  note="",
-                                  flags=[],
-                                  logs=[]))],
-             group_by="=== ",
-             note="",
-             protocol_nr=False,
-             port_nr=False,
-             sequence=0),
-    ],
-    group_by="=== ",
-    note="",
-    max_ncwb=16,
-    indent="  ",
-    protocol_nr=False,
-    port_nr=False,
-)
-# noinspection DuplicatedCode
-IOS_ACE_EXT_D = dict(
-    line="ip access-list extended ACL_NAME1\n"
-         "  remark === C-1\n"
-         "  permit tcp 10.0.0.1 0.0.0.0 eq 1 10.0.0.0 0.0.0.3 eq 2\n"
-         "  remark === C-2\n"
-         "  deny ip object-group AG_NAME any",
-    platform="ios",
-    type="extended",
-    input=["interface Ethernet1/1"],
-    output=[],
-    note="",
-    max_ncwb=16,
-    indent="  ",
-    protocol_nr=False,
-    port_nr=False,
-    name="ACL_NAME1",
-    group_by="",
-    items=[
-        dict(line="remark === C-1",
-             platform="ios",
-             note="",
-             sequence=0,
-             action="remark",
-             text="=== C-1"),
-        dict(line="permit tcp 10.0.0.1 0.0.0.0 eq 1 10.0.0.0 0.0.0.3 eq 2",
-             platform="ios",
-             type="extended",
-             note="",
-             max_ncwb=16,
-             protocol_nr=False,
-             port_nr=False,
-             sequence=0,
-             action="permit",
-             protocol=dict(line="tcp",
-                           platform="ios",
-                           note="",
-                           protocol_nr=False,
-                           has_port=True,
-                           name="tcp",
-                           number=6),
-             srcaddr=dict(line="10.0.0.1 0.0.0.0",
-                          platform="ios",
-                          items=[],
-                          note="",
-                          max_ncwb=16,
-                          type="wildcard",
-                          addrgroup="",
-                          ipnet=IPv4Network("10.0.0.1/32"),
-                          prefix="10.0.0.1/32",
-                          subnet="10.0.0.1 255.255.255.255",
-                          wildcard="10.0.0.1 0.0.0.0"),
-             srcport=dict(line="eq 1",
-                          platform="ios",
-                          note="",
-                          protocol="tcp",
-                          port_nr=False,
-                          items=[1],
-                          operator="eq",
-                          ports=[1],
-                          sport="1"),
-             dstaddr=dict(line="10.0.0.0 0.0.0.3",
-                          platform="ios",
-                          items=[],
-                          note="",
-                          max_ncwb=16,
-                          type="wildcard",
-                          addrgroup="",
-                          ipnet=IPv4Network("10.0.0.0/30"),
-                          prefix="10.0.0.0/30",
-                          subnet="10.0.0.0 255.255.255.252",
-                          wildcard="10.0.0.0 0.0.0.3"),
-             dstport=dict(line="eq 2",
-                          platform="ios",
-                          note="",
-                          protocol="tcp",
-                          port_nr=False,
-                          items=[2],
-                          operator="eq",
-                          ports=[2],
-                          sport="2"),
-             option=dict(line="", platform="ios", note="", flags=[], logs=[])),
-        dict(line="remark === C-2",
-             platform="ios",
-             note="",
-             sequence=0,
-             action="remark",
-             text="=== C-2"),
-        dict(line="deny ip object-group AG_NAME any",
-             platform="ios",
-             type="extended",
-             note="",
-             max_ncwb=16,
-             protocol_nr=False,
-             port_nr=False,
-             sequence=0,
-             action="deny",
-             protocol=dict(line="ip",
-                           platform="ios",
-                           note="",
-                           protocol_nr=False,
-                           has_port=False,
-                           name="ip",
-                           number=0),
-             srcaddr=dict(line="object-group AG_NAME",
-                          platform="ios",
-                          items=[
-                              dict(line="host 10.0.0.1",
-                                   platform="ios",
-                                   items=[],
-                                   note="",
-                                   max_ncwb=16,
-                                   type="host",
-                                   addrgroup="",
-                                   ipnet=IPv4Network("10.0.0.1/32"),
-                                   prefix="10.0.0.1/32",
-                                   subnet="10.0.0.1 255.255.255.255",
-                                   wildcard="10.0.0.1 0.0.0.0"),
-                          ],
-                          note="",
-                          max_ncwb=16,
-                          type="addrgroup",
-                          addrgroup="AG_NAME",
-                          ipnet=None,
-                          prefix="",
-                          subnet="",
-                          wildcard=""),
-             srcport=dict(line="",
-                          platform="ios",
-                          note="",
-                          protocol="",
-                          port_nr=False,
-                          items=[],
-                          operator="",
-                          ports=[],
-                          sport=""),
-             dstaddr=dict(line="any",
-                          platform="ios",
-                          items=[],
-                          note="",
-                          max_ncwb=16,
-                          type="any",
-                          addrgroup="",
-                          ipnet=IPv4Network("0.0.0.0/0"),
-                          prefix="0.0.0.0/0",
-                          subnet="0.0.0.0 0.0.0.0",
-                          wildcard="0.0.0.0 255.255.255.255"),
-             dstport=dict(line="",
-                          platform="ios",
-                          note="",
-                          protocol="",
-                          port_nr=False,
-                          items=[],
-                          operator="",
-                          ports=[],
-                          sport=""),
-             option=dict(line="", platform="ios", note="", flags=[], logs=[]))
-    ]
-)
-# noinspection DuplicatedCode
-IOS_ACEG_EXT_D = dict(
-    line="ip access-list extended ACL_NAME1\n"
-         "  remark === C-1\n"
-         "  permit tcp 10.0.0.1 0.0.0.0 eq 1 10.0.0.0 0.0.0.3 eq 2\n"
-         "  remark === C-2\n"
-         "  deny ip object-group AG_NAME any",
-    platform="ios",
-    type="extended",
-    input=["interface Ethernet1/1"],
-    output=[],
-    name="ACL_NAME1",
-    items=[
-        dict(line="remark === C-1\npermit tcp 10.0.0.1 0.0.0.0 eq 1 10.0.0.0 0.0.0.3 eq 2",
-             platform="ios",
-             type="extended",
-             name="=== C-1",
-             items=[
-                 dict(line="remark === C-1",
-                      platform="ios",
-                      note="",
-                      sequence=0,
-                      action="remark",
-                      text="=== C-1"),
-                 dict(line="permit tcp 10.0.0.1 0.0.0.0 eq 1 10.0.0.0 0.0.0.3 eq 2",
-                      platform="ios",
-                      type="extended",
-                      note="",
-                      max_ncwb=16,
-                      protocol_nr=False,
-                      port_nr=False,
-                      sequence=0,
-                      action="permit",
-                      protocol=dict(line="tcp",
-                                    platform="ios",
-                                    note="",
-                                    protocol_nr=False,
-                                    has_port=True,
-                                    name="tcp",
-                                    number=6),
-                      srcaddr=dict(line="10.0.0.1 0.0.0.0",
-                                   platform="ios",
-                                   items=[],
-                                   note="",
-                                   max_ncwb=16,
-                                   type="wildcard",
-                                   addrgroup="",
-                                   ipnet=IPv4Network("10.0.0.1/32"),
-                                   prefix="10.0.0.1/32",
-                                   subnet="10.0.0.1 255.255.255.255",
-                                   wildcard="10.0.0.1 0.0.0.0"),
-                      srcport=dict(line="eq 1",
-                                   platform="ios",
-                                   note="",
-                                   protocol="tcp",
-                                   port_nr=False,
-                                   items=[1],
-                                   operator="eq",
-                                   ports=[1],
-                                   sport="1"),
-                      dstaddr=dict(line="10.0.0.0 0.0.0.3",
-                                   platform="ios",
-                                   items=[],
-                                   note="",
-                                   max_ncwb=16,
-                                   type="wildcard",
-                                   addrgroup="",
-                                   ipnet=IPv4Network("10.0.0.0/30"),
-                                   prefix="10.0.0.0/30",
-                                   subnet="10.0.0.0 255.255.255.252",
-                                   wildcard="10.0.0.0 0.0.0.3"),
-                      dstport=dict(line="eq 2",
-                                   platform="ios",
-                                   note="",
-                                   protocol="tcp",
-                                   port_nr=False,
-                                   items=[2],
-                                   operator="eq",
-                                   ports=[2],
-                                   sport="2"),
-                      option=dict(line="",
-                                  platform="ios",
-                                  note="",
-                                  flags=[],
-                                  logs=[]),
-                      ),
-             ],
-             group_by="=== ",
-             note="",
-             protocol_nr=False,
-             port_nr=False,
-             sequence=0),
-        dict(line="remark === C-2\ndeny ip object-group AG_NAME any",
-             platform="ios",
-             type="extended",
-             name="=== C-2",
-             items=[
-                 dict(line="remark === C-2",
-                      platform="ios",
-                      note="",
-                      sequence=0,
-                      action="remark",
-                      text="=== C-2"),
-                 dict(line="deny ip object-group AG_NAME any",
-                      platform="ios",
-                      type="extended",
-                      note="",
-                      max_ncwb=16,
-                      protocol_nr=False,
-                      port_nr=False,
-                      sequence=0,
-                      action="deny",
-                      protocol=dict(line="ip",
-                                    platform="ios",
-                                    note="",
-                                    protocol_nr=False,
-                                    has_port=False,
-                                    name="ip",
-                                    number=0),
-                      srcaddr=dict(line="object-group AG_NAME",
-                                   platform="ios",
-                                   items=[
-                                       dict(line="host 10.0.0.1",
-                                            platform="ios",
-                                            items=[],
-                                            note="",
-                                            max_ncwb=16,
-                                            type="host",
-                                            addrgroup="",
-                                            ipnet=IPv4Network("10.0.0.1/32"),
-                                            prefix="10.0.0.1/32",
-                                            subnet="10.0.0.1 255.255.255.255",
-                                            wildcard="10.0.0.1 0.0.0.0"),
-                                   ],
-                                   note="",
-                                   max_ncwb=16,
-                                   type="addrgroup",
-                                   addrgroup="AG_NAME",
-                                   ipnet=None,
-                                   prefix="",
-                                   subnet="",
-                                   wildcard=""),
-                      srcport=dict(line="",
-                                   platform="ios",
-                                   note="",
-                                   protocol="",
-                                   port_nr=False,
-                                   items=[],
-                                   operator="",
-                                   ports=[],
-                                   sport=""),
-                      dstaddr=dict(line="any",
-                                   platform="ios",
-                                   items=[],
-                                   note="",
-                                   max_ncwb=16,
-                                   type="any",
-                                   addrgroup="",
-                                   ipnet=IPv4Network("0.0.0.0/0"),
-                                   prefix="0.0.0.0/0",
-                                   subnet="0.0.0.0 0.0.0.0",
-                                   wildcard="0.0.0.0 255.255.255.255"),
-                      dstport=dict(line="",
-                                   platform="ios",
-                                   note="",
-                                   protocol="",
-                                   port_nr=False,
-                                   items=[],
-                                   operator="",
-                                   ports=[],
-                                   sport=""),
-                      option=dict(line="",
-                                  platform="ios",
-                                  note="",
-                                  flags=[],
-                                  logs=[])),
-             ],
-             group_by="=== ",
-             note="",
-             protocol_nr=False,
-             port_nr=False,
-             sequence=0),
-    ],
-    group_by="=== ",
-    note="",
-    max_ncwb=16,
-    indent="  ",
-    protocol_nr=False,
-    port_nr=False,
-)
-# noinspection DuplicatedCode
-IOS_ACE_STD_D = dict(
-    line="ip access-list standard ACL_NAME2\n"
-         "  remark === C-11\n"
-         "  permit host 10.0.0.1\n"
-         "  remark === C-12\n"
-         "  permit 10.0.0.0 0.0.0.3",
-    platform="ios",
-    type="standard",
-    input=["interface Ethernet1/2"],
-    output=["interface Ethernet1/2"],
-    note="",
-    max_ncwb=16,
-    indent="  ",
-    protocol_nr=False,
-    port_nr=False,
-    name="ACL_NAME2",
-    group_by="",
-    items=[
-        dict(line="remark === C-11",
-             platform="ios",
-             note="",
-             sequence=0,
-             action="remark",
-             text="=== C-11"),
-        dict(line="permit host 10.0.0.1",
-             platform="ios",
-             type="standard",
-             note="",
-             max_ncwb=16,
-             protocol_nr=False,
-             port_nr=False,
-             sequence=0,
-             action="permit",
-             protocol=dict(line="ip",
-                           platform="ios",
-                           note="",
-                           protocol_nr=False,
-                           has_port=False,
-                           name="ip",
-                           number=0),
-             srcaddr=dict(line="host 10.0.0.1",
-                          platform="ios",
-                          items=[],
-                          note="",
-                          max_ncwb=16,
-                          type="host",
-                          addrgroup="",
-                          ipnet=IPv4Network("10.0.0.1/32"),
-                          prefix="10.0.0.1/32",
-                          subnet="10.0.0.1 255.255.255.255",
-                          wildcard="10.0.0.1 0.0.0.0"),
-             srcport=dict(line="",
-                          platform="ios",
-                          note="",
-                          protocol="",
-                          port_nr=False,
-                          items=[],
-                          operator="",
-                          ports=[],
-                          sport=""),
-             dstaddr=dict(line="any",
-                          platform="ios",
-                          items=[],
-                          note="",
-                          max_ncwb=16,
-                          type="any",
-                          addrgroup="",
-                          ipnet=IPv4Network("0.0.0.0/0"),
-                          prefix="0.0.0.0/0",
-                          subnet="0.0.0.0 0.0.0.0",
-                          wildcard="0.0.0.0 255.255.255.255"),
-             dstport=dict(line="",
-                          platform="ios",
-                          note="",
-                          protocol="",
-                          port_nr=False,
-                          items=[],
-                          operator="",
-                          ports=[],
-                          sport=""),
-             option=dict(line="", platform="ios", note="", flags=[], logs=[])),
-        dict(line="remark === C-12",
-             platform="ios",
-             note="",
-             sequence=0,
-             action="remark",
-             text="=== C-12"),
-        dict(line="permit 10.0.0.0 0.0.0.3",
-             platform="ios",
-             type="standard",
-             note="",
-             max_ncwb=16,
-             protocol_nr=False,
-             port_nr=False,
-             sequence=0,
-             action="permit",
-             protocol=dict(line="ip",
-                           platform="ios",
-                           note="",
-                           protocol_nr=False,
-                           has_port=False,
-                           name="ip",
-                           number=0),
-             srcaddr=dict(line="10.0.0.0 0.0.0.3",
-                          platform="ios",
-                          items=[],
-                          note="",
-                          max_ncwb=16,
-                          type="wildcard",
-                          addrgroup="",
-                          ipnet=IPv4Network("10.0.0.0/30"),
-                          prefix="10.0.0.0/30",
-                          subnet="10.0.0.0 255.255.255.252",
-                          wildcard="10.0.0.0 0.0.0.3"),
-             srcport=dict(line="",
-                          platform="ios",
-                          note="",
-                          protocol="",
-                          port_nr=False,
-                          items=[],
-                          operator="",
-                          ports=[],
-                          sport=""),
-             dstaddr=dict(line="any",
-                          platform="ios",
-                          items=[],
-                          note="",
-                          max_ncwb=16,
-                          type="any",
-                          addrgroup="",
-                          ipnet=IPv4Network("0.0.0.0/0"),
-                          prefix="0.0.0.0/0",
-                          subnet="0.0.0.0 0.0.0.0",
-                          wildcard="0.0.0.0 255.255.255.255"),
-             dstport=dict(line="",
-                          platform="ios",
-                          note="",
-                          protocol="",
-                          port_nr=False,
-                          items=[],
-                          operator="",
-                          ports=[],
-                          sport=""),
-             option=dict(line="", platform="ios", note="", flags=[], logs=[]))
-    ]
-)
-# noinspection DuplicatedCode
-IOS_ACEG_STD_D = dict(
-    line="ip access-list standard ACL_NAME2\n"
-         "  remark === C-11\n"
-         "  permit host 10.0.0.1\n"
-         "  remark === C-12\n"
-         "  permit 10.0.0.0 0.0.0.3",
-    platform="ios",
-    type="standard",
-    input=["interface Ethernet1/2"],
-    output=["interface Ethernet1/2"],
-    note="",
-    max_ncwb=16,
-    indent="  ",
-    protocol_nr=False,
-    port_nr=False,
-    name="ACL_NAME2",
-    group_by="=== ",
-    items=[
-        dict(line="remark === C-11\npermit host 10.0.0.1",
-             platform="ios",
-             type="standard",
-             name="=== C-11",
-             group_by="=== ",
-             items=[
-                 dict(line="remark === C-11",
-                      platform="ios",
-                      note="",
-                      sequence=0,
-                      action="remark",
-                      text="=== C-11"),
-                 dict(line="permit host 10.0.0.1",
-                      platform="ios",
-                      type="standard",
-                      note="",
-                      max_ncwb=16,
-                      protocol_nr=False,
-                      port_nr=False,
-                      sequence=0,
-                      action="permit",
-                      protocol=dict(line="ip",
-                                    platform="ios",
-                                    note="",
-                                    protocol_nr=False,
-                                    has_port=False,
-                                    name="ip",
-                                    number=0),
-                      srcaddr=dict(line="host 10.0.0.1",
-                                   platform="ios",
-                                   items=[],
-                                   note="",
-                                   max_ncwb=16,
-                                   type="host",
-                                   addrgroup="",
-                                   ipnet=IPv4Network("10.0.0.1/32"),
-                                   prefix="10.0.0.1/32",
-                                   subnet="10.0.0.1 255.255.255.255",
-                                   wildcard="10.0.0.1 0.0.0.0"),
-                      srcport=dict(line="",
-                                   platform="ios",
-                                   note="",
-                                   protocol="",
-                                   port_nr=False,
-                                   items=[],
-                                   operator="",
-                                   ports=[],
-                                   sport=""),
-                      dstaddr=dict(line="any",
-                                   platform="ios",
-                                   items=[],
-                                   note="",
-                                   max_ncwb=16,
-                                   type="any",
-                                   addrgroup="",
-                                   ipnet=IPv4Network("0.0.0.0/0"),
-                                   prefix="0.0.0.0/0",
-                                   subnet="0.0.0.0 0.0.0.0",
-                                   wildcard="0.0.0.0 255.255.255.255"),
-                      dstport=dict(line="",
-                                   platform="ios",
-                                   note="",
-                                   protocol="",
-                                   port_nr=False,
-                                   items=[],
-                                   operator="",
-                                   ports=[],
-                                   sport=""),
-                      option=dict(line="", platform="ios", note="", flags=[], logs=[]))],
-             note="",
-             protocol_nr=False,
-             port_nr=False,
-             sequence=0),
-        dict(line="remark === C-12\npermit 10.0.0.0 0.0.0.3",
-             platform="ios",
-             type="standard",
-             name="=== C-12",
-             group_by="=== ",
-             items=[
-                 dict(line="remark === C-12",
-                      platform="ios",
-                      note="",
-                      sequence=0,
-                      action="remark",
-                      text="=== C-12"),
-                 dict(line="permit 10.0.0.0 0.0.0.3",
-                      platform="ios",
-                      type="standard",
-                      note="",
-                      max_ncwb=16,
-                      protocol_nr=False,
-                      port_nr=False,
-                      sequence=0,
-                      action="permit",
-                      protocol=dict(line="ip",
-                                    platform="ios",
-                                    note="",
-                                    protocol_nr=False,
-                                    has_port=False,
-                                    name="ip",
-                                    number=0),
-                      srcaddr=dict(line="10.0.0.0 0.0.0.3",
-                                   platform="ios",
-                                   items=[],
-                                   note="",
-                                   max_ncwb=16,
-                                   type="wildcard",
-                                   addrgroup="",
-                                   ipnet=IPv4Network("10.0.0.0/30"),
-                                   prefix="10.0.0.0/30",
-                                   subnet="10.0.0.0 255.255.255.252",
-                                   wildcard="10.0.0.0 0.0.0.3"),
-                      srcport=dict(line="",
-                                   platform="ios",
-                                   note="",
-                                   protocol="",
-                                   port_nr=False,
-                                   items=[],
-                                   operator="",
-                                   ports=[],
-                                   sport=""),
-                      dstaddr=dict(line="any",
-                                   platform="ios",
-                                   items=[],
-                                   note="",
-                                   max_ncwb=16,
-                                   type="any",
-                                   addrgroup="",
-                                   ipnet=IPv4Network("0.0.0.0/0"),
-                                   prefix="0.0.0.0/0",
-                                   subnet="0.0.0.0 0.0.0.0",
-                                   wildcard="0.0.0.0 255.255.255.255"),
-                      dstport=dict(line="",
-                                   platform="ios",
-                                   note="",
-                                   protocol="",
-                                   port_nr=False,
-                                   items=[],
-                                   operator="",
-                                   ports=[],
-                                   sport=""),
-                      option=dict(line="", platform="ios", note="", flags=[], logs=[])),
-             ],
-             note="",
-             protocol_nr=False,
-             port_nr=False,
-             sequence=0)
-    ]
-)
+from tests.helpers_test import DENY_IP, PERMIT_IP, REMARK, PERMIT_NUM, PERMIT_WILD_252
+from tests.test__functions__helpers import CNX_ACEG_EXT_D, IOS_ACE_EXT_D, IOS_ACEG_EXT_D
+from tests.test__functions__helpers import CNX_ACL_EXT_CFG, IOS_ADDGR_D, CNX_ACE_EXT_D
+from tests.test__functions__helpers import CNX_ADDGR_WILD_252
+from tests.test__functions__helpers import IOS_ACE_STD_D, IOS_ACEG_STD_D, IOS_ACL_WILD_252
+from tests.test__functions__helpers import IOS_ADDGR_CFG, IOS_ACL_EXT_CFG, IOS_ACL_STD_CFG
 
 
 # noinspection DuplicatedCode
@@ -1120,16 +22,17 @@ class Test(unittest.TestCase):
         """functions.acls()"""
         for kwargs, req_d in [
             (dict(config=CNX_ACL_EXT_CFG, platform="nxos"), CNX_ACE_EXT_D),
-            (dict(config=CNX_ACL_EXT_CFG, platform="nxos", group_by="=== "), CNX_ACEG_EXT_D),
             (dict(config=IOS_ACL_EXT_CFG, platform="ios"), IOS_ACE_EXT_D),
-            (dict(config=IOS_ACL_EXT_CFG, platform="ios", group_by="=== "), IOS_ACEG_EXT_D),
             (dict(config=IOS_ACL_STD_CFG, platform="ios"), IOS_ACE_STD_D),
+            # group_by
+            (dict(config=CNX_ACL_EXT_CFG, platform="nxos", group_by="=== "), CNX_ACEG_EXT_D),
+            (dict(config=IOS_ACL_EXT_CFG, platform="ios", group_by="=== "), IOS_ACEG_EXT_D),
             (dict(config=IOS_ACL_STD_CFG, platform="ios", group_by="=== "), IOS_ACEG_STD_D),
-            (dict(config=IOS_ACL_STD_CFG, names=["typo"]), {}),
             # names
             (dict(config=IOS_ACL_STD_CFG, names=None), IOS_ACE_STD_D),
             (dict(config=IOS_ACL_STD_CFG, names=[]), {}),
             (dict(config=IOS_ACL_STD_CFG, names=["ACL_NAME2"]), IOS_ACE_STD_D),
+            (dict(config=IOS_ACL_STD_CFG, names=["typo"]), {}),
         ]:
             acls = f.acls(**kwargs)
             if req_d:
@@ -1140,6 +43,35 @@ class Test(unittest.TestCase):
                 self.assertEqual(diff, [], msg=f"{kwargs=}")
             else:
                 self.assertEqual(len(acls), 0, msg="1 acl expected")
+
+    def test_valid__acls_2(self):
+        """functions.acls(kwargs)"""
+        # max_ncwb, 30 instead of 16
+        acls = f.acls(config=IOS_ACL_WILD_252, max_ncwb=30)
+        self.assertEqual(len(acls), 1, msg="max_ncwb")
+
+        # indent, " " instead of "  "
+        acls = f.acls(config=CNX_ACL_EXT_CFG, platform="nxos", indent=" ")
+        result = acls[0].indent
+        self.assertEqual(result, " ", msg="indent")
+
+        # protocol_nr, "0" instead of "ip"
+        acls = f.acls(config=IOS_ACL_STD_CFG, protocol_nr=True)
+        result = acls[0].items[1].protocol.line
+        self.assertEqual(result, "0", msg="protocol_nr")
+
+        # port_nr, "80" instead of "www"
+        acls = f.acls(config=CNX_ACL_EXT_CFG, platform="nxos", port_nr=True)
+        result = acls[0].items[1].dstport.line
+        self.assertEqual(result, "eq 80", msg="port_nr")
+
+    def test_invalid__acls(self):
+        """functions.acls()"""
+        for kwargs, error in [
+            (dict(config=IOS_ACL_WILD_252), NetmaskValueError),  # max_ncwb
+        ]:
+            with self.assertRaises(error, msg=f"{kwargs=}"):
+                f.acls(**kwargs)
 
     def test_valid__aces(self):
         """functions.aces()"""
@@ -1156,6 +88,30 @@ class Test(unittest.TestCase):
             result = [o.line for o in aces]
             self.assertEqual(result, req, msg=f"{kwargs=}")
 
+    def test_valid__aces_2(self):
+        """functions.aces(kwargs)"""
+        # max_ncwb, 30 instead of 16
+        aces = f.aces(config=PERMIT_WILD_252, max_ncwb=30)
+        self.assertEqual(len(aces), 1, msg="max_ncwb")
+
+        # protocol_nr, "0" instead of "ip"
+        aces = f.aces(config=PERMIT_IP, protocol_nr=True)
+        result = aces[0].protocol.line
+        self.assertEqual(result, "0", msg="protocol_nr")
+
+        # port_nr, "80" instead of "www"
+        aces = f.aces(config=PERMIT_NUM, platform="nxos", port_nr=True)
+        result = aces[0].dstport.line
+        self.assertEqual(result, "eq 80", msg="port_nr")
+
+    def test_invalid__acs(self):
+        """functions.acls()"""
+        for kwargs, error in [
+            (dict(config=PERMIT_WILD_252), NetmaskValueError),  # max_ncwb
+        ]:
+            with self.assertRaises(error, msg=f"{kwargs=}"):
+                f.aces(**kwargs)
+
     def test_valid__addrgroups(self):
         """functions.addrgroups()"""
         for kwargs, req_d in [
@@ -1165,6 +121,25 @@ class Test(unittest.TestCase):
             result = [o.data() for o in aces]
             diff = list(dictdiffer.diff(first=result, second=req_d))
             self.assertEqual(diff, [], msg=f"{kwargs=}")
+
+    def test_valid__addrgroups_2(self):
+        """functions.addrgroups(kwargs)"""
+        # max_ncwb, 30 instead of 16
+        addrgroups = f.addrgroups(config=CNX_ADDGR_WILD_252, platform="nxos", max_ncwb=30)
+        self.assertEqual(len(addrgroups), 1, msg="max_ncwb")
+
+        # indent, " " instead of "  "
+        addrgroups = f.addrgroups(config=IOS_ADDGR_CFG, indent=" ")
+        result = addrgroups[0].indent
+        self.assertEqual(result, " ", msg="indent")
+
+    def test_invalid__addrgroups(self):
+        """functions.addrgroups()"""
+        for kwargs, error in [
+            (dict(config=CNX_ADDGR_WILD_252, platform="nxos"), NetmaskValueError),  # max_ncwb
+        ]:
+            with self.assertRaises(error, msg=f"{kwargs=}"):
+                f.addrgroups(**kwargs)
 
     def test_valid__range_protocol(self):
         """functions.range_protocol()"""
