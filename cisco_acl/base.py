@@ -1,4 +1,4 @@
-"""Base - Parent of: Address, Port, Protocol, BaseAce"""
+"""Base - Parent of: Address, Port, Protocol, AceBase"""
 
 from abc import ABC, abstractmethod
 from typing import Any
@@ -10,7 +10,7 @@ from cisco_acl.types_ import LStr, DAny
 
 
 class Base(ABC):
-    """Base - Parent of: Address, Port, Protocol, BaseAce"""
+    """Base - Parent of: Address, Port, Protocol, AceBase"""
 
     def __init__(self, **kwargs):
         """Base

@@ -14,7 +14,7 @@ from typing import List, Optional, Union
 
 from cisco_acl import helpers as h
 from cisco_acl.ace import Ace, LAce
-from cisco_acl.base_ace import BaseAce
+from cisco_acl.ace_base import AceBase
 from cisco_acl.group import Group
 from cisco_acl.helpers import ACTIONS
 from cisco_acl.remark import Remark, LRemark
@@ -32,7 +32,7 @@ ULAce = Union[LAce, LRemark, LUAce]
 
 
 @total_ordering
-class AceGroup(BaseAce, Group):
+class AceGroup(AceBase, Group):
     """Group of ACE (Access Control Entry)"""
 
     def __init__(self, line: str = "", **kwargs):
@@ -88,7 +88,7 @@ class AceGroup(BaseAce, Group):
         self._name = ""
         self._group_by = ""
         self._items: LUAce = []
-        BaseAce.__init__(self, **kwargs)  # platform, type, note, sequence, protocol_nr, port_nr
+        AceBase.__init__(self, **kwargs)  # platform, type, note, sequence, protocol_nr, port_nr
         Group.__init__(self)
         if name := kwargs.get("name"):
             self._name = h.init_name(name)

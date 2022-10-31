@@ -1,4 +1,4 @@
-"""BaseAce - Parent of: Ace, Remark, AceGroup"""
+"""AceBase, parent of: Ace, Remark, AceGroup"""
 
 from abc import ABC, abstractmethod
 
@@ -8,11 +8,11 @@ from cisco_acl.types_ import StrInt, DAny
 from cisco_acl.wildcard import init_max_ncwb
 
 
-class BaseAce(Base, ABC):
-    """BaseAce - Parent of: Ace, Remark, AceGroup"""
+class AceBase(Base, ABC):
+    """AceBase, parent of: Ace, Remark, AceGroup"""
 
     def __init__(self, **kwargs):
-        """BaseAce - Parent of: Ace, Remark, AceGroup
+        """AceBase
         :param platform: Platform: "ios" (default), "nxos"
         :type platform: str
 

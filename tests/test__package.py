@@ -58,7 +58,7 @@ class Test(unittest.TestCase):
         diff = imports1.difference(imports2)
         self.assertEqual(len(diff), 0, msg=f"imports {diff=} in {path1=} {path2=}")
 
-    def test_valid__version__readme(self):
+    def test_valid__version(self):
         """version in README, URL"""
         package = PYPROJECT["project"]["name"].replace("_", "-")
         readme = PYPROJECT["project"]["readme"]

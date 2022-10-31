@@ -5,15 +5,15 @@ from functools import total_ordering
 from ipaddress import IPv4Network
 from typing import Iterable, List, Optional, Union
 
-from cisco_acl import base_address
+from cisco_acl import address_base
 from cisco_acl import helpers as h
-from cisco_acl.base_address import BaseAddress
+from cisco_acl.address_base import AddressBase
 from cisco_acl.types_ import StrInt, LStr, DAny, LDAny
 from cisco_acl.wildcard import Wildcard
 
 
 @total_ordering
-class AddressAg(BaseAddress):
+class AddressAg(AddressBase):
     """AddressAg - Address of AddrGroup. A "group-object" item of "object-group network " command"""
 
     def __init__(self, line: str, **kwargs):
@@ -298,5 +298,5 @@ def collapse(addresses: IAddressAg) -> LAddressAg:
         if not isinstance(address, AddressAg):
             raise TypeError(f"{address=} {AddressAg} expected")
     # noinspection PyProtectedMember
-    collapsed = base_address.collapse_(addresses)
+    collapsed = address_base.collapse_(addresses)
     return [o for o in collapsed if isinstance(o, AddressAg)]

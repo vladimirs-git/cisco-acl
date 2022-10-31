@@ -4,13 +4,13 @@ from __future__ import annotations
 from functools import total_ordering
 from typing import Dict, Iterable, List, Optional, Union
 
-from cisco_acl import base_address
-from cisco_acl.base_address import BaseAddress
+from cisco_acl import address_base
+from cisco_acl.address_base import AddressBase
 from cisco_acl.types_ import LStr, DAny, LDAny
 
 
 @total_ordering
-class Address(BaseAddress):
+class Address(AddressBase):
     """Address - Source or destination address in ACE"""
 
     def __init__(self, line: str, **kwargs):
@@ -121,6 +121,6 @@ def collapse(addresses: IAddress) -> LAddress:
         if not isinstance(address, Address):
             raise TypeError(f"{address=} {Address} expected")
     # noinspection PyProtectedMember
-    collapsed = base_address.collapse_(addresses)
+    collapsed = address_base.collapse_(addresses)
     collapsed_: LAddress = [o for o in collapsed if isinstance(o, Address)]
     return collapsed_

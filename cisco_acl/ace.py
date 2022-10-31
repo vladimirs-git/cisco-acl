@@ -6,7 +6,7 @@ from typing import List
 
 from cisco_acl import helpers as h
 from cisco_acl.address import Address
-from cisco_acl.base_ace import BaseAce
+from cisco_acl.ace_base import AceBase
 from cisco_acl.option import Option
 from cisco_acl.port import Port
 from cisco_acl.protocol import Protocol
@@ -14,7 +14,7 @@ from cisco_acl.types_ import DAny, OBool, DStr, LStr
 
 
 @total_ordering
-class Ace(BaseAce):
+class Ace(AceBase):
     """ACE - Access Control Entry"""
 
     def __init__(self, line: str, **kwargs):

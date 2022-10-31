@@ -4,6 +4,12 @@
 CHANGELOG
 =========
 
+3.0.1 (2022-10-31)
+------------------
+* [rename] AceBase, AddressBase
+* [fix] AddressBase._is_address_prefix()
+
+
 3.0.0 (2022-10-30)
 ------------------
 * [new] kwargs for cisco_acl.acls() cisco_acl.aces() cisco_acl.addrgroups()

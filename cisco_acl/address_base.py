@@ -1,4 +1,4 @@
-"""BaseAddress - Parent of: Address, AddressAg"""
+"""AddressBase, parent of: Address, AddressAg"""
 
 from abc import abstractmethod
 from functools import total_ordering
@@ -12,11 +12,11 @@ from cisco_acl.wildcard import Wildcard, init_max_ncwb
 
 
 @total_ordering  # type: ignore
-class BaseAddress(Base):
-    """BaseAddress - Parent of: Address, AddressAg"""
+class AddressBase(Base):
+    """AddressBase, parent of: Address, AddressAg"""
 
     def __init__(self, **kwargs):
-        """BaseAddress
+        """AddressBase
         :param platform: Platform: "ios" (default), "nxos"
         :type platform: str
 
@@ -473,7 +473,7 @@ class BaseAddress(Base):
     @staticmethod
     def _is_address_prefix(line: str) -> bool:
         """True if address is prefix "A.B.C.D/LEN" """
-        return line.find("/") != -1
+        return bool(line) and line[0].isdigit() and line.find("/") != -1
 
     @staticmethod
     def _is_address_wildcard(line: str) -> bool:

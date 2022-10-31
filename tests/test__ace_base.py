@@ -1,4 +1,4 @@
-"""Unittest base_ace.py"""
+"""Unittest ace_base.py"""
 
 import unittest
 
@@ -7,12 +7,12 @@ from tests.helpers_test import Helpers, PERMIT_IP, REMARK
 
 
 class Test(Helpers):
-    """BaseAce"""
+    """AceBase"""
 
     # =========================== property ===========================
 
     def test_valid__sequence(self):
-        """BaseAce.sequence"""
+        """AceBase.sequence"""
         for sequence, req in [
             ("", 0),
             ("0", 0),
@@ -33,7 +33,7 @@ class Test(Helpers):
                 self.assertEqual(result, req, msg=f"{sequence=}")
 
     def test_invalid__sequence(self):
-        """BaseAce.sequence"""
+        """AceBase.sequence"""
         for sequence, error in [
             ({}, TypeError),
             (-1, ValueError),

@@ -5,12 +5,12 @@ from functools import total_ordering
 from typing import List
 
 from cisco_acl import helpers as h
-from cisco_acl.base_ace import BaseAce
+from cisco_acl.ace_base import AceBase
 from cisco_acl.types_ import DAny
 
 
 @total_ordering
-class Remark(BaseAce):
+class Remark(AceBase):
     """Remark - comments in ACL"""
 
     def __init__(self, line: str = "", **kwargs):

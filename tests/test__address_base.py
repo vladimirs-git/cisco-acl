@@ -1,4 +1,4 @@
-"""Unittest base_address.py"""
+"""Unittest address_base.py"""
 
 import unittest
 
@@ -24,12 +24,12 @@ from tests.helpers_test import (
 
 # noinspection DuplicatedCode
 class Test(Helpers):
-    """BaseAddress"""
+    """AddressBase"""
 
     # ========================== redefined ===========================
 
     def test_valid__hash__(self):
-        """BaseAddress.__hash__()"""
+        """AddressBase.__hash__()"""
         for line, hash_ in [
             (WILD30, ("", WILD30)),
             (PREFIX30, ("", WILD30)),
@@ -43,7 +43,7 @@ class Test(Helpers):
             self.assertEqual(result, req, msg=f"{line=}")
 
     def test_valid__eq__(self):
-        """BaseAddress.__eq__() __ne__()"""
+        """AddressBase.__eq__() __ne__()"""
         prefix00 = Address(PREFIX00, platform="nxos")
         prefix30 = Address(PREFIX30, platform="nxos")
         prefix30_2 = Address(PREFIX30, platform="nxos")
@@ -93,7 +93,7 @@ class Test(Helpers):
             self.assertEqual(result, not req, msg=f"{obj1=} {obj2=}")
 
     def test_valid__lt__(self):
-        """BaseAddress.__lt__() __le__() __gt__() __ge__()"""
+        """AddressBase.__lt__() __le__() __gt__() __ge__()"""
         for line1, line2, req_lt, req_le, req_gt, req_ge in [
             # wildcard="0.0.0.0 255.255.255.255", ipnet="0.0.0.0/0"
             (WILD00, WILD00, False, True, False, True),
@@ -135,7 +135,7 @@ class Test(Helpers):
             self.assertEqual(result, req_ge, msg=f"{line1=} {line2=}")
 
     def test_valid__lt__sort(self):
-        """BaseAddress.__lt__(), Address.__le__()"""
+        """AddressBase.__lt__(), Address.__le__()"""
         for items in [
             # wildcard="0.0.0.0 255.255.255.255", ipnet="0.0.0.0/0"
             [Address(WILD00), Address(WILD00)],
