@@ -8,7 +8,7 @@ from itertools import product
 
 from cisco_acl import helpers as h
 from cisco_acl.base import Base
-from cisco_acl.types_ import LIpNet, LInt, DAny, OIpNet, T2IpAddr, TLintInt
+from cisco_acl.types_ import LIpNet, LInt, DAny, OIpNet, T2IpAddr, TLintInt, LStr
 
 PREFIX_LEN = 32  # IPv4 prefix length
 ALL_ONES = (2 ** PREFIX_LEN) - 1

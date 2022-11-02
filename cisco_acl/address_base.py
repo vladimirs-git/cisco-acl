@@ -341,11 +341,12 @@ class AddressBase(Base):
         :return: List of IPv4Network
 
         :example: contiguous wildcard
-            Address("10.0.0.0 0.0.0.3").ipnets() -> [IPv4Network("10.0.0.0/30")]
+            addr = Address("10.0.0.0 0.0.0.3")
+            addr.ipnets() -> [IPv4Network("10.0.0.0/30")]
 
         :example: non-contiguous wildcard
-            self: Address("10.0.0.0 0.0.1.3")
-            return: [IPv4Network("10.0.0.0/30"), IPv4Network("10.0.1.0/30")]
+            addr = Address("10.0.0.0 0.0.1.3")
+            addr.ipnets() -> [IPv4Network("10.0.0.0/30"), IPv4Network("10.0.1.0/30")]
         """
         if isinstance(self.ipnet, IPv4Network):
             return [self.ipnet]
@@ -369,20 +370,21 @@ class AddressBase(Base):
         :return: Subnets with prefix length
 
         :example:
-            self: Address("object-group NAME", platform="ios")
-            return: ["10.0.1.0/30", "10.0.2.0/30"]
+            addr = Address("object-group NAME")
+            addr.prefixes() -> ["10.0.1.0/30", "10.0.2.0/30"]
 
         :example:
-            self: Address("10.0.0.0 0.0.0.3", platform="ios")
-            return: ["10.0.0.0/30"]
+            addr = Address("10.0.0.0 0.0.0.3")
+            addr.prefixes() -> ["10.0.0.0/30", "10.0.1.0/30", "10.0.2.0/30", "10.0.3.0/30"]
         """
-        ipnets = self.ipnets()
+        ipnets: LIpNet = self.ipnets()
         return [str(o) for o in ipnets]
 
     def subnet_of(self, other) -> bool:
         """Checks self *Address* (all ipnets) is subnet of `other` *Address* (any of ipnet)
         :param other: Other *Address* (top)
-        :type other: *Union[Address, AddressAg]*
+        :type other: Address, AddressAg
+
         :return: True - if *Address* is subnet of `other` *Address*
         """
         tops = other.ipnets()
@@ -395,12 +397,12 @@ class AddressBase(Base):
         :return: Subnets with mask
 
         :example:
-            self: Address("object-group NAME", platform="ios")
-            return: ["10.0.1.0 255.255.255.252", "10.0.2.0 255.255.255.252"]
+            addr = Address("object-group NAME")
+            addr.subnets() -> ["10.0.1.0 255.255.255.252", "10.0.2.0 255.255.255.252"]
 
         :example:
-            self: Address("10.0.0.0 0.0.0.3", platform="ios")
-            return: ["10.0.0.0 255.255.255.252"]
+            addr = Address("10.0.0.0 0.0.1.3")
+            addr.subnets() -> ["10.0.0.0 255.255.255.252", "10.0.1.0 255.255.255.252"]
         """
         ipnets = self.ipnets()
         return [o.with_netmask.replace("/", " ") for o in ipnets]
@@ -410,12 +412,12 @@ class AddressBase(Base):
         :return: LIst of wildcard *str*
 
         :example:
-            self: Address("object-group NAME", platform="ios")
+            addr = Address("object-group NAME")
             return: ["10.0.1.0 0.0.0.3", "10.0.2.0 0.0.0.3"]
 
         :example:
-            self: Address("10.0.0.0 0.0.0.3", platform="ios")
-            return: ["10.0.0.0 0.0.0.3"]
+            self: Address("10.0.0.0 0.0.1.3")
+            addr.wildcards() -> ["10.0.0.0 0.0.1.3"]
         """
         if isinstance(self._wildcard, Wildcard):
             return [self._wildcard.line]
