@@ -116,3 +116,9 @@ print()
 #   permit tcp host 1.1.1.1 eq 1 2.2.2.0 0.0.0.255 eq 4
 #   permit tcp host 1.1.1.1 eq 2 2.2.2.0 0.0.0.255 eq 3
 #   permit tcp host 1.1.1.1 eq 2 2.2.2.0 0.0.0.255 eq 4
+
+# An estimate of the amount of TCAM resources needed for this ACL
+tcam_count = acl1.tcam_count()
+print(f"{tcam_count=}")
+print()
+# tcam_count=8

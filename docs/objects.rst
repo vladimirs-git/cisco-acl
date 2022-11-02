@@ -61,11 +61,6 @@ data()
 **Acl.data()** - Converts *Acl* object to *dict*
 
 
-delete_note()
-.............
-**Acl.delete_note(item)** - Deletes note in all children self.items: Ace, AceGroup, Remark
-
-
 group()
 .......
 **Acl.group(group_by)** - Groups ACEs to *AceGroup* by `group_by` startswith in remarks
@@ -136,6 +131,16 @@ skip            *List[str]*  Skips checking specified address type: "addrgroup",
 
 Return
     *dict* Shading (in the top) and shadow (in the bottom) ACEs
+
+
+tcam_count()
+............
+**Acl.tcam_count()** - Calculates sum of ACEs.
+Also takes into account the addresses in the address group.
+Useful for getting an estimate of the amount of TCAM resources needed for this ACL
+
+Return
+    *int* Count of TCAM resources
 
 
 ungroup_ports()

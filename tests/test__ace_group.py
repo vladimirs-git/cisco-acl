@@ -1,7 +1,6 @@
 """Unittest ace_group.py"""
 
 import unittest
-from ipaddress import IPv4Network
 
 import dictdiffer  # type: ignore
 
@@ -10,17 +9,21 @@ from tests.helpers_test import (
     DENY_ICMP,
     DENY_IP,
     DENY_IP2,
+    HOST,
     Helpers,
     PERMIT_IP,
     PERMIT_IP1,
     PERMIT_NAM,
     PERMIT_NUM,
+    PERMIT_TCP1,
     PREFIX30,
     REMARK,
     UUID,
     UUID_R,
     WILD30,
+    WILD_NC3,
 )
+from tests.test__ace_group__helpers import REQ_NO_LINE, REQ_LINE
 
 
 # noinspection DuplicatedCode
@@ -308,150 +311,12 @@ class Test(Helpers):
     def test_valid__data(self):
         """AceGroup.data()"""
         kw_no_line = dict(line="")
-        req_no_line = dict(
-            line="",
-            platform="ios",
-            type="extended",
-            name="",
-            items=[],
-            group_by="",
-            note="",
-            sequence=0,
-            protocol_nr=False,
-            port_nr=False,
-        )
-
         kw_line = dict(
             line=f"1 {PERMIT_IP}\n2 {DENY_ICMP}",
             platform="nxos",
             note="a",
             protocol_nr=True,
             port_nr=True,
-        )
-        req_line = dict(
-            line="1 permit 0 any any\n2 deny 1 any any",
-            platform="nxos",
-            type="extended",
-            name="",
-            items=[dict(line="1 permit 0 any any",
-                        platform="nxos",
-                        type="extended",
-                        protocol_nr=True,
-                        port_nr=True,
-                        sequence=1,
-                        action="permit",
-                        protocol=dict(line="0",
-                                      platform="nxos",
-                                      note="",
-                                      protocol_nr=True,
-                                      has_port=False,
-                                      name="ip",
-                                      number=0),
-                        srcaddr=dict(line="any",
-                                     platform="nxos",
-                                     items=[],
-                                     note="",
-                                     max_ncwb=16,
-                                     type="any",
-                                     addrgroup="",
-                                     ipnet=IPv4Network("0.0.0.0/0"),
-                                     prefix="0.0.0.0/0",
-                                     subnet="0.0.0.0 0.0.0.0",
-                                     wildcard="0.0.0.0 255.255.255.255"),
-                        srcport=dict(line="",
-                                     platform="nxos",
-                                     protocol="",
-                                     note="",
-                                     port_nr=True,
-                                     items=[],
-                                     operator="",
-                                     ports=[],
-                                     sport=""),
-                        dstaddr=dict(line="any",
-                                     platform="nxos",
-                                     items=[],
-                                     note="",
-                                     max_ncwb=16,
-                                     type="any",
-                                     addrgroup="",
-                                     ipnet=IPv4Network("0.0.0.0/0"),
-                                     prefix="0.0.0.0/0",
-                                     subnet="0.0.0.0 0.0.0.0",
-                                     wildcard="0.0.0.0 255.255.255.255"),
-                        dstport=dict(line="",
-                                     platform="nxos",
-                                     protocol="",
-                                     note="",
-                                     port_nr=True,
-                                     items=[],
-                                     operator="",
-                                     ports=[],
-                                     sport=""),
-                        option=dict(line="", platform="nxos", note="", flags=[], logs=[]),
-                        note="",
-                        max_ncwb=16),
-                   dict(line="2 deny 1 any any",
-                        platform="nxos",
-                        type="extended",
-                        protocol_nr=True,
-                        port_nr=True,
-                        sequence=2,
-                        action="deny",
-                        protocol=dict(line="1",
-                                      platform="nxos",
-                                      note="",
-                                      protocol_nr=True,
-                                      has_port=False,
-                                      name="icmp",
-                                      number=1),
-                        srcaddr=dict(line="any",
-                                     platform="nxos",
-                                     items=[],
-                                     note="",
-                                     max_ncwb=16,
-                                     type="any",
-                                     addrgroup="",
-                                     ipnet=IPv4Network("0.0.0.0/0"),
-                                     prefix="0.0.0.0/0",
-                                     subnet="0.0.0.0 0.0.0.0",
-                                     wildcard="0.0.0.0 255.255.255.255"),
-                        srcport=dict(line="",
-                                     platform="nxos",
-                                     protocol="",
-                                     note="",
-                                     port_nr=True,
-                                     items=[],
-                                     operator="",
-                                     ports=[],
-                                     sport=""),
-                        dstaddr=dict(line="any",
-                                     platform="nxos",
-                                     items=[],
-                                     note="",
-                                     max_ncwb=16,
-                                     type="any",
-                                     addrgroup="",
-                                     ipnet=IPv4Network("0.0.0.0/0"),
-                                     prefix="0.0.0.0/0",
-                                     subnet="0.0.0.0 0.0.0.0",
-                                     wildcard="0.0.0.0 255.255.255.255"),
-                        dstport=dict(line="",
-                                     platform="nxos",
-                                     protocol="",
-                                     note="",
-                                     port_nr=True,
-                                     items=[],
-                                     operator="",
-                                     ports=[],
-                                     sport=""),
-                        option=dict(line="", platform="nxos", note="", flags=[], logs=[]),
-                        note="",
-                        max_ncwb=16)],
-            group_by="",
-            note="a",
-            protocol_nr=True,
-            port_nr=True,
-            sequence=1,
         )
         req_uuid1 = [("remove", ["items", 0, "protocol"], [("uuid", "ID1")]),
                      ("remove", ["items", 0, "srcaddr"], [("uuid", "ID1")]),
@@ -469,8 +334,8 @@ class Test(Helpers):
                      ("remove", ["items", 1], [("uuid", "ID1")]),
                      ("remove", "", [("uuid", "ID1")])]
         for kwargs, req_d, req_uuid in [
-            (kw_no_line, req_no_line, UUID_R),
-            (kw_line, req_line, req_uuid1),
+            (kw_no_line, REQ_NO_LINE, UUID_R),
+            (kw_line, REQ_LINE, req_uuid1),
         ]:
             obj = AceGroup(**kwargs)
             obj.uuid = UUID
@@ -493,28 +358,30 @@ class Test(Helpers):
             diff = list(dictdiffer.diff(first=result, second=req_d))
             self.assertEqual(diff, req_uuid, msg=f"{kwargs=}")
 
-    def test_valid__line_to_ace(self):
-        """AceGroup._line_to_ace() AceGroup._line_to_oace()"""
-        obj = AceGroup()
+    def test_valid__tcam_count(self):
+        """AceGroup.tcam_count()"""
+        addrs = [Address(WILD30), Address(WILD_NC3), Address(HOST)]
         for line, req in [
-            (REMARK, Remark(REMARK)),
-            (PERMIT_IP, Ace(PERMIT_IP)),
-            (DENY_IP, Ace(DENY_IP)),
-            ("", None),
-            ("typo", None),
+            (REMARK, 0),
+            (PERMIT_IP, 1),
+            (f"{REMARK}\n{PERMIT_TCP1}\n{REMARK}\n{DENY_ICMP}\n{PERMIT_IP}\n", 3),
+            ("permit ip object-group NAME any", 3),
+            ("permit ip any object-group NAME", 3),
+            ("permit ip object-group NAME object-group NAME", 9),
         ]:
-            if req:
-                result = obj._line_to_ace(line)
-                self.assertEqual(result, req, msg=f"{line=}")
-            else:
-                with self.assertRaises(ValueError, msg=f"{line=}"):
-                    obj._line_to_ace(line)
+            obj = AceGroup(line)
+            for item in obj.items:
+                if isinstance(item, Ace) and req:
+                    if item.srcaddr.type == "addrgroup":
+                        item.srcaddr.items = addrs
+                    if item.dstaddr.type == "addrgroup":
+                        item.dstaddr.items = addrs
 
-            result = obj._line_to_oace(line)
+            result = obj.tcam_count()
             self.assertEqual(result, req, msg=f"{line=}")
 
-    def test_valid__split_ports(self):
-        """AceGroup.split_ports()"""
+    def test_valid__ungroup_ports(self):
+        """AceGroup.ungroup_ports()"""
         for line, req in [
             ("permit tcp any any", "permit tcp any any"),
             ("permit tcp any eq 1 any eq 2", "permit tcp any eq 1 any eq 2"),
@@ -553,6 +420,26 @@ class Test(Helpers):
             # setter
             obj.items = items
             self._test_attrs(obj=obj, req_d=req_d, msg=f"{items=}")
+
+    def test_valid__line_to_ace(self):
+        """AceGroup._line_to_ace() AceGroup._line_to_oace()"""
+        obj = AceGroup()
+        for line, req in [
+            (REMARK, Remark(REMARK)),
+            (PERMIT_IP, Ace(PERMIT_IP)),
+            (DENY_IP, Ace(DENY_IP)),
+            ("", None),
+            ("typo", None),
+        ]:
+            if req:
+                result = obj._line_to_ace(line)
+                self.assertEqual(result, req, msg=f"{line=}")
+            else:
+                with self.assertRaises(ValueError, msg=f"{line=}"):
+                    obj._line_to_ace(line)
+
+            result = obj._line_to_oace(line)
+            self.assertEqual(result, req, msg=f"{line=}")
 
 
 if __name__ == "__main__":

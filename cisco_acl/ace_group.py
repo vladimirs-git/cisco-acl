@@ -269,6 +269,30 @@ class AceGroup(AceBase, Group):
             raise TypeError(f"{remark=} {Remark} expected")
         return remark
 
+    def tcam_count(self) -> int:
+        """Calculates sum of ACEs. Also takes into account the addresses in the address group.
+        Useful for getting an estimate of the amount of TCAM resources needed for this ACL
+        :return: Count of TCAM resources
+        """
+        counter = 0
+        for item in self.items:
+            if isinstance(item, AceGroup):
+                counter += item.tcam_count()
+                continue
+            if not isinstance(item, Ace):
+                continue
+            if "addrgroup" not in [item.srcaddr.type, item.dstaddr.type]:
+                counter += 1
+                continue
+            src_counter = 1
+            if item.srcaddr.type == "addrgroup":
+                src_counter = len(item.srcaddr.items) or 1
+            dst_counter = 1
+            if item.dstaddr.type == "addrgroup":
+                dst_counter = len(item.dstaddr.items) or 1
+            counter += src_counter * dst_counter
+        return counter
+
     # noinspection PyIncorrectDocstring
     @h.check_start_step_sequence
     def resequence(self, start: int = 10, step: int = 10, **kwargs) -> int:

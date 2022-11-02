@@ -494,6 +494,15 @@ class Acl(AceGroup):
                     shadow.add(ace_bottom.line)
         return shading_d
 
+    def tcam_count(self) -> int:
+        """Calculates sum of ACEs. Also takes into account the addresses in the address group.
+        Useful for getting an estimate of the amount of TCAM resources needed for this ACL
+        :return: Count of TCAM resources
+        """
+        counter = super().tcam_count()
+        counter += 1
+        return counter
+
     def ungroup_ports(self) -> None:
         """Ungroups ACEs with multiple ports in single line ("eq" or "neq")
         to multiple lines with single port

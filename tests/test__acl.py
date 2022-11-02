@@ -835,6 +835,28 @@ class Test(Helpers):
               "permit tcp any eq 2 any eq 4"
         self.assertEqual(result, req, msg=f"{line=}")
 
+    def test_valid__tcam_count(self):
+        """AceGroup.tcam_count()"""
+        addrs = [Address(WILD30), Address(WILD_NC3), Address(HOST)]
+        for line, req in [
+            (REMARK, 1),
+            (PERMIT_IP, 2),
+            (f"{REMARK}\n{PERMIT_TCP1}\n{REMARK}\n{PERMIT_IP}\n", 3),
+            ("permit ip object-group NAME any", 4),
+            ("permit ip any object-group NAME", 4),
+            ("permit ip object-group NAME object-group NAME", 10),
+        ]:
+            obj = Acl(f"{ACL_NAME_IOS}\n{line}")
+            for item in obj.items:
+                if isinstance(item, Ace) and req:
+                    if item.srcaddr.type == "addrgroup":
+                        item.srcaddr.items = addrs
+                    if item.dstaddr.type == "addrgroup":
+                        item.dstaddr.items = addrs
+
+            result = obj.tcam_count()
+            self.assertEqual(result, req, msg=f"{line=}")
+
     def test_valid__ungroup(self):
         """Acl.ungroup() Acl._ungroup()"""
         acl1 = Acl(f"{ACL_NAME_IOS}\n{REMARK}\n{DENY_IP}\n{PERMIT_IP}")
