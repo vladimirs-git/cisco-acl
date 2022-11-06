@@ -235,7 +235,7 @@ class AddrGroup(Base, Group):
         data = self.data(uuid=True)
         self.__init__(**data)  # type: ignore
 
-    # =========================== methods ============================
+    # =========================== method =============================
 
     def data(self, uuid: bool = False) -> DAny:
         """Returns *AddrGroup* data as *dict*
@@ -352,7 +352,7 @@ class AddrGroup(Base, Group):
             wildcards.extend(wildcards_)
         return wildcards
 
-    # =========================== helpers ============================
+    # =========================== helper =============================
 
     def _line_to_address(self, line: str) -> OAddressAg:
         """Converts config line to *AddressAg* object

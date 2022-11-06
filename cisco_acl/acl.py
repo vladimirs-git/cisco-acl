@@ -249,7 +249,7 @@ class Acl(AceGroup):
         for item in self._items:
             item.platform = self._platform
 
-    # =========================== methods ============================
+    # =========================== method =============================
 
     def data(self, uuid: bool = False) -> DAny:
         """Converts *Acl* object to *dict*
@@ -543,7 +543,7 @@ class Acl(AceGroup):
         self._group_by = ""
         self.items = list(self._ungroup(self._items))
 
-    # =========================== helpers ============================
+    # =========================== helper =============================
 
     def _cfg_acl_name(self) -> str:
         """Acl name line, with "ip access-list" keyword in beginning

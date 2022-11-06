@@ -81,7 +81,7 @@ class Option(Base):
         """ACE Option logs, items that not related to packet forwarding"""
         return self._logs
 
-    # =========================== methods ============================
+    # =========================== method =============================
 
     def data(self, uuid: bool = False) -> DAny:
         """Returns *Option* data as *dict*

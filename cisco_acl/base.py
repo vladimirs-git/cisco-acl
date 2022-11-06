@@ -90,7 +90,7 @@ class Base(ABC):
             raise TypeError(f"{uuid_=} {str} expected")
         self._uuid = uuid_
 
-    # =========================== methods ============================
+    # =========================== method =============================
 
     def copy(self):
         """Copies the self object"""
@@ -106,7 +106,7 @@ class Base(ABC):
         :return: data in *dict* format
         """
 
-    # =========================== helpers ============================
+    # =========================== helper =============================
 
     def _repr__add_param(self, param: str, params: LStr) -> LStr:
         """Adds param to list of params"""

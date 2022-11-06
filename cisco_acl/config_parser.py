@@ -37,7 +37,7 @@ class ConfigParser(ABC):
         version = self.version
         return f"<{name}: {platform=} {version=}>"
 
-    # =========================== methods ============================
+    # =========================== method =============================
 
     def addgrs(self) -> LDAny:
         """Parses address groups from config
@@ -250,7 +250,7 @@ class ConfigParser(ABC):
 
         return data
 
-    # =========================== helpers ============================
+    # =========================== helper =============================
 
     def _add_acl_interfaces(self, acls: LDAny) -> None:
         """Adds input/output interfaces to parsed `acls`

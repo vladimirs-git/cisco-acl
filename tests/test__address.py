@@ -285,7 +285,7 @@ class Test(Helpers):
             obj.prefix = prefix
             self._test_attrs(obj=obj, req_d=req_d, msg=f"{prefix=} {platform=}")
 
-    # =========================== methods ============================
+    # =========================== method =============================
 
     def test_valid__copy(self):
         """AddrGroup.copy()"""

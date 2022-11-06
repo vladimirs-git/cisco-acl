@@ -273,7 +273,7 @@ class Test(Helpers):
             result = obj.sequence
             self.assertEqual(result, req, msg=f"{sequence=}")
 
-    # =========================== methods ============================
+    # =========================== method =============================
 
     def test_valid__copy(self):
         """AddrGroup.copy()"""

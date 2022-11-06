@@ -406,7 +406,7 @@ class Test(Helpers):
             with self.assertRaises(error, msg=f"{platform=} {type_=} {type_new=} {line=}"):
                 obj.type = type_new
 
-    # =========================== methods ============================
+    # =========================== method =============================
 
     def test_valid__copy(self):
         """Acl.copy()"""
@@ -871,7 +871,7 @@ class Test(Helpers):
             result = [o.line for o in obj.items]
             self.assertEqual(result, req, msg=f"{obj=}")
 
-    # =========================== helpers ============================
+    # =========================== helper =============================
 
     def test_valid__cfg_acl_name(self):
         """Acl._cfg_acl_name()"""

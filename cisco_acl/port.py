@@ -227,7 +227,7 @@ class Port(Base):
             raise TypeError(f"{sport=} {str} expected")
         self.ports = h.string_to_ports(sport)
 
-    # =========================== methods ============================
+    # =========================== method =============================
 
     def data(self, uuid: bool = False) -> DAny:
         """Converts *Port* object to *dict*
@@ -266,7 +266,7 @@ class Port(Base):
             data["uuid"] = self.uuid
         return data
 
-    # =========================== helpers ============================
+    # =========================== helper =============================
 
     @staticmethod
     def _line__operator(items: LStr) -> str:

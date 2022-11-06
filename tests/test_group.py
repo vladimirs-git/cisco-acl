@@ -106,7 +106,7 @@ class Test(unittest.TestCase):
         req = [3, 2, 1]
         self.assertEqual(result, req, msg=f"{group=}")
 
-    # =========================== methods ============================
+    # =========================== method =============================
 
     def test_valid__add(self):
         """Group.add()"""

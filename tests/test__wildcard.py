@@ -201,7 +201,7 @@ class Test(Helpers):
             with self.assertRaises(error, msg=f"{kwargs=}"):
                 Wildcard.fsubnet(**kwargs)
 
-    # =========================== methods ============================
+    # =========================== method =============================
 
     def test_valid__data(self):
         """Wildcard.data()"""

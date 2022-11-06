@@ -287,7 +287,7 @@ def subnet_of(top: UAddress, bottom: UAddress) -> bool:
     return True
 
 
-# ============================= helpers ==============================
+# ============================= helper ===============================
 
 def _create_acls_w_acegs(parser: ConfigParser, group_by: str) -> LAcl:
     """Creates Acls with AceGroups. Groups ACEs to *AceGroup* by `group_by` in startswith remarks

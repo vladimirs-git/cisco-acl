@@ -145,7 +145,7 @@ class Test(Helpers):
             with self.assertRaises(error, msg=f"{text=}"):
                 obj.text = text
 
-    # =========================== methods ============================
+    # =========================== method =============================
 
     def test_valid__copy(self):
         """Remark.copy()"""

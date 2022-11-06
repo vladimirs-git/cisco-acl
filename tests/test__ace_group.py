@@ -275,7 +275,7 @@ class Test(Helpers):
             with self.assertRaises(error, msg=f"{platform=} {type_=} {type_new=} {line=}"):
                 obj.type = type_new
 
-    # =========================== methods ============================
+    # =========================== method =============================
 
     def test_valid__copy(self):
         """AceGroup.copy()"""
@@ -403,7 +403,7 @@ class Test(Helpers):
             result = obj.line
             self.assertEqual(result, req, msg=f"{line=}")
 
-    # =========================== helpers ============================
+    # =========================== helper =============================
 
     def test_valid__convert_any_to_aces(self):
         """AceGroup._convert_any_to_aces()"""

@@ -438,7 +438,7 @@ class Test(Helpers):
             with self.assertRaises(error, msg=f"{platform=} {type_=} {type_new=} {line=}"):
                 obj.type = type_new
 
-    # =========================== methods ============================
+    # =========================== method =============================
 
     def test_valid__copy(self):
         """Ace.copy()"""

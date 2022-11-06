@@ -315,7 +315,7 @@ class Test(Helpers):
                 result_ = item.uuid
                 self.assertEqual(result_, UUID, msg=f"{kwargs=} {platform_new=}")
 
-    # =========================== methods ============================
+    # =========================== method =============================
 
     def test_valid__copy(self):
         """AddrGroup.copy()"""

@@ -293,7 +293,7 @@ class AddressBase(Base):
         """
         return self._type
 
-    # =========================== methods ============================
+    # =========================== method =============================
 
     def data(self, uuid: bool = False) -> DAny:
         """Converts *Address* object to *dict*
@@ -429,7 +429,7 @@ class AddressBase(Base):
             wildcards.append(wildcard_o.line)
         return wildcards
 
-    # =========================== helpers ============================
+    # =========================== helper =============================
 
     def _cmd_addrgroup(self) -> str:
         """Address group line beginning

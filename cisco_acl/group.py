@@ -43,7 +43,7 @@ class Group:
         for item in self.items[::-1]:
             yield item
 
-    # =========================== methods ============================
+    # =========================== method =============================
 
     def add(self, item) -> None:
         """Adds new item to self.items list, if it is not in self.items"""

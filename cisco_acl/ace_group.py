@@ -221,7 +221,7 @@ class AceGroup(AceBase, Group):
         data = self.data(uuid=True)
         self.__init__(**data)  # type: ignore
 
-    # =========================== methods ============================
+    # =========================== method =============================
 
     def data(self, uuid: bool = False) -> DAny:
         """Converts *AceGroup* object to *dict*
@@ -335,7 +335,7 @@ class AceGroup(AceBase, Group):
             _items.append(ace_o)
         self.items = _items
 
-    # =========================== helpers ============================
+    # =========================== helper =============================
 
     def _dict_to_ace(self, **kwargs) -> UAce:
         """Converts *dict* data to object: *Ace*, *Remark*

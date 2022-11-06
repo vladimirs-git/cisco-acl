@@ -79,7 +79,7 @@ class Test(Helpers):
             obj.platform = platform_new
             self._test_attrs(obj=obj, req_d=req_d, msg=msg)
 
-    # =========================== methods ============================
+    # =========================== method =============================
 
     def test_valid__copy(self):
         """Option.copy()"""

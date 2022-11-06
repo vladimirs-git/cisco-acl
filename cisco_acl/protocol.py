@@ -218,7 +218,7 @@ class Protocol(Base):
     def protocol_nr(self, protocol_nr: bool) -> None:
         self._protocol_nr = bool(protocol_nr)
 
-    # =========================== methods ============================
+    # =========================== method =============================
 
     def data(self, uuid: bool = False) -> DAny:
         """Converts *Protocol* object to *dict*

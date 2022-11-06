@@ -87,7 +87,7 @@ class Address(AddressBase):
         items_ = self._init_items(items)
         self._items = [o for o in items_ if isinstance(o, Address)]
 
-    # =========================== methods ============================
+    # =========================== method =============================
 
 
 IAddress = Iterable[Address]

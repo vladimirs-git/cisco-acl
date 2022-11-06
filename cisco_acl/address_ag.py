@@ -192,7 +192,7 @@ class AddressAg(AddressBase):
     def sequence(self, sequence: StrInt) -> None:
         self._sequence = h.init_int(sequence)
 
-    # =========================== methods ============================
+    # =========================== method =============================
 
     def data(self, uuid: bool = False) -> DAny:
         """Converts *AddressAg* object to *dict*
@@ -205,7 +205,7 @@ class AddressAg(AddressBase):
         data["sequence"] = self._sequence
         return data
 
-    # =========================== helpers ============================
+    # =========================== helper =============================
 
     def _cmd_addrgroup(self) -> str:
         """Address group line beginning

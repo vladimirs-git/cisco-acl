@@ -24,7 +24,7 @@ from tests.helpers_test import (
 class Test(unittest.TestCase):
     """Helpers"""
 
-    # =========================== helpers ============================
+    # =========================== helper =============================
 
     @staticmethod
     def _generate_aces_req() -> LDStr:

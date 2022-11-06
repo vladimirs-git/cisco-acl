@@ -148,7 +148,7 @@ class Wildcard(Base):
         wildcard = ipnet.with_hostmask.replace("/", " ")
         return Wildcard(wildcard, **kwargs)
 
-    # =========================== methods ============================
+    # =========================== method =============================
 
     def data(self, uuid: bool = False) -> DAny:
         """Converts *Wildcard* object to *dict*
@@ -196,7 +196,7 @@ class Wildcard(Base):
             ipnets.append(ipnet)
         return ipnets
 
-    # =========================== helpers ============================
+    # =========================== helper =============================
 
     def _create_ipnet(self) -> OIpNet:
         """Init ipnet"""

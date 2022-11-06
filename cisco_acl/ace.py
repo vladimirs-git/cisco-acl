@@ -300,7 +300,7 @@ class Ace(AceBase):
         data = self.data(uuid=True)
         self.__init__(**data)  # type: ignore
 
-    # =========================== methods ============================
+    # =========================== method =============================
 
     def data(self, uuid: bool = False) -> DAny:
         """Converts *Ace* object to *dict*
@@ -457,7 +457,7 @@ class Ace(AceBase):
             return [self]
         return aces
 
-    # =========================== helpers ============================
+    # =========================== helper =============================
 
     @staticmethod
     def _check_parsed_elements(line: str, data: DStr) -> bool:

@@ -250,7 +250,7 @@ class Test(Helpers):
         with self.assertRaises(ValueError, msg="platform"):
             Protocol("ip", platform="typo")
 
-    # =========================== methods ============================
+    # =========================== method =============================
 
     def test_valid__copy(self):
         """Protocol.copy()"""

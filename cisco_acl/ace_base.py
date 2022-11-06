@@ -124,7 +124,7 @@ class AceBase(Base, ABC):
         data = self.data(uuid=True)
         self.__init__(**data)  # type: ignore
 
-    # =========================== methods ============================
+    # =========================== method =============================
 
     def copy(self):
         """Copies the self object"""
@@ -140,7 +140,7 @@ class AceBase(Base, ABC):
         :return: data in *dict* format
         """
 
-    # =========================== helpers ============================
+    # =========================== helper =============================
 
     def _sequence_s(self) -> str:
         """Returns string of sequence, empty string if sequence==0"""

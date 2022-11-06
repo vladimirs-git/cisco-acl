@@ -399,7 +399,7 @@ class Test(Helpers):
             with self.assertRaises(error, msg=f"{sport=}"):
                 obj.sport = sport
 
-    # =========================== methods ============================
+    # =========================== method =============================
 
     def test_valid__copy(self):
         """Port.copy()"""
@@ -437,7 +437,7 @@ class Test(Helpers):
             diff = list(dictdiffer.diff(first=result, second=req_d))
             self.assertEqual(diff, UUID_R, msg=f"{kwargs=}")
 
-    # =========================== helpers ============================
+    # =========================== helper =============================
 
     def test_valid__line__operator(self):
         """Port._line__operator()"""

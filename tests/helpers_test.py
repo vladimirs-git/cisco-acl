@@ -261,7 +261,7 @@ CNX_ADDGR_D = dict(
 class Helpers(unittest.TestCase):
     """Unittest Helpers"""
 
-    # ============================= helpers ==============================
+    # =========================== helper =============================
 
     @staticmethod
     def _quotation(line: str) -> str:

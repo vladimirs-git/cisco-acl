@@ -105,7 +105,7 @@ class Remark(AceBase):
     def text(self, text: str) -> None:
         self._text = h.init_remark_text(text)
 
-    # =========================== methods ============================
+    # =========================== method =============================
 
     def data(self, uuid: bool = False) -> DAny:
         """Converts *Remark* object to *dict*
