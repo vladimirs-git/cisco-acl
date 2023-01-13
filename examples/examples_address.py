@@ -41,10 +41,9 @@ print()
 
 # Address.is_subnet()
 addr = Address("10.0.0.0/24", platform="nxos")
-subnet = Address("10.0.0.0/30", platform="nxos")
-result = addr.subnet_of(subnet)
-assert subnet.subnet_of(addr) is True
-assert addr.subnet_of(subnet) is False
+addr2 = Address("10.0.0.0/30", platform="nxos")
+assert addr2.subnet_of(addr) is True
+assert addr.subnet_of(addr2) is False
 
 # address.collapse()
 wildcard = Address("10.0.0.0 0.0.0.1")

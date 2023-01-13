@@ -12,8 +12,8 @@ Python package to parse and manage Cisco ACL (Access Control List).
 
 Supported platforms:
 
-- Cisco IOS
-- Cisco Nexus NX-OS
+- Cisco IOS (tested on ISR4331/K9, IOS XE version 16.09.06)
+- Cisco Nexus NX-OS (tested on N3K-C3172TQ-XL, NXOS version 7.0(3)I7(8))
 
 Main features:
 
