@@ -1,4 +1,5 @@
-"""**Address(line)**
+"""Address.
+
 The following example demonstrates Address object.
 """
 

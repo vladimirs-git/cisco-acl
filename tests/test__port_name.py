@@ -41,15 +41,19 @@ class Test(Helpers):
         for kwargs, req_d, absent in [
             ({}, dict(cmd=514, syslog=514, msrpc=135), ["drip", "ripv6"]),
             # name
+            (dict(protocol="tcp", platform="asa"), dict(www=80, https=443), ["syslog", "ripv6"]),
             (dict(protocol="tcp", platform="ios"),
              dict(cmd=514, syslog=514, msrpc=135), ["drip", "ripv6"]),
             (dict(protocol="tcp", platform="nxos"), dict(cmd=514, drip=3949), ["syslog", "ripv6"]),
+            (dict(protocol="udp", platform="asa"), dict(www=80), ["cmd", "ripv6", "drip"]),
             (dict(protocol="udp", platform="ios"), dict(syslog=514, ripv6=521), ["cmd", "drip"]),
             (dict(protocol="udp", platform="nxos"), dict(syslog=514), ["cmd", "ripv6", "drip"]),
             # int
+            (dict(protocol=6, platform="asa"), dict(www=80, https=443), ["syslog", "ripv6"]),
             (dict(protocol=6, platform="ios"),
              dict(cmd=514, syslog=514, msrpc=135), ["drip", "ripv6"]),
             (dict(protocol=6, platform="nxos"), dict(cmd=514, drip=3949), ["syslog", "ripv6"]),
+            (dict(protocol=17, platform="asa"), dict(www=80), ["cmd", "ripv6", "drip"]),
             (dict(protocol=17, platform="ios"), dict(syslog=514, ripv6=521), ["cmd", "drip"]),
             (dict(protocol=17, platform="nxos"), dict(syslog=514), ["cmd", "ripv6", "drip"]),
         ]:
@@ -63,11 +67,13 @@ class Test(Helpers):
         for kwargs, req_d, absent in [
             ({}, {514: "cmd", 135: "msrpc"}, [3949, 521]),
             # name
+            (dict(protocol="tcp", platform="asa"), {443: "https"}, [3949, 521]),
             (dict(protocol="tcp", platform="ios"), {514: "cmd", 135: "msrpc"}, [3949, 521]),
             (dict(protocol="tcp", platform="nxos"), {514: "cmd", 3949: "drip"}, [135, 521]),
             (dict(protocol="udp", platform="ios"), {514: "syslog", 521: "ripv6"}, [135, 3949]),
             (dict(protocol="udp", platform="nxos"), {514: "syslog"}, [135, 521, 3949]),
             # int
+            (dict(protocol=6, platform="asa"), {443: "https"}, [3949, 521]),
             (dict(protocol=6, platform="ios"), {514: "cmd", 135: "msrpc"}, [3949, 521]),
             (dict(protocol=6, platform="nxos"), {514: "cmd", 3949: "drip"}, [135, 521]),
             (dict(protocol=17, platform="ios"), {514: "syslog", 521: "ripv6"}, [135, 3949]),
@@ -83,7 +89,14 @@ class Test(Helpers):
     def test_valid__all_known_names(self):
         """all_known_names()"""
         results = all_known_names()
-        req = {"cmd", "syslog", "drip", "ripv6", "msrpc"}
+        req = {
+            "cmd",  # TCP_NAME_PORT__BASE
+            "https",  # TCP_NAME_PORT__ASA
+            "syslog",  # TCP_NAME_PORT__IOS
+            "drip",  # TCP_NAME_PORT__NXOS
+            "ripv6",  # UDP_NAME_PORT__IOS
+            "pcanywhere-status",  # UDP_NAME_PORT__ASA
+        }
         result = set(results).intersection(req)
         self.assertEqual(result, req, msg="all_known_names")
 

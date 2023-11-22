@@ -1,5 +1,8 @@
-"""AddrGroup. Group of *AddressAg* addresses configured in "object-group network" (ios) or
-"object-group ip address" (nxos)"""
+"""AddrGroup.
+
+Group of AddressAg addresses configured in "object-group network" (ios) or
+"object-group ip address" (nxos).
+"""
 from __future__ import annotations
 
 import logging
@@ -7,7 +10,7 @@ from functools import total_ordering
 from ipaddress import IPv4Network
 from typing import Any, Dict, List, Union
 
-from cisco_acl import helpers as h
+from cisco_acl import parsers, helpers as h
 from cisco_acl.address_ag import AddressAg, OAddressAg, LUSAddressAg
 from cisco_acl.address_ag import LAddressAg
 from cisco_acl.base import Base
@@ -18,32 +21,32 @@ from cisco_acl.wildcard import init_max_ncwb
 
 @total_ordering
 class AddrGroup(Base, Group):
-    """AddrGroup. Group of *AddressAg* addresses configured in "object-group network" (ios) or
-    "object-group ip address" (nxos)"""
+    """AddrGroup."""
 
     def __init__(self, line: str = "", **kwargs):
-        """AddrGroup
-        :param line: Address group config line
+        r"""Init AddrGroup.
+
+        :param line: Address group config line.
         :type line: str
 
-        :param platform: Platform: "ios" (default), "nxos"
+        :param platform: Platform: "asa", "ios", "nxos". Default "ios".
         :type platform: str
 
         Helpers
-        :param note: Object description
+        :param note: Object description.
         :type note: Any
 
-        :param indent: Address lines indentation (default "  ")
+        :param indent: Address lines indentation (default "  ").
         :type indent: str
 
-        :param max_ncwb: Max count of non-contiguous wildcard bits
+        :param max_ncwb: Max count of non-contiguous wildcard bits.
         :type max_ncwb: int
 
-        Alternate way to get `name` and `items`, if `line` absent
+        Alternate way to get `name` and `items`, if `line` absent.
         :param name: Address group name (default from `line`)
         :type name: str
 
-        :param items: List of addresses in group
+        :param items: List of addresses in group.
         :type items: List[str], List[AddressAg]
 
         :example:
@@ -69,21 +72,23 @@ class AddrGroup(Base, Group):
         self.line = line
 
     def __hash__(self) -> int:
+        """__hash__."""
         return self._name.__hash__()
 
     def __eq__(self, other) -> bool:
-        """== equality"""
+        """== equality."""
         if self.__class__ == other.__class__:
             return self.__hash__() == other.__hash__()
         return False
 
     def __lt__(self, other) -> bool:
-        """< less than"""
+        """< less than."""
         if self.__class__ == other.__class__:
             return self._name < other.name
         return False
 
     def __contains__(self, other: UAddrGr) -> bool:
+        """__contains__."""
         if isinstance(other, AddressAg):
             if other in self._items:
                 return True
@@ -112,7 +117,7 @@ class AddrGroup(Base, Group):
 
     @property
     def indent(self) -> str:
-        """Address lines indentation (default  "  ")"""
+        """Address lines indentation (default  "  ")."""
         return self._indent
 
     @indent.setter
@@ -121,7 +126,7 @@ class AddrGroup(Base, Group):
 
     @property
     def items(self) -> LAddressAg:
-        """List of *AddressAg* objects"""
+        """List of AddressAg objects."""
         return self._items
 
     @items.setter
@@ -157,7 +162,7 @@ class AddrGroup(Base, Group):
 
     @property
     def line(self) -> str:
-        """Address group config line
+        r"""Address group config line.
 
         :example:
             self: AddrGroup("object-group ip address NAME\nhost 10.0.0.1")
@@ -208,7 +213,7 @@ class AddrGroup(Base, Group):
 
     @property
     def name(self) -> str:
-        """Address group name"""
+        """Address group name."""
         return self._name
 
     @name.setter
@@ -219,13 +224,14 @@ class AddrGroup(Base, Group):
 
     @property
     def platform(self) -> str:
-        """Platform: "ios" Cisco IOS, "nxos" Cisco Nexus NX-OS"""
+        """Platform: Platform: "asa", "ios", "nxos"."""
         return self._platform
 
     @platform.setter
     def platform(self, platform: str) -> None:
-        """Changes platform, normalizes self.items regarding the new platform
-        :param platform: Platform: "ios" (default), "nxos"
+        """Change platform, normalizes self.items regarding the new platform.
+
+        :param platform: Platform: "asa", "ios", "nxos". Default "ios".
         """
         self._platform = h.init_platform(platform=platform)
 
@@ -238,11 +244,13 @@ class AddrGroup(Base, Group):
     # =========================== method =============================
 
     def data(self, uuid: bool = False) -> DAny:
-        """Returns *AddrGroup* data as *dict*
-        :param uuid: Returns self.uuid in data
+        """Return AddrGroup data as dict.
+
+        :param uuid: Return self.uuid in data.
         :type uuid: bool
 
-        :return: Address group data"""
+        :return: Address group data.
+        """
         data = dict(
             # init
             line=self.line,
@@ -257,8 +265,9 @@ class AddrGroup(Base, Group):
         return data
 
     def cmd_addgr_name(self) -> str:
-        """Address group name line, with "object-group ip address" keyword in beginning
-        :return: Address group name line
+        """Address group name line, with "object-group ip address" keyword in beginning.
+
+        :return: Address group name line.
 
         :example:
             self.name: "NAME"
@@ -276,9 +285,10 @@ class AddrGroup(Base, Group):
         return f"object-group network {self._name}"
 
     def ipnets(self) -> LIpNet:
-        """List of *IPv4Network* from all addresses in address group
-        return: List of IpNetwork
-        :raises ValueError: If one of the address is non-contiguous wildcard
+        """List of IPv4Network from all addresses in address group.
+
+        return: List of IpNetwork.
+        :raises ValueError: If one of the address is non-contiguous wildcard.
 
         :example: all items ara valid addresses
             self.items: [AddressAd("10.0.0.0/30"),
@@ -298,8 +308,9 @@ class AddrGroup(Base, Group):
         return ipnets
 
     def prefixes(self) -> LStr:
-        """Prefixes from all addresses in address group
-        :return: Prefixes "A.B.C.D/LEN"
+        """Prefixe from all addresses in address group.
+
+        :return: Prefixes "A.B.C.D/LEN".
 
         :example:
             self.items: [AddressAd("10.0.0.0/30"),
@@ -312,11 +323,12 @@ class AddrGroup(Base, Group):
     # noinspection PyIncorrectDocstring
     @h.check_start_step_sequence
     def resequence(self, start: int = 10, step: int = 10, **kwargs) -> int:
-        """Changes sequence numbers for all addresses in address group
-        :param start: Starting sequence number. start=0 - delete all sequence numbers
-        :param step: Step to increment the sequence number
-        :param items: List of *AddressAg* objects (default self.items)
-        :return: Last sequence number
+        """Change sequence numbers for all addresses in address group.
+
+        :param start: Starting sequence number. start=0 - delete all sequence numbers.
+        :param step: Step to increment the sequence number.
+        :param items: List of AddressAg objects (default self.items).
+        :return: Last sequence number.
         """
         items: LAddressAg = kwargs.get("items") or self._items
         sequence: int = int(start)
@@ -329,8 +341,9 @@ class AddrGroup(Base, Group):
         return sequence
 
     def subnets(self) -> LStr:
-        """Subnets from all addresses in address group
-        :return: Subnets with mask "A.B.C.D A.B.C.D"
+        """Subnets from all addresses in address group.
+
+        :return: Subnets with mask "A.B.C.D A.B.C.D".
 
         :example:
             self.items: [AddressAd("10.0.0.0/30"),
@@ -341,8 +354,9 @@ class AddrGroup(Base, Group):
         return [o.with_netmask.replace("/", " ") for o in ipnets]
 
     def wildcards(self) -> LStr:
-        """Wildcards from all addresses in address group
-        :return: Wildcards "A.B.C.D A.B.C.D"
+        """Wildcards from all addresses in address group.
+
+        :return: Wildcards "A.B.C.D A.B.C.D".
         """
         wildcards: LStr = []
         for addr_o in self._items:
@@ -355,9 +369,10 @@ class AddrGroup(Base, Group):
     # =========================== helper =============================
 
     def _line_to_address(self, line: str) -> OAddressAg:
-        """Converts config line to *AddressAg* object
-        :param line: Address line
-        :return: Address object
+        """Convert config line to AddressAg object.
+
+        :param line: Address line.
+        :return: Address object.
 
         :example:
             line: "10 host 10.0.0.1"
@@ -368,7 +383,7 @@ class AddrGroup(Base, Group):
             return: None
         """
         try:
-            h.parse_address(line)
+            parsers.parse_address(line)
         except ValueError:
             return None
         addr_o = AddressAg(line=line, platform=self._platform, max_ncwb=self.max_ncwb)

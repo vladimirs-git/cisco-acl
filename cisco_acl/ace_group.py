@@ -1,6 +1,7 @@
 """Group of ACE (Access Control Entry).
+
 These are multiple ACEe items, which must be in a certain order.
-If you are changing *Ace* items order (sequence numbers) inside *Acl*,
+If you are changing Ace items order (sequence numbers) inside Acl,
 the AceGroup behaves like a single item and order of ACE items inside AceGroup is not changed.
 AceGroup is useful for freezing ACEs section, to hold "deny" after certain "permit".
 This class implements most of the Python list methods: append(), extend(), sort(), etc.
@@ -12,7 +13,7 @@ from functools import total_ordering
 from ipaddress import NetmaskValueError
 from typing import List, Optional, Union
 
-from cisco_acl import helpers as h
+from cisco_acl import parsers, helpers as h
 from cisco_acl.ace import Ace, LAce
 from cisco_acl.ace_base import AceBase
 from cisco_acl.group import Group
@@ -33,57 +34,57 @@ ULAce = Union[LAce, LRemark, LUAce]
 
 @total_ordering
 class AceGroup(AceBase, Group):
-    """Group of ACE (Access Control Entry)"""
+    """Group of ACE (Access Control Entry)."""
 
     def __init__(self, line: str = "", **kwargs):
-        """Group of ACE (Access Control Entry).
+        r"""Init AceGroup.
+
         This class implements most of the Python list methods: append(), extend(), sort(), etc.
         :param line: String of ACEs, lines that starts with "allow", "deny", "remark".
         :type line: str
 
-        :param platform: Platform: "ios" (default), "nxos"
+        :param platform: Platform: "asa", "ios", "nxos". Default "ios".
         :type platform: str
 
         Helpers
-        :param note: Object description
+        :param note: Object description.
         :type note: Any
 
-        :param max_ncwb: Max count of non-contiguous wildcard bits
+        :param max_ncwb: Max count of non-contiguous wildcard bits.
         :type max_ncwb: int
 
-        :param protocol_nr: Well-known ip protocols as numbers
-            True  - all ip protocols as numbers
-            False - well-known ip protocols as names (default)
+        :param protocol_nr: Well-known ip protocols as numbers.
+            True  - all ip protocols as numbers,
+            False - well-known ip protocols as names (default).
         :type protocol_nr: bool
 
-        :param port_nr: Well-known TCP/UDP ports as numbers
-            True  - all tcp/udp ports as numbers
-            False - well-known tcp/udp ports as names (default)
+        :param port_nr: Well-known TCP/UDP ports as numbers.
+            True  - all tcp/udp ports as numbers,
+            False - well-known tcp/udp ports as names (default).
         :type port_nr: bool
 
         :param group_by: Startswith in remark line. ACEs group, starting from the Remark,
             where line startswith `group_by`, will be applied to the same AceGroup,
-            until next Remark that also startswith `group_by`
+            until next Remark that also startswith `group_by`.
         :type group_by: str
 
-        Alternate way to get `name` and ACEs `items`, if `line` absent
-        :param str type: ACL type: "extended", "standard" (default "extended")
+        Alternate way to get `name` and ACEs `items`, if `line` absent.
+        :param str type: ACL type: "extended", "standard" (default "extended").
 
-        :param name: Name of AceGroup, usually Remark.text of 1st self.items
+        :param name: Name of AceGroup, usually Remark.text of 1st self.items.
         :type name: str
 
-        :param items: An alternate way to create *AceGroup* object from a list of *Ace*
+        :param items: An alternate way to create AceGroup object from a list of Ace.
             (default from `line`)
         :type items: List[Union[Ace, Remark, str]]
 
         :example:
             aceg = AceGroup("10 permit icmp any any\n  20 deny ip any any")
-            result:
-                aceg.line == "10 permit icmp any any\n20 deny ip any any"
-                aceg.platform == "ios"
-                aceg.note == "description"
-                aceg.sequence == 20  # Taking from the first ACE in items.
-                aceg.items == [Ace("10 permit icmp any any"), Ace("20 deny ip any any")]
+            aceg.line -> "10 permit icmp any any\n20 deny ip any any"
+            aceg.platform -> "ios"
+            aceg.note -> "description"
+            aceg.sequence -> 20  # Taking from the first ACE in items.
+            aceg.items -> [Ace("10 permit icmp any any"), Ace("20 deny ip any any")]
         """
         self._name = ""
         self._group_by = ""
@@ -102,7 +103,7 @@ class AceGroup(AceBase, Group):
         self.line = line
 
     def __lt__(self, other) -> bool:
-        """< less than"""
+        """< less than."""
         if hasattr(other, "sequence"):
             if self._sequence == other.sequence:
                 if other.__class__.__name__ == "Remark":
@@ -119,12 +120,12 @@ class AceGroup(AceBase, Group):
 
     @property
     def group_by(self) -> str:
-        """Groups ACEs to *AceGroup* by startswith ot this value in remarks"""
+        """Group ACEs to AceGroup by startswith ot this value in remarks."""
         return self._group_by
 
     @property
     def items(self) -> LUAce:
-        """List of ACE items: *Ace*, *Remark*, *AceGroup*"""
+        """List of ACE items: Ace, Remark, AceGroup."""
         return self._items
 
     @items.setter
@@ -153,7 +154,7 @@ class AceGroup(AceBase, Group):
 
     @property
     def line(self) -> str:
-        """Group of ACL config line"""
+        """Group of ACL config line."""
         lines = [o.line for o in self._items]
         return "\n".join(lines)
 
@@ -169,31 +170,34 @@ class AceGroup(AceBase, Group):
 
     @property
     def name(self) -> str:
-        """Acl/AceGroup name"""
+        """Acl/AceGroup name."""
         return self._name
 
     @name.setter
     def name(self, name: str) -> None:
-        """Acl/AceGroup name, without "ip access-list "
+        """Acl/AceGroup name, without "ip access-list ".
+
         Requirements:
-        - length <= 100 chars
-        - all chars are digits
-        - first char is ascii_letters, other chars are ascii_letters and punctuation
+        - length <= 100 chars.
+        - all chars are digits.
+        - first char is ascii_letters, other chars are ascii_letters and punctuation.
         """
         self._name = h.init_name(name)
 
     @property
     def platform(self) -> str:
-        """Platform
-        - "ios" Cisco IOS (extended ACL)
-        - "nxos" Cisco Nexus NX-OS
+        """Platform.
+
+        - "ios" Cisco IOS (extended ACL).
+        - "nxos" Cisco Nexus NX-OS.
         """
         return self._platform
 
     @platform.setter
     def platform(self, platform: str) -> None:
-        """Changes platform, normalizes self.items regarding the new platform
-        :param platform: Platform: "ios" (default), "nxos"
+        """Change platform, normalizes self.items regarding the new platform.
+
+        :param platform: Platform: "asa", "ios", "nxos". Default "ios".
         """
         self._platform = h.init_platform(platform=platform)
 
@@ -208,7 +212,7 @@ class AceGroup(AceBase, Group):
 
     @property
     def type(self) -> str:
-        """ACL type: standard, extended"""
+        """ACL type: standard, extended."""
         return self._type
 
     @type.setter
@@ -224,11 +228,12 @@ class AceGroup(AceBase, Group):
     # =========================== method =============================
 
     def data(self, uuid: bool = False) -> DAny:
-        """Converts *AceGroup* object to *dict*
-        :param uuid: Returns self.uuid in data
+        """Convert AceGroup object to the dictionary.
+
+        :param uuid: Return self.uuid in data.
         :type uuid: bool
 
-        :return: data in *dict* format
+        :return: The dictionary.
         """
         data = dict(
             # init
@@ -249,7 +254,7 @@ class AceGroup(AceBase, Group):
         return data
 
     def delete_note(self) -> None:
-        """Deletes note in all children self.items: Ace, AceGroup, Remark"""
+        """Delete note in all children self.items: Ace, AceGroup, Remark."""
         self.note = ""
         for item in self._items:
             item.note = ""
@@ -257,22 +262,23 @@ class AceGroup(AceBase, Group):
                 item.delete_note()
 
     def get_remark_name(self) -> str:
-        """Returns Rule name from 1st remark"""
+        """Return Rule name from 1st remark."""
         remark = self.get_remark()
         name = h.parse_remark_name(text=remark.text, group_by=self.group_by)
         return name
 
     def get_remark(self) -> Remark:
-        """Returns 1st remark with Rule name"""
+        """Return 1st remark with Rule name."""
         remark = self.items[0]
         if not isinstance(remark, Remark):
             raise TypeError(f"{remark=} {Remark} expected")
         return remark
 
     def tcam_count(self) -> int:
-        """Calculates sum of ACEs. Also takes into account the addresses in the address group.
-        Useful for getting an estimate of the amount of TCAM resources needed for this ACL
-        :return: Count of TCAM resources
+        """Calculate sum of ACEs. Also takes into account the addresses in the address group.
+
+        Useful for getting an estimate of the amount of TCAM resources needed for this ACL.
+        :return: Count of TCAM resources.
         """
         counter = 0
         for item in self.items:
@@ -296,11 +302,12 @@ class AceGroup(AceBase, Group):
     # noinspection PyIncorrectDocstring
     @h.check_start_step_sequence
     def resequence(self, start: int = 10, step: int = 10, **kwargs) -> int:
-        """Resequence all AceGroup.items and change sequence numbers
-        :param start: Starting sequence number. start=0 - delete all sequence numbers
-        :param step: Step to increment the sequence number
-        :param items: List of Ace objects (default self.items)
-        :return: Last sequence number
+        """Resequence all AceGroup.items and change sequence numbers.
+
+        :param start: Starting sequence number. start=0 - delete all sequence numbers.
+        :param step: Step to increment the sequence number.
+        :param items: List of Ace objects (default self.items).
+        :return: Last sequence number.
         """
         items: LUAce = kwargs.get("items") or self._items
         sequence: int = int(start)
@@ -316,8 +323,9 @@ class AceGroup(AceBase, Group):
         return sequence
 
     def ungroup_ports(self) -> None:
-        """Ungroups ACEs with multiple ports in single line ("eq" or "neq")
-        to multiple lines with single port
+        """Ungroup ports.
+
+        ACEs with multiple ports in single line ("eq" or "neq") to multiple lines with single port.
         :example:
             aceg = AceGroup("permit tcp any eq 1 2 any eq 3 4")
             aceg.split_ports()
@@ -338,15 +346,16 @@ class AceGroup(AceBase, Group):
     # =========================== helper =============================
 
     def _dict_to_ace(self, **kwargs) -> UAce:
-        """Converts *dict* data to object: *Ace*, *Remark*
-        :param kwargs: ACE data
-        :return: ACE object: *Ace* or *Remark*
+        """Convert dict data to object: Ace, Remark.
 
-        :example: permit
+        :param kwargs: ACE data.
+        :return: ACE object: Ace or Remark.
+
+        :example: permit.
             data: {line="permit ip any any"}
             return: Ace("permit ip any any")
 
-        :example: remark
+        :example: remark.
             data: {line="remark text"}
             return: Remark("text")
         """
@@ -362,9 +371,11 @@ class AceGroup(AceBase, Group):
         return Ace(**kwargs)
 
     def _dict_to_aceg(self, **kwargs) -> UAceg:
-        """Converts *dict* data to object: *AceGroup*, *Ace*, *Remark*
-        :param kwargs: ACE data
-        :return: ACE object: *AceGroup*, *Ace*, *Remark*"""
+        """Convert dict data to object: AceGroup, Ace, Remark.
+
+        :param kwargs: ACE data.
+        :return: ACE object: AceGroup, Ace, Remark.
+        """
         items = kwargs.get("items")
         if isinstance(items, (list, tuple)):
             kwargs["platform"] = self._platform
@@ -375,9 +386,10 @@ class AceGroup(AceBase, Group):
         return self._dict_to_ace(**kwargs)
 
     def _line_to_ace(self, line: str) -> UAce:
-        """Converts config line to object: *Ace*, *Remark*
-        :param line: ACE line
-        :return: ACE object: *Ace* or *Remark*
+        """Convert config line to object: Ace, Remark.
+
+        :param line: ACE line.
+        :return: ACE object: Ace or Remark.
 
         :example: permit
             line: "permit ip any any"
@@ -391,7 +403,7 @@ class AceGroup(AceBase, Group):
             line: "text"
             return: None
         """
-        action = h.parse_action(line)["action"]
+        action = parsers.parse_action(line)["action"]
         if action in ["remark"]:
             return Remark(line, platform=self._platform, type=self._type)
         ace_o = Ace(line=line,
@@ -403,7 +415,7 @@ class AceGroup(AceBase, Group):
         return ace_o
 
     def _line_to_oace(self, line: str, warning: bool = False) -> OUAce:
-        """Converts config line to object: *Ace*, *Remark*, None"""
+        """Convert config line to object: Ace, Remark, None."""
         if not line:
             return None
 

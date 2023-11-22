@@ -5,6 +5,7 @@ import unittest
 import dictdiffer  # type: ignore
 
 from cisco_acl import Option
+from cisco_acl import helpers as h
 from tests.helpers_test import Helpers, UUID, UUID_R
 
 
@@ -39,6 +40,8 @@ class Test(Helpers):
     def test_valid__repr__(self):
         """Option.__repr__()"""
         for kwargs, req in [
+            (dict(line="syn", platform="asa", note="a", typo="b"),
+             "Option(\"syn\", platform=\"asa\", note=\"a\")"),
             (dict(line="syn", platform="ios", note=""), "Option(\"syn\")"),
             (dict(line="syn", platform="nxos", note="a", typo="b"),
              "Option(\"syn\", platform=\"nxos\", note=\"a\")"),
@@ -52,23 +55,32 @@ class Test(Helpers):
 
     def test_valid__line(self):
         """Option.line()"""
-        for line, req_d in [
-            ("", dict(line="", flags=[], logs=[])),
-            ("ack syn log", dict(line="ack syn log", flags=["ack", "syn"], logs=["log"])),
-            ("typo", dict(line="typo", flags=["typo"], logs=[])),
-        ]:
-            obj1 = Option(line)
-            self._test_attrs(obj=obj1, req_d=req_d, msg=f"{line=}")
-            # setter
-            obj1.line = line
-            self._test_attrs(obj=obj1, req_d=req_d, msg=f"{line=}")
+        for platform in h.PLATFORMS:
+            for line, req_d in [
+                ("", dict(line="", flags=[], logs=[])),
+                ("ack syn log", dict(line="ack syn log", flags=["ack", "syn"], logs=["log"])),
+                ("typo", dict(line="typo", flags=["typo"], logs=[])),
+            ]:
+                obj1 = Option(line=line, platform=platform)
+                self._test_attrs(obj=obj1, req_d=req_d, msg=f"{line=}")
+                # setter
+                obj1.line = line
+                self._test_attrs(obj=obj1, req_d=req_d, msg=f"{line=}")
 
     def test_valid__platform(self):
         """Option.platform()"""
         option_d = dict(line="syn")
         for platform, platform_new, line, req_d in [
+            # asa
+            ("asa", "asa", "syn", option_d),
+            ("asa", "ios", "syn", option_d),
+            ("asa", "nxos", "syn", option_d),
+            # ios
+            ("ios", "asa", "syn", option_d),
             ("ios", "ios", "syn", option_d),
             ("ios", "nxos", "syn", option_d),
+            # nxos
+            ("nxos", "asa", "syn", option_d),
             ("nxos", "ios", "syn", option_d),
             ("nxos", "nxos", "syn", option_d),
         ]:

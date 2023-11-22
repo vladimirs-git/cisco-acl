@@ -1,24 +1,25 @@
-"""Remark - comments in ACL"""
+"""Remark - comments in ACL."""
 from __future__ import annotations
 
 from functools import total_ordering
 from typing import List
 
-from cisco_acl import helpers as h
+from cisco_acl import parsers, helpers as h
 from cisco_acl.ace_base import AceBase
 from cisco_acl.types_ import DAny
 
 
 @total_ordering
 class Remark(AceBase):
-    """Remark - comments in ACL"""
+    """Remark - comments in ACL."""
 
     def __init__(self, line: str = "", **kwargs):
-        """Remark
-        :param line: string of ACEs
+        """Init Remark.
+
+        :param line: string of ACEs.
         :type line: str
 
-        :param platform: Platform: "ios" (default), "nxos"
+        :param platform: Platform: "asa", "ios", "nxos". Default "ios".
         :type platform: str
 
         Helpers
@@ -26,12 +27,11 @@ class Remark(AceBase):
         :type note: Any
 
         :example:
-            line: "10 remark text"
-            result:
-                self.line: "10 remark text"
-                self.sequence: 10
-                self.action: "remark"
-                self.text: "text"
+            remark = Remark("10 remark text")
+            remark.line -> "10 remark text"
+            remark.sequence -> 10
+            remark.action -> "remark"
+            remark.text -> "text"
         """
         self._action = "remark"
         self._sequence = 0
@@ -45,7 +45,7 @@ class Remark(AceBase):
             self.line = line
 
     def __lt__(self, other) -> bool:
-        """< less than"""
+        """< less than."""
         if hasattr(other, "sequence"):
             if self._sequence == other.sequence:
                 if isinstance(other, Remark):
@@ -60,28 +60,27 @@ class Remark(AceBase):
 
     @property
     def action(self) -> str:
-        """ACE remark action
+        """ACE remark action.
 
         :example:
-            Remark("10 remark text")
-            return: "remark"
+            Remark("10 remark text") -> "remark"
         """
         return self._action
 
     @property
     def line(self) -> str:
-        """ACE remark line
+        """ACE remark line.
 
         :example:
-            Remark("10 remark text")
-            return: "10 remark text" """
+            Remark("10 remark text") -> "10 remark text".
+        """
         items = [self._sequence_s(), self._action, self._text]
         return " ".join([s for s in items if s])
 
     @line.setter
     def line(self, line) -> None:
         line = h.init_line(line)
-        ace_d = h.parse_action(line)
+        ace_d = parsers.parse_action(line)
 
         action = ace_d["action"]
         expected = "remark"
@@ -93,11 +92,10 @@ class Remark(AceBase):
 
     @property
     def text(self) -> str:
-        """ACE remark text
+        """ACE remark text.
 
         :example:
-            Remark("10 remark text")
-            return: "text"
+            Remark("10 remark text") -> "text"
         """
         return self._text
 
@@ -108,11 +106,12 @@ class Remark(AceBase):
     # =========================== method =============================
 
     def data(self, uuid: bool = False) -> DAny:
-        """Converts *Remark* object to *dict*
-        :param uuid: Returns self.uuid in data
+        """Convert Remark object to the dictionary.
+
+        :param uuid: Return self.uuid in data.
         :type uuid: bool
 
-        :return: Remark data
+        :return: Remark data.
         """
         data = dict(
             # init

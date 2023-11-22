@@ -1,4 +1,5 @@
-"""ACL - Access Control List
+"""ACL - Access Control List.
+
 This class implements most of the Python list methods: append(), extend(), sort(), etc.
 """
 from __future__ import annotations
@@ -16,57 +17,58 @@ from cisco_acl.types_ import LStr, UStr, DAny, DLStr, SStr, T2Str
 
 @total_ordering
 class Acl(AceGroup):
-    """ACL - Access Control List"""
+    """ACL - Access Control List."""
 
     def __init__(self, line: str = "", **kwargs):
-        """ACL - Access Control List.
+        r"""Init Acl.
+
         Support lines that starts with "allow", "deny", "remark".
 
         :param line: ACL config, "show running-config" output
         :type line: str
 
-        :param platform: Platform: "ios" (default), "nxos"
+        :param platform: Platform: "asa", "ios", "nxos". Default "ios".
         :type platform: str
 
-        :param input: Interfaces, where Acl is used on input
+        :param input: Interfaces, where Acl is used on input.
         :type input: str
 
-        :param output: Interfaces, where Acl is used on output
+        :param output: Interfaces, where Acl is used on output.
         :type output: str
 
         Helpers
-        :param note: Object description
+        :param note: Object description.
         :type note: Any
 
-        :param max_ncwb: Max count of non-contiguous wildcard bits
+        :param max_ncwb: Max count of non-contiguous wildcard bits.
         :type max_ncwb: int
 
-        :param indent: ACE lines indentation (default "  ")
+        :param indent: ACE lines indentation (default "  ").
         :type indent: str
 
-        :param protocol_nr: Well-known ip protocols as numbers
-            True  - all ip protocols as numbers
-            False - well-known ip protocols as names (default)
+        :param protocol_nr: Well-known ip protocols as numbers.
+            True  - all ip protocols as numbers,
+            False - well-known ip protocols as names (default).
         :type protocol_nr: bool
 
-        :param port_nr: Well-known TCP/UDP ports as numbers
-            True  - all tcp/udp ports as numbers
-            False - well-known tcp/udp ports as names (default)
+        :param port_nr: Well-known TCP/UDP ports as numbers.
+            True  - all tcp/udp ports as numbers,
+            False - well-known tcp/udp ports as names (default).
         :type port_nr: bool
 
         :param group_by: Startswith in remark line. ACEs group, starting from the Remark,
             where line startswith `group_by`, will be applied to the same AceGroup,
-            until next Remark that also startswith `group_by`
+            until next Remark that also startswith `group_by`.
         :type group_by: str
 
         Alternate way to get `name` and ACEs `items`, if `line` absent
         :param str type: ACL type: "extended", "standard" (default from `line`)
 
-        :param name: ACL name (default from `line`)
+        :param name: ACL name (default from `line`).
         :type name: str
 
-        :param items: ACEs items: *str*, *Ace*, *AceGroup*, *Remark* objects
-            (default from `line`)
+        :param items: ACEs items: string, Ace, AceGroup, Remark objects
+            (default from `line`).
         :type items: List[Union[List[str], dict, List[Dict], Ace, Remark, AceGroup]]
 
         :example:
@@ -75,13 +77,13 @@ class Acl(AceGroup):
                       input="interface FastEthernet1",
                       indent=" ")
 
-            acl.line == "ip access-list extended NAME\n remark TEXT\n permit icmp any any"
-            acl.platform == "ios"
-            acl.name == "NAME"
-            acl.items == [Remark("remark TEXT"), Ace("permit icmp any any")]
-            acl.input == ["interface FastEthernet1"]
-            acl.output == []
-            acl.indent == " "
+            acl.line -> "ip access-list extended NAME\n remark TEXT\n permit icmp any any"
+            acl.platform -> "ios"
+            acl.name -> "NAME"
+            acl.items -> [Remark("remark TEXT"), Ace("permit icmp any any")]
+            acl.input -> ["interface FastEthernet1"]
+            acl.output -> []
+            acl.indent -> " "
         """
         self._items: LUAceg = []  # type: ignore
         items = kwargs.get("items") or []
@@ -103,17 +105,18 @@ class Acl(AceGroup):
         self.line = line
 
     def __hash__(self) -> int:
+        """__hash__."""
         return self.line.__hash__()
 
     def __eq__(self, other) -> bool:
-        """== equality"""
+        """== equality."""
         if self.__class__ == other.__class__:
             if self.__hash__() == other.__hash__():
                 return True
         return False
 
     def __lt__(self, other) -> bool:
-        """< less than"""
+        """< less than."""
         if hasattr(other, "sequence"):
             if self._sequence == other.sequence:
                 if isinstance(other, (Acl, Ace)):
@@ -123,6 +126,7 @@ class Acl(AceGroup):
         return False
 
     def __repr__(self):
+        """__repr__."""
         params = self._repr__params()
         params = self._repr__add_param("input", params)
         params = self._repr__add_param("output", params)
@@ -138,7 +142,7 @@ class Acl(AceGroup):
 
     @property
     def indent(self) -> str:
-        """ACE lines indentation (default "  ")"""
+        """ACE lines indentation (default "  ")."""
         return self._indent
 
     @indent.setter
@@ -149,7 +153,7 @@ class Acl(AceGroup):
 
     @property
     def input(self) -> LStr:
-        """Interfaces where Acl is used on input"""
+        """Interface where Acl is used on input."""
         return self._input
 
     @input.setter
@@ -159,7 +163,7 @@ class Acl(AceGroup):
 
     @property  # type: ignore
     def items(self) -> LUAceg:  # type: ignore
-        """List of ACE items: *Ace*, *Remark*, *AceGroup*"""
+        """List of ACE items: Ace, Remark, AceGroup."""
         return self._items
 
     @items.setter
@@ -195,7 +199,7 @@ class Acl(AceGroup):
 
     @property
     def line(self) -> str:
-        """ACL config line"""
+        """ACL config line."""
         items = []
         for item in self._items:
             if isinstance(item, AceGroup):
@@ -227,7 +231,7 @@ class Acl(AceGroup):
 
     @property
     def output(self) -> LStr:
-        """Interfaces, where Acl is used on output"""
+        """Interfaces, where Acl is used on output."""
         return self._output
 
     @output.setter
@@ -237,7 +241,7 @@ class Acl(AceGroup):
 
     @property
     def platform(self) -> str:
-        """Platform: "ios" Cisco IOS, "nxos" Cisco Nexus NX-OS"""
+        """Platform: Platform: "asa", "ios", "nxos"."""
         return self._platform
 
     @platform.setter
@@ -252,11 +256,12 @@ class Acl(AceGroup):
     # =========================== method =============================
 
     def data(self, uuid: bool = False) -> DAny:
-        """Converts *Acl* object to *dict*
-        :param uuid: Returns self.uuid in data
+        r"""Convert Acl object to the dictionary.
+
+        :param uuid: Return self.uuid in data.
         :type uuid: bool
 
-        :return: data in *dict* format
+        :return: The dictionary.
 
         :example:
         acl = Acl("ip access-list extended NAME\n"
@@ -349,10 +354,11 @@ class Acl(AceGroup):
         return data
 
     def group(self, group_by: str) -> None:
-        """Groups ACEs to *AceGroup* by `group_by` startswith in remarks
+        """Group ACEs to AceGroup by `group_by` startswith in remarks.
+
         :param group_by: Startswith in remark line. ACEs group, starting from the Remark,
             where line startswith `group_by`, will be applied to the same AceGroup,
-            until next Remark that also startswith `group_by`
+            until next Remark that also startswith `group_by`.
         :type group_by: str
 
         :example:
@@ -400,9 +406,10 @@ class Acl(AceGroup):
         self._group_by = group_by
 
     def delete_shadow(self, skip: LStr = None) -> DLStr:
-        """Removes ACEs in the shadow (in the bottom, without hits) from ACL
-        :param skip: Skips checking specified address type: "addrgroup", "nc_wildcard"
-        :return: *dict* Shading (in the top) and shadow (in the bottom) ACEs
+        """Remove ACEs in the shadow (in the bottom, without hits) from ACL.
+
+        :param skip: Skips checking specified address type: "addrgroup", "nc_wildcard".
+        :return: dict Shading (in the top) and shadow (in the bottom) ACEs.
 
         :example:
         acl = Acl("ip access-list extended NAME
@@ -441,12 +448,13 @@ class Acl(AceGroup):
         return shading_d
 
     def shadow_of(self, skip: LStr = None) -> LStr:
-        """Returns ACEs in the shadow (in the bottom)
+        """Return ACEs in the shadow (in the bottom).
+
         NOTES:
-        - Method compare *Ace* with the same action. ACEs where self.action=="permit" and
-            other.action=="deny" not taken into account (skip checking)
-        :param skip: Skips checking specified address type: "addrgroup", "nc_wildcard"
-        :return: ACEs in the shadow
+        - Method compare Ace with the same action. ACEs where self.action=="permit" and
+            other.action=="deny" not taken into account (skip checking).
+        :param skip: Skips checking specified address type: "addrgroup", "nc_wildcard".
+        :return: ACEs in the shadow.
 
         :example:
         acl = Acl("ip access-list extended NAME
@@ -461,12 +469,13 @@ class Acl(AceGroup):
         return shadow
 
     def shading(self, skip: LStr = None) -> DLStr:
-        """Returns shading (in the top) and shadow (in the bottom) ACEs as *dict*,
-        where *key* is shading rule, *value* shadow rules.
+        """Return shading `in the top` and shadow `in the bottom` ACEs as dict.
+
+        In dict key is shading rule, value shadow rules.
         NOTES:
-        - Method compare *Ace* with the same action. ACEs where self.action=="permit" and
-            other.action=="deny" not taken into account (skip checking)
-        :param skip: Skips checking specified address type: "addrgroup", "nc_wildcard"
+        - Method compare Ace with the same action. ACEs where self.action=="permit" and
+            other.action=="deny" not taken into account (skip checking).
+        :param skip: Skips checking specified address type: "addrgroup", "nc_wildcard".
 
         :return: Shading (in the top) and shadow (in the bottom) ACEs
         :raises ValueError: addrgroup without addresses, non-contiguous wildcard
@@ -495,17 +504,20 @@ class Acl(AceGroup):
         return shading_d
 
     def tcam_count(self) -> int:
-        """Calculates sum of ACEs. Also takes into account the addresses in the address group.
-        Useful for getting an estimate of the amount of TCAM resources needed for this ACL
-        :return: Count of TCAM resources
+        """Calculate sum of ACEs. Also takes into account the addresses in the address group.
+
+        Useful for getting an estimate of the amount of TCAM resources needed for this ACL.
+        :return: Count of TCAM resources.
         """
         counter = super().tcam_count()
         counter += 1
         return counter
 
     def ungroup_ports(self) -> None:
-        """Ungroups ACEs with multiple ports in single line ("eq" or "neq")
-        to multiple lines with single port
+        """Ungroup ACEs ports.
+
+        Ungroup with multiple ports in single line ("eq" or "neq"),
+        to multiple lines with single port.
         :example:
             acl = Acl("ip access-list extended NAME
                        permit tcp any eq 1 2 any eq 3 4")
@@ -530,15 +542,16 @@ class Acl(AceGroup):
             self.group(group_by=self._group_by)
 
     def ungroup(self) -> None:
-        """Ungroups *AceGroup* to a flat list of *Ace* items
-        :example:
-        self.items: [Ace("permit icmp any any"),
-                     AceGroup(items=[Ace("permit tcp any any"), Ace("permit udp any any")])]
+        """Ungroup AceGroup to a flat list of Ace items.
 
-         after acl.ungroup()
-         self.items: [Ace("permit icmp any any"),
-                      Ace("permit tcp any any"),
-                      Ace("permit udp any any")]
+        :example:
+            self.items: [Ace("permit icmp any any"),
+                         AceGroup(items=[Ace("permit tcp any any"), Ace("permit udp any any")])]
+
+             after acl.ungroup()
+             self.items: [Ace("permit icmp any any"),
+                          Ace("permit tcp any any"),
+                          Ace("permit udp any any")]
         """
         self._group_by = ""
         self.items = list(self._ungroup(self._items))
@@ -546,8 +559,9 @@ class Acl(AceGroup):
     # =========================== helper =============================
 
     def _cfg_acl_name(self) -> str:
-        """Acl name line, with "ip access-list" keyword in beginning
-        :return: Acl name line
+        """Acl name line, with "ip access-list" keyword in beginning.
+
+        :return: Acl name line.
 
         :example:
             self.name: "NAME"
@@ -566,7 +580,7 @@ class Acl(AceGroup):
         return " ".join(items)
 
     def _parse_type_name(self, line: str) -> T2Str:
-        """Parses ACL type and name from line "ip access-list " """
+        """Parse ACL type and name from line "ip access-list "."""
         expected = "ip access-list "
         if not line.startswith(expected):
             raise ValueError(f"{line=}, {expected=}")
@@ -594,7 +608,7 @@ class Acl(AceGroup):
         return _type, name
 
     def _ungroup(self, items: list) -> Generator:
-        """Ungroups AceGroup to a flat list of items"""
+        """Ungroup AceGroup to a flat list of items."""
         for item in items:
             if isinstance(item, (Acl, AceGroup)):
                 yield from self._ungroup(item.items)

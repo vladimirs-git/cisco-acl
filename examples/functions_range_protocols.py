@@ -1,4 +1,4 @@
-"""Generates ACEs in required range of IP protocols"""
+"""Generate ACEs in required range of IP protocols."""
 from pprint import pprint
 
 import cisco_acl

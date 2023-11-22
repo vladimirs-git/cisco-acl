@@ -1,4 +1,4 @@
-"""Generates ACEs in required range of TCP/UDP source/destination ports"""
+"""Generate ACEs in required range of TCP/UDP source/destination ports."""
 from pprint import pprint
 
 import cisco_acl

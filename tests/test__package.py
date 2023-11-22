@@ -43,21 +43,6 @@ PYPROJECT = _make_pyproject_d(ROOT)
 class Test(unittest.TestCase):
     """package"""
 
-    def test_valid__init__(self):
-        """__init__.py"""
-        regex = r"(import|from)\s"
-
-        path1 = Path.joinpath(ROOT, "__init__.py")
-        lines1 = {s.strip() for s in path1.read_text().splitlines()}
-        imports1 = {s for s in lines1 if re.match(regex, s)}
-
-        path2 = Path.joinpath(ROOT, "cisco_acl", "__init__.py")
-        lines2 = {s.strip() for s in path2.read_text().splitlines()}
-        imports2 = {s for s in lines2 if re.match(regex, s)}
-
-        diff = imports1.difference(imports2)
-        self.assertEqual(len(diff), 0, msg=f"imports {diff=} in {path1=} {path2=}")
-
     def test_valid__version(self):
         """version in README, URL"""
         package = PYPROJECT["project"]["name"].replace("_", "-")

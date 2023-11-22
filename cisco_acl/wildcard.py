@@ -1,4 +1,4 @@
-"""Wildcard network that of Cisco ACL"""
+"""Wildcard network that of Cisco ACL."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ from itertools import product
 
 from cisco_acl import helpers as h
 from cisco_acl.base import Base
-from cisco_acl.types_ import LIpNet, LInt, DAny, OIpNet, T2IpAddr, TLintInt, LStr
+from cisco_acl.types_ import LIpNet, LInt, DAny, OIpNet, T2IpAddr, TLintInt
 
 PREFIX_LEN = 32  # IPv4 prefix length
 ALL_ONES = (2 ** PREFIX_LEN) - 1
@@ -17,25 +17,26 @@ MAX_NCWB = 30  # Maximum allowed count of non-contiguous wildcard bits
 
 
 class Wildcard(Base):
-    """Wildcard network that of Cisco ACL"""
+    """Wildcard network that of Cisco ACL."""
 
     def __init__(self, line: str, **kwargs):
-        """Wildcard
-        :param line: Network with wildcard mask
-        :param max_ncwb: Max count of non-contiguous wildcard bits. Allowed in range 0..30
+        """Init Wildcard.
+
+        :param line: Network with wildcard mask.
+        :param max_ncwb: Max count of non-contiguous wildcard bits. Allowed in range 0..30.
             0  - contiguous wildcard, 1 prefix
             30 - max allowed, 1073741824 prefixes
             16 - default, 65536 prefixes
         :type max_ncwb: int
 
         Helpers
-        :param uuid: Unique identifier
+        :param uuid: Unique identifier.
         :type uuid: str
 
-        :param note: Object description
+        :param note: Object description.
         :type note: Any
 
-        :raises NetmaskValueError: If non-contiguous wildcard increase max_ncwb
+        :raises NetmaskValueError: If non-contiguous wildcard increase max_ncwb.
         """
         self.ipnet: OIpNet = None  # IPv4Network of contiguous wildcard
         self._ncwb: LInt = []  # non-contiguous wildcard bits
@@ -45,6 +46,7 @@ class Wildcard(Base):
         self.line = line
 
     def __repr__(self):
+        """__repr__."""
         params = self._repr__params()
 
         max_ncwb = self.max_ncwb
@@ -56,13 +58,14 @@ class Wildcard(Base):
         return f"{name}({kwargs})"
 
     def __str__(self):
+        """__str__."""
         return self.line
 
     # =========================== property ===========================
 
     @property
     def line(self) -> str:
-        """Line of network with wildcard mask"""
+        """Line of network with wildcard mask."""
         return f"{self._prefix} {self._wildmask}"
 
     @line.setter
@@ -78,13 +81,14 @@ class Wildcard(Base):
 
     @property
     def max_ncwb(self) -> int:
-        """Max count of non-contiguous wildcard bits"""
+        """Max count of non-contiguous wildcard bits."""
         return self._max_ncwb
 
     @max_ncwb.setter
     def max_ncwb(self, max_ncwb: int) -> None:
-        """Max count of non-contiguous wildcard bits
-        :param max_ncwb: Max count of non-contiguous wildcard bits. Allowed in range 0..30
+        """Max count of non-contiguous wildcard bits.
+
+        :param max_ncwb: Max count of non-contiguous wildcard bits. Allowed in range 0..30.
             0  - contiguous wildcard, 1 prefix
             30 - max allowed, 1073741824 prefixes
             16 - default, 65536 prefixes
@@ -93,12 +97,12 @@ class Wildcard(Base):
 
     @property
     def prefix(self) -> str:
-        """Wildcard network"""
+        """Wildcard network."""
         return str(self._prefix)
 
     @property
     def wildmask(self) -> str:
-        """Wildcard mask"""
+        """Wildcard mask."""
         return str(self._wildmask)
 
     # =========================== classmethod ============================
@@ -106,14 +110,15 @@ class Wildcard(Base):
     # noinspection PyIncorrectDocstring
     @classmethod
     def fprefix(cls, prefix: str, **kwargs) -> Wildcard:
-        """Converts prefix to *Wildcard* object
-        :param prefix: Prefix "A.B.C.D/LEN"
+        """Convert prefix to Wildcard object.
+
+        :param prefix: Prefix "A.B.C.D/LEN".
         :type prefix: str
 
-        :param max_ncwb: Max count of non-contiguous wildcard bits
+        :param max_ncwb: Max count of non-contiguous wildcard bits.
         :type max_ncwb: int
 
-        :return: *Wildcard* object
+        :return: Wildcard object
         """
         ipnet: IPv4Network = h.prefix_to_ipnet(prefix)
         line: str = ipnet.with_hostmask.replace("/", " ")
@@ -122,14 +127,15 @@ class Wildcard(Base):
     # noinspection PyIncorrectDocstring
     @classmethod
     def fsubnet(cls, subnet: str, **kwargs) -> Wildcard:
-        """Converts subnet to *Wildcard* object
-        :param subnet: Subnet with mask "A.B.C.D A.B.C.D"
+        """Convert subnet to Wildcard object.
+
+        :param subnet: Subnet with mask "A.B.C.D A.B.C.D".
         :type subnet: str
 
-        :param max_ncwb: Max count of non-contiguous wildcard bits
+        :param max_ncwb: Max count of non-contiguous wildcard bits.
         :type max_ncwb: int
 
-        :return: *Wildcard* object
+        :return: Wildcard object.
         :rtype: Wildcard
         """
         items = subnet.split()
@@ -151,11 +157,12 @@ class Wildcard(Base):
     # =========================== method =============================
 
     def data(self, uuid: bool = False) -> DAny:
-        """Converts *Wildcard* object to *dict*
-        :param uuid: Returns self.uuid in data
+        """Convert Wildcard object to the dictionary.
+
+        :param uuid: Return self.uuid in data.
         :type uuid: bool
 
-        :return: data in *dict* format
+        :return: The dictionary.
         """
         data = dict(
             # init
@@ -174,8 +181,9 @@ class Wildcard(Base):
 
     @lru_cache
     def ipnets(self) -> LIpNet:
-        """List of *IPv4Network* that match this wildcard
-        :return: List of *IPv4Network*
+        """List of IPv4Network that match this wildcard.
+
+        :return: List of IPv4Network.
         :example:
             wildcard = Wildcard("10.0.0.0 0.0.1.3")
             wildcard.ipnets() -> [IPv4Network("10.0.0.0/30"),
@@ -199,7 +207,7 @@ class Wildcard(Base):
     # =========================== helper =============================
 
     def _create_ipnet(self) -> OIpNet:
-        """Init ipnet"""
+        """Init ipnet."""
         prefix = str(self._prefix)
         wildmask = str(self._wildmask)
         try:
@@ -218,8 +226,9 @@ class Wildcard(Base):
         return ipnet
 
     def _create_ncwb(self) -> TLintInt:
-        """Init non-contiguous wildcard bits and prefix length
-        :return: List of non-contiguous wildcard bits, prefixlen
+        """Init non-contiguous wildcard bits and prefix length.
+
+        :return: List of non-contiguous wildcard bits, prefixlen.
         :example:
             _init_prefix("10.0.0.0 0.0.0.3") -> IPv4Address("10.0.0.0"), IPv4Address("0.0.0.3")
         """
@@ -232,8 +241,9 @@ class Wildcard(Base):
 
     @staticmethod
     def _create_prefix(line: str) -> T2IpAddr:
-        """Converts line to prefix, wildmask as *IPv4Address*
-        :return: prefix, wildmask
+        """Convert line to prefix, wildmask as IPv4Address.
+
+        :return: prefix, wildmask.
         :example:
             _init_prefix("10.0.0.0 0.0.0.3") -> IPv4Address("10.0.0.0"), IPv4Address("0.0.0.3")
         """
@@ -249,10 +259,11 @@ class Wildcard(Base):
         return prefix_o, wildmask_o
 
     def _ncw_bits(self, wb_idxs: LInt, prefixlen_idx: int) -> LInt:
-        """Returns non-contiguous wildcard mask bits
-        :param wb_idxs: Wildcard mask bit indexes
-        :param prefixlen_idx: Index to get indexes of IPv4Network prefix length
-        :raise NetmaskValueError: If non-contiguous wildcard mask bits count increase allowed
+        """Return non-contiguous wildcard mask bits.
+
+        :param wb_idxs: Wildcard mask bit indexes.
+        :param prefixlen_idx: Index to get indexes of IPv4Network prefix length.
+        :raise NetmaskValueError: If non-contiguous wildcard mask bits count increase allowed.
         """
         ncwb: LInt = wb_idxs[prefixlen_idx:]
         ncwb.reverse()
@@ -268,8 +279,9 @@ class Wildcard(Base):
 
     @staticmethod
     def _prefixlen_idx(mask_bit_idxs: LInt) -> int:
-        """Gets last bits in wildcard mask amd returns index to get prefix length
-        :return: Index to get indexes of IPv4Network prefix length
+        """Get last bits in wildcard mask amd returns index to get prefix length.
+
+        :return: Index to get indexes of IPv4Network prefix length.
         """
         prefixlen_idx = 0
         for idx, mask_bit_idx in enumerate(mask_bit_idxs):
@@ -283,8 +295,9 @@ class Wildcard(Base):
 
 # noinspection PyIncorrectDocstring
 def init_max_ncwb(**kwargs) -> int:
-    """Init max non-contiguous wildcard bits count
-    :param max_ncwb: Max count of non-contiguous wildcard bits. Allowed in range 0..30
+    """Init max non-contiguous wildcard bits count.
+
+    :param max_ncwb: Max count of non-contiguous wildcard bits. Allowed in range 0..30.
         0  - contiguous wildcard, 1 prefix
         30 - max allowed, 1073741824 prefixes
         16 - default, 65536 prefixes
@@ -300,21 +313,23 @@ def init_max_ncwb(**kwargs) -> int:
 
 
 def invert_mask(mask: str) -> str:
-    """Inverts mask to wildcard and vice versa
-    :param mask: Mask or wildmask "0.0.0.3"
-    :return: Inverted mask or wildmask
-    :example: wildmask to mask
+    """Invert mask to wildcard and vice versa.
+
+    :param mask: Mask or wildmask "0.0.0.3".
+    :return: Inverted mask or wildmask.
+    :example: wildmask to mask.
         invert_mask("0.0.0.3") -> "0.0.0.252"
-    :example: mask to wildmask
+    :example: mask to wildmask.
         invert_mask("0.0.0.252") -> "0.0.0.3"
     """
     return ".".join([str(255 - int(s)) for s in mask.split(".")])
 
 
 def is_contiguous_wildmask(mask: str) -> bool:
-    """Checks mask.
-      True  - if contiguous wildcard mask
-      False - if non-contiguous wildcard mask or generic mask
+    """Check mask.
+
+    :return: True - if contiguous wildcard mask,
+             False - if non-contiguous wildcard mask or generic mask.
     :example:
         is_contiguous_wildmask("0.0.0.3") -> True
         is_contiguous_wildmask("0.0.3.3") -> False
@@ -327,9 +342,9 @@ def is_contiguous_wildmask(mask: str) -> bool:
 
 
 def is_mask(mask: str) -> bool:
-    """Checks mask.
-      True  - if generic mask
-      False - if wildcard mask
+    """Check mask.
+
+    :return: True - if generic mask, False - if wildcard mask.
     :example:
     is_mask("255.255.255.252") -> True
         is_mask("0.0.0.3") -> False
@@ -343,7 +358,7 @@ def is_mask(mask: str) -> bool:
 
 
 def sum_octets(mask: str) -> int:
-    """Returns sum of "A.B.C.D" octets"""
+    """Return sum of "A.B.C.D" octets."""
     octets: LInt = [int(s) for s in mask.split(".")]
     if len(octets) != 4:
         raise ValueError(f"invalid {mask=}, expected 4 octets")

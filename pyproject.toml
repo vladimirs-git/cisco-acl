@@ -1,6 +1,6 @@
 [project]
 name = "cisco_acl"
-version = "3.0.4"
+version = "3.1.0"
 authors = [{ name="Vladimir Prusakov", email="vladimir.prusakovs@gmail.com" }]
 description = "Python package to parse and manage Cisco ACL (Access Control List)"
 readme = "README.rst"
@@ -26,7 +26,7 @@ classifiers = [
 "Homepage" = "https://github.com/vladimirs-git/cisco-acl"
 "Repository" = "https://github.com/vladimirs-git/cisco-acl"
 "Bug Tracker" = "https://github.com/vladimirs-git/cisco-acl/issues"
-"Download URL" = "https://github.com/vladimirs-git/cisco-acl/archive/refs/tags/3.0.4.tar.gz"
+"Download URL" = "https://github.com/vladimirs-git/cisco-acl/archive/refs/tags/3.1.0.tar.gz"
 [tool.setuptools.packages.find]
 include = ["cisco_acl"]
 [tool.setuptools.package-data]

@@ -1,4 +1,5 @@
-"""**Protocol(line)**
+"""Protocol.
+
 The following example demonstrates Protocol object.
 """
 

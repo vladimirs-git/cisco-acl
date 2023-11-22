@@ -1,4 +1,4 @@
-"""Port - ACE TCP/UDP source or destination port object"""
+"""Port - ACE TCP/UDP source or destination port object."""
 from __future__ import annotations
 
 from functools import total_ordering
@@ -13,53 +13,50 @@ from cisco_acl.types_ import LInt, LStr, IInt, DAny, StrInt
 
 @total_ordering
 class Port(Base):
-    """Port - ACE TCP/UDP source or destination port object"""
+    """Port - ACE TCP/UDP source or destination port object."""
 
     def __init__(self, line: str = "", **kwargs):
-        """ACE. TCP/UDP Port
-        :param line: TCP/UDP ports line
-        :type line: str
+        """Init Port.
 
-        :param platform: Platform: "ios" (default), "nxos"
+        :param line: TCP/UDP ports line.
+
+        :param platform: Platform: "asa", "ios", "nxos". Default "ios"..
         :type platform: str
 
-        :param protocol: ACL protocol: "tcp", "udp", ""
+        :param protocol: ACL protocol: "tcp", "udp", "".
         :type protocol: str
 
         Helpers
-        :param note: Object description
+        :param note: Object description.
         :type note: Any
 
-        :param port_nr: Well-known TCP/UDP ports as numbers
-            True  - all tcp/udp ports as numbers
-            False - well-known tcp/udp ports as names (default)
+        :param port_nr: Well-known TCP/UDP ports as numbers.
+            True  - all tcp/udp ports as numbers,
+            False - well-known tcp/udp ports as names (default).
         :type port_nr: bool
 
-        :example: ios, "eq" (can match multiple ports in single line)
+        :example: ios, "eq" (can match multiple ports in single line).
             port = Port("eq www 443", platform="ios", protocol="tcp")
-            result:
-                port.line == "eq www 443"
-                port.operator == "eq"
-                port.items == [80, 443]
-                port.ports == [80, 443]
-                port.sport == "80,443"
+            port.line -> "eq www 443"
+            port.operator -> "eq"
+            port.items -> [80, 443]
+            port.ports -> [80, 443]
+            port.sport -> "80,443"
 
-        :example: nxos, "neq" (can match only one port in single line)
+        :example: nxos, "neq" (can match only one port in single line).
             port = Port("neq www", platform="nxos", protocol="tcp")
-            result:
-                port.line == "neq www"
-                port.operator == "neq"
-                port.items == [80]
-                port.ports == [1, 2, ..., 79, 81, ..., 65534, 65535]
-                port.sport == "1-79,81-65535"
+            port.line -> "neq www"
+            port.operator -> "neq"
+            port.items -> [80]
+            port.ports -> [1, 2, ..., 79, 81, ..., 65534, 65535]
+            port.sport -> "1-79,81-65535"
 
-        :example: range
+        :example: Range.
             port = Port("range 1 3", platform="ios", protocol="tcp")
-            result:
-                port.line == "range 1 3"
-                port.operator == "range"
-                port.ports == [1, 2, 3]
-                port.sport == "1-3"
+            port.line -> "range 1 3"
+            port.operator -> "range"
+            port.ports -> [1, 2, 3]
+            port.sport == "1-3"
         """
         super().__init__(**kwargs)  # platform, note
         self._protocol = h.init_protocol(line=line, **kwargs)
@@ -67,6 +64,7 @@ class Port(Base):
         self.line = line
 
     def __repr__(self):
+        """__repr__."""
         params = self._repr__params()
         params = self._repr__add_param("protocol", params)
         kwargs = ", ".join(params)
@@ -76,14 +74,15 @@ class Port(Base):
     # ========================== redefined ===========================
 
     def __hash__(self) -> int:
+        """__hash__."""
         return self.line.__hash__()
 
     def __eq__(self, other) -> bool:
-        """== equality"""
+        """== equality."""
         return self.__hash__() == other.__hash__()
 
     def __lt__(self, other) -> bool:
-        """< less than"""
+        """< less than."""
         if self.__class__ == other.__class__:
             if self._operator and other.operator:
                 if self._operator != other.operator:
@@ -98,16 +97,12 @@ class Port(Base):
 
     @property
     def items(self) -> LInt:
-        """ACE TCP/UDP list of *int* protocol numbers
-        :return: List of ports
+        """ACE TCP/UDP list of int protocol numbers.
 
+        :return: List of ports.
         :example:
-            self: Port("eq www 443")
-            return: [80, 443]
-
-        :example:
-            self: Port("neq www")
-            return: [80]
+            Port("eq www 443") -> [80, 443]
+            Port("neq www") -> [80]
         """
         return self._items
 
@@ -121,7 +116,7 @@ class Port(Base):
 
     @property
     def line(self) -> str:
-        """ACE source or destination TCP/UDP ports"""
+        """ACE source or destination TCP/UDP ports."""
         if not (self._operator and self._items and self._protocol in ["tcp", "udp"]):
             return ""
         if self._port_nr:
@@ -153,19 +148,20 @@ class Port(Base):
 
     @property
     def operator(self) -> str:
-        """ACE TCP/UDP port operator: "eq", "gt", "lt", "neq", "range"
+        """ACE TCP/UDP port operator: "eq", "gt", "lt", "neq", "range".
 
+        :return: Operator.
         :example:
-            self: Port("eq www 443")
-            return: "eq"
+            Port("eq www 443") -> "eq"
         """
         return self._operator
 
     @property
     def port_nr(self) -> bool:
-        """Well-known TCP/UDP ports as numbers
-            True  - all tcp/udp ports as numbers
-            False - well-known tcp/udp ports as names (default)
+        """Return well-known TCP/UDP ports as numbers.
+
+        True  - all tcp/udp ports as numbers,
+        False - well-known tcp/udp ports as names (default).
         """
         return self._port_nr
 
@@ -175,15 +171,11 @@ class Port(Base):
 
     @property
     def ports(self) -> LInt:
-        """ACE list of *int* TCP/UDP port numbers
+        """ACE list of int TCP/UDP port numbers.
 
         :example:
-            self: Port("eq www 443")
-            return: [80, 443]
-
-        :example:
-            self: Port("neq www")
-            return: [1, 2, ..., 79, 81, ..., 65534, 65535]
+            Port("eq www 443") -> [80, 443]
+            Port("neq www") -> [1, 2, ..., 79, 81, ..., 65534, 65535]
         """
         return self._ports
 
@@ -199,7 +191,7 @@ class Port(Base):
 
     @property
     def protocol(self) -> str:
-        """Protocol name: "tcp", "udp", "" """
+        """Protocol name: "tcp", "udp", ""."""
         return self._protocol
 
     @protocol.setter
@@ -213,11 +205,10 @@ class Port(Base):
 
     @property
     def sport(self) -> str:
-        """ACE *str* of TCP/UDP ports range
+        """ACE string of TCP/UDP ports range.
 
         :example:
-            self: Port("eq 1 3 4 5")
-            return: "1,3-5"
+            Port("eq 1 3 4 5") -> "1,3-5"
         """
         return self._sport
 
@@ -230,16 +221,14 @@ class Port(Base):
     # =========================== method =============================
 
     def data(self, uuid: bool = False) -> DAny:
-        """Converts *Port* object to *dict*
-        :param uuid: Returns self.uuid in data
-        :type uuid: bool
+        """Convert Port object to the dictionary.
 
-        :return: Port data
-
+        :param uuid: Return self.uuid in data.
+        :return: Port data.
         :example:
             address = Address("10.0.0.0/24", platform="nxos")
-            address.data() ->
-                {"line": "10.0.0.0/24",
+            address.data() -> {
+                "line": "10.0.0.0/24",
                 "platform": "nxos",
                 "items": [],
                 "note": "",
@@ -247,7 +236,8 @@ class Port(Base):
                 "ipnet": IPv4Network("10.0.0.0/24"),
                 "prefix": "10.0.0.0/24",
                 "subnet": "10.0.0.0 255.255.255.0",
-                "wildcard": "10.0.0.0 0.0.0.255"}
+                "wildcard": "10.0.0.0 0.0.0.255",
+            }
         """
         data = dict(
             # init
@@ -270,11 +260,10 @@ class Port(Base):
 
     @staticmethod
     def _line__operator(items: LStr) -> str:
-        """Gets operator from items
+        """Get operator from items.
 
         :example:
-            items: ["eq", "www"]
-            return: ["eq"]
+            self._line__operator(["eq", "www"]) -> ["eq"]
         """
         operator, *items = items
         expected: LStr = list(OPERATORS)
@@ -283,11 +272,10 @@ class Port(Base):
         return operator
 
     def _line__items_to_ints(self, items: LStr) -> LInt:
-        """Converts named and digit items to int items
+        """Convert named and digit items to int items.
 
         :example:
-            items: ["www", "443"]
-            return: [80, 443]
+            self._line__items_to_ints(["www", "443"]) -> [80, 443]
         """
         if not items:
             raise ValueError(f"absent ports={items}")
@@ -316,23 +304,20 @@ class Port(Base):
         if operator == "range" and len(ports) != 2:
             raise ValueError(f"invalid {operator=} with {ports=} expected 2 ports")
         if self._operator in ["eq", "neq"]:
-            if platform == "nxos" and len(ports) != 1:
+            if platform in ["asa", "nxos"] and len(ports) != 1:
                 raise ValueError(f"invalid count of {ports=}, for {platform=} expected 1 port")
 
         return sorted(ports)
 
     def _items_to_ports(self, items: LInt) -> LInt:
-        """Transforms line items to ports
+        """Transform line items to ports.
 
         :example:
-            items: [1, 4]
-            self.operator: "range"
-            return: [1, 2, 3, 4]
+            self.operator == "range"
+            self._items_to_ports([1, 4]) ->[1, 2, 3, 4]
 
-        :example:
-            items: [4]
-            self.operator: "ge"
-            return: [4, 5, 6, ..., 65535]
+            self.operator == "ge"
+            self._items_to_ports([4, 5, 6, ..., 65535]) -> [4]
         """
         operator = self._operator
         if operator == "eq":
@@ -354,17 +339,14 @@ class Port(Base):
         raise ValueError(f"invalid port {operator=}")
 
     def _ports_to_items(self, ports: LInt) -> LInt:
-        """Transforms ports to line items
+        """Transform ports to line items.
 
         :example:
-            ports: [1, 2, 3, 4]
-            self.operator: "range"
-            return: [1, 4]
+            self.operator == "range"
+            self._ports_to_items([1, 2, 3, 4]) -> [1, 4]
 
-        :example:
-            ports: [4, 5, 6, ..., 65535]
-            self.operator: "ge"
-            return: [4]
+            self.operator == "ge"
+            self._ports_to_items([4, 5, 6, ..., 65535]) -> [4]
         """
         operator = self._operator
         if operator == "eq":

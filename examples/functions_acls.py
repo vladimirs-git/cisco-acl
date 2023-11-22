@@ -1,5 +1,6 @@
-"""Creates *Acl* objects based on the "show running-config" output.
-Each ACE line is treated as an independent *Ace* element
+"""Create Acl objects based on the "show running-config" output.
+
+Each ACE line is treated as an independent Ace element.
 """
 from pprint import pprint
 
@@ -34,7 +35,7 @@ print(acl.line, "\n")
 #   permit icmp any any
 
 
-# *Acl* some attributes demonstration
+# Acl some attributes demonstration
 # Note, "object-group ADDR_GROUP" includes addresses from "object-group network ADDR_GROUP"
 print(f"{acl.line=}")
 print(f"{acl.platform=}")
@@ -150,7 +151,7 @@ print()
 # ...
 
 
-# Crate *Acl* object based on *dict* data
+# Crate Acl object based on dict data
 acl = cisco_acl.Acl(**data)
 print(acl.line, "\n")
 # ip access-list ACL_NAME
@@ -162,7 +163,7 @@ print(acl.line, "\n")
 #   permit 1 any any
 
 
-# Copy *Acl* object
+# Copy Acl object
 acl2 = acl.copy()
 print(acl2.line, "\n")
 # ip access-list ACL_NAME
@@ -173,8 +174,8 @@ print(acl2.line, "\n")
 #   permit 1 any any
 
 
-# Update some data in *Ace* objects
-# Note, when iterating *acl2* object, you are iterating list of *Ace* objects in *acl2.items*
+# Update some data in Ace objects
+# Note, when iterating acl2 object, you are iterating list of Ace objects in acl2.items
 acl2.items = [o for o in acl2 if o.srcaddr.line == "10.0.0.0/24"]
 for port, ace in enumerate(acl2, start=53):
     ace.protocol.line = "udp"

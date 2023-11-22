@@ -1,4 +1,4 @@
-"""Typing"""
+"""Typing."""
 from ipaddress import IPv4Network, IPv4Address
 from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, Union
 

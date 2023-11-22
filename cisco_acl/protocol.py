@@ -1,4 +1,4 @@
-"""ACE IP protocol object"""
+"""ACE IP protocol object."""
 from __future__ import annotations
 
 from functools import total_ordering
@@ -26,89 +26,110 @@ OPTIONS = (
     "ttl",
     "urg",
 )
-IOS_PROTOCOLS = {
+PROTOCOLS_IOS = {
+    "ip": 0,
+    "icmp": 1,
+    "igmp": 2,
+    "ipip": 4,
+    "tcp": 6,
+    "egp": 8,
+    "udp": 17,
+    "ipv6": 41,
+    "gre": 47,
+    "esp": 50,
     "ah": 51,
     "ahp": 51,
-    "egp": 8,
     "eigrp": 88,
-    "esp": 50,
-    "gre": 47,
+    "ospf": 89,
+    "nos": 94,
+    "pim": 103,
+    "pcp": 108,
+}
+PROTOCOLS_NXOS = {
+    "ip": 0,
     "icmp": 1,
     "igmp": 2,
-    "ip": 0,
-    "ipip": 4,
-    "ipv6": 41,
-    "nos": 94,
-    "ospf": 89,
-    "pcp": 108,
-    "pim": 103,
     "tcp": 6,
     "udp": 17,
-}
-NXOS_PROTOCOLS = {
+    "gre": 47,
+    "esp": 50,
     "ahp": 51,
     "eigrp": 88,
-    "esp": 50,
-    "gre": 47,
+    "ospf": 89,
+    "nos": 94,
+    "pim": 103,
+    "pcp": 108,
+}
+PROTOCOLS_ASA = {
+    "ip": 0,
     "icmp": 1,
     "igmp": 2,
-    "ip": 0,
-    "nos": 94,
-    "ospf": 89,
-    "pcp": 108,
-    "pim": 103,
+    "ipinip": 4,
     "tcp": 6,
+    "igrp": 9,
     "udp": 17,
+    "gre": 47,
+    "esp": 50,
+    "ah": 51,
+    "icmp6": 58,
+    "eigrp": 88,
+    "ospf": 89,
+    "nos": 94,
+    "pim": 103,
+    "pcp": 108,
+    "snp": 109,
+    "sctp": 132,
 }
-ANY_PROTOCOLS = {**IOS_PROTOCOLS, **NXOS_PROTOCOLS}
+PROTOCOLS_ANY = {**PROTOCOLS_ASA, **PROTOCOLS_IOS, **PROTOCOLS_NXOS}
 PROTOCOL_TO_NR = dict(
-    ios=IOS_PROTOCOLS,
-    nxos=NXOS_PROTOCOLS,
+    asa=PROTOCOLS_ASA,
+    ios=PROTOCOLS_IOS,
+    nxos=PROTOCOLS_NXOS,
 )
 NR_TO_PROTOCOL = dict(
-    ios={i: s for s, i in IOS_PROTOCOLS.items()},
-    nxos={i: s for s, i in NXOS_PROTOCOLS.items()},
+    asa={i: s for s, i in PROTOCOLS_ASA.items()},
+    ios={i: s for s, i in PROTOCOLS_IOS.items()},
+    nxos={i: s for s, i in PROTOCOLS_NXOS.items()},
 )
 
 
 @total_ordering
 class Protocol(Base):
-    """ACE IP protocol object"""
+    """ACE IP protocol object."""
 
     def __init__(self, line: str = "", **kwargs):
-        """ACE. IP protocol object
-        :param line: IP protocol line
+        """Init Protocol.
+
+        :param line: IP protocol line.
         :type line: str
 
-        :param platform: Platform: "ios" (default), "nxos"
+        :param platform: Platform: "asa", "ios", "nxos". Default "ios".
         :type platform: str
 
         Helpers
-        :param note: Object description
+        :param note: Object description.
         :type note: Any
 
-        :param protocol_nr: Well-known ip protocols as numbers
-            True  - all ip protocols as numbers
-            False - well-known ip protocols as names (default)
+        :param protocol_nr: Well-known ip protocols as numbers.
+            True  - all ip protocols as numbers,
+            False - well-known ip protocols as names (default).
         :type protocol_nr: bool
 
-        :param has_port: ACE has tcp/udp src/dst ports
-            True  - ACL has tcp/udp src/dst ports
-            False - ACL does not have tcp/udp src/dst ports (default)
+        :param has_port: ACE has tcp/udp src/dst ports.
+            True  - ACL has tcp/udp src/dst ports,
+            False - ACL does not have tcp/udp src/dst ports (default).
         :type port_nr: bool
 
         :example:
             protocol = Protocol("tcp", platform="ios")
-            result:
-                protocol.line == "tcp"
-                protocol.name == "tcp"
-                protocol.number == 6
-        :example:
-        protocol = Protocol("255", platform="ios")
-            result:
-                protocol.line == "255"
-                protocol.name == ""
-                protocol.number == 255
+            protocol.line -> "tcp"
+            protocol.name -> "tcp"
+            protocol.number -> 6
+
+            protocol = Protocol("255", platform="ios")
+            protocol.line -> "255"
+            protocol.name == ""
+            protocol.number == 255
         """
         self._number = PROTOCOL_IP
         self._protocol_nr = bool(kwargs.get("protocol_nr") or False)
@@ -119,20 +140,22 @@ class Protocol(Base):
     # ========================== redefined ===========================
 
     def __hash__(self) -> int:
+        """__hash__."""
         return self.line.__hash__()
 
     def __eq__(self, other) -> bool:
-        """== equality"""
+        """== equality."""
         return self.__hash__() == other.__hash__()
 
     def __lt__(self, other) -> bool:
-        """< less than"""
+        """< less than."""
         if self.__class__ == other.__class__:
             if self.number != other.number:
                 return self.number < other.number
         return False
 
     def __repr__(self):
+        """__repr__."""
         params = super()._repr__params()
         params = self._repr__add_param("protocol_nr", params)
         params = self._repr__add_param("has_port", params)
@@ -144,7 +167,7 @@ class Protocol(Base):
 
     @property
     def has_port(self) -> bool:
-        """True if protocol is "tcp" or "udp" with specified port"""
+        """Return True if protocol is "tcp" or "udp" with specified port."""
         return self._has_port
 
     @has_port.setter
@@ -176,9 +199,9 @@ class Protocol(Base):
 
         # permit ip any any
         else:
-            number_ = ANY_PROTOCOLS.get(line)
+            number_ = PROTOCOLS_ANY.get(line)
             if number_ is None:
-                raise ValueError(f"invalid protocol {line=}, expected={list(ANY_PROTOCOLS)}")
+                raise ValueError(f"invalid protocol {line=}, expected={list(PROTOCOLS_ANY)}")
             number = int(number_)
 
         self._number = number
@@ -208,9 +231,10 @@ class Protocol(Base):
 
     @property
     def protocol_nr(self) -> bool:
-        """Well-known ip protocols as numbers
-            True  - all ip protocols as numbers
-            False - well-known ip protocols as names (default)
+        """Well-known ip protocols as numbers.
+
+        True  - all ip protocols as numbers,
+        False - well-known ip protocols as names (default).
         """
         return self._protocol_nr
 
@@ -221,21 +245,22 @@ class Protocol(Base):
     # =========================== method =============================
 
     def data(self, uuid: bool = False) -> DAny:
-        """Converts *Protocol* object to *dict*
-        :param uuid: Returns self.uuid in data
-        :type uuid: bool
+        """Convert Protocol object to the dictionary.
 
-        :return: Protocol data
+        :param uuid: Return self.uuid in data.
+        :return: Protocol data.
 
         :example:
             address = Protocol(line="tcp")
-            address.data() -> {"line": "tcp",
-                              "platform": "ios",
-                              "note": "",
-                              "protocol_nr": False,
-                              "has_port": False,
-                              "name": "tcp",
-                              "number": 6}
+            address.data() -> {
+                "line": "tcp",
+                "platform": "ios",
+                "note": "",
+                "protocol_nr": False,
+                "has_port": False,
+                "name": "tcp",
+                "number": 6,
+            }
         """
         data = dict(
             # init

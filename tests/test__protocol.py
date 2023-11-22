@@ -54,6 +54,8 @@ class Test(Helpers):
     def test_valid__repr__(self):
         """Protocol.__repr__()"""
         for kwargs, req in [
+            (dict(line="tcp", platform="asa", note="a", protocol_nr=True, has_port=True, typo="b"),
+             "Protocol(\"tcp\", platform=\"asa\", note=\"a\", protocol_nr=True, has_port=True)"),
             (dict(line="tcp", platform="ios", note=""), "Protocol(\"tcp\")"),
             (dict(line="tcp", platform="nxos", note="a", protocol_nr=True, has_port=True, typo="b"),
              "Protocol(\"tcp\", platform=\"nxos\", note=\"a\", protocol_nr=True, has_port=True)"),

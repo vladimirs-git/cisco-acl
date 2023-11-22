@@ -1,5 +1,4 @@
-"""Creates *Ace* objects based on the "show running-config" output.
-"""
+"""Create Ace objects based on the "show running-config" output."""
 from pprint import pprint
 
 import cisco_acl
@@ -22,7 +21,7 @@ print()
 # ace.line="permit icmp any any"
 
 
-# *Ace* some attributes demonstration
+# Ace some attributes demonstration
 ace = aces[0]
 print(f"{ace.line=}")
 print(f"{ace.platform=}")
@@ -128,7 +127,7 @@ print()
 # ...
 
 
-# Copy *Ace* object
+# Copy Ace object
 ace2 = ace.copy()
 print(f"{ace2.line=}", "\n")
 # ace2.line="permit tcp 10.0.0.0 0.0.0.255 range 1 4 any eq ftp 22 telnet syn ack log"

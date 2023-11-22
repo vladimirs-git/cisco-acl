@@ -1,4 +1,4 @@
-"""Unittest helpers"""
+"""Unittest helpers."""
 
 import unittest
 from ipaddress import IPv4Network
@@ -259,22 +259,23 @@ CNX_ADDGR_D = dict(
 
 
 class Helpers(unittest.TestCase):
-    """Unittest Helpers"""
+    """Unittest Helpers."""
 
     # =========================== helper =============================
 
     @staticmethod
     def _quotation(line: str) -> str:
-        """Replaces quotation sign"""
+        """Replace quotation sign."""
         return line.replace(chr(39), "\"")
 
     # ============================ tests =============================
 
     def _test_attrs(self, obj, req_d, msg: str):
-        """Test obj.line and attributes in req_d
-        :param obj: Tested object
-        :param req_d: Valid attributes and values
-        :param msg: Message
+        """Test obj.line and attributes in req_d.
+
+        :param obj: Tested object.
+        :param req_d: Valid attributes and values.
+        :param msg: Message.
         """
         result = obj.line
         req = req_d["line"]
@@ -288,20 +289,22 @@ class Helpers(unittest.TestCase):
             self.assertEqual(result, req, msg=f"{msg} {attr=}")
 
     def _test_keys(self, data: dict, req_d: dict, msg: str):
-        """Test values of data in req_d
-        :param data: Tested dict
-        :param req_d: Valid keys and values
-        :param msg: Message
+        """Test values of data in req_d.
+
+        :param data: Tested dict.
+        :param req_d: Valid keys and values.
+        :param msg: Message.
         """
         for key, req in req_d.items():
             result = data[key]
             self.assertEqual(result, req, msg=f"{msg} {key=}")
 
     def _test_no_keys(self, data: dict, absent: list, msg: str):
-        """Test `absent_d` keys absent in `data`
-        :param data: Tested dict
-        :param absent: Valid keys and values
-        :param msg: Message
+        """Test `absent_d` keys absent in `data`.
+
+        :param data: Tested dict.
+        :param absent: Valid keys and values.
+        :param msg: Message.
         """
         for key in absent:
             result = data.get(key)
@@ -309,7 +312,7 @@ class Helpers(unittest.TestCase):
 
 
 def make_acl(line: str, **kwargs) -> Acl:
-    """Creates Acl, add "ip access-list" if absent"""
+    """Create Acl, add "ip access-list" if absent."""
     platform = kwargs.get("platform") or "nxos"
     if not line.startswith("ip access-list "):
         acl_name = "ACL_NAME"
@@ -331,7 +334,7 @@ def make_acl(line: str, **kwargs) -> Acl:
 
 
 def make_aceg(line: str) -> DAny:
-    """Creates AceGroup based on ACL line, add "ip access-list" if absent"""
+    """Create AceGroup based on ACL line, add "ip access-list" if absent."""
     acl_o = make_acl(line)
     aceg_o = acl_o.items[0]
     data = aceg_o.data()
@@ -339,7 +342,7 @@ def make_aceg(line: str) -> DAny:
 
 
 def remove_acl_name(line: str) -> str:
-    """Removes multiple spaces and "ip access-list ACL_NAME" from line"""
+    """Remove multiple spaces and "ip access-list ACL_NAME" from line."""
     items = [s.strip() for s in line.split("\n")]
     items = [s for s in items if s]
     items = [s for s in items if not s.startswith("ip access-list ")]

@@ -1,4 +1,5 @@
-"""**Ace(line)**
+"""Ace.
+
 The following example creates an Ace object and demonstrate various manipulation approaches.
 """
 

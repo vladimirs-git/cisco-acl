@@ -1,10 +1,10 @@
-"""**AceGroup sequence numbers and sorting**
+"""AceGroup sequence numbers and sorting.
 
-- Create AceGroup, with 2 items (1st is remark, 2nd is rule)
-- Create AceGroup, with 3 items (1st is remark, 2nd and 3rd are rules)
-- Add AceGroup to Acl
-- Sorting (changing sequence) rules by notes
-    AceGroup behaves like a ACE item (Items inside AceGroup save the same order)
+- Create AceGroup, with 2 items (1st is remark, 2nd is rule).
+- Create AceGroup, with 3 items (1st is remark, 2nd and 3rd are rules).
+- Add AceGroup to Acl.
+- Sorting (changing sequence) rules by notes.
+    AceGroup behaves like a ACE item (Items inside AceGroup save the same order).
 """
 
 from cisco_acl import Acl, AceGroup

@@ -1,4 +1,5 @@
-"""**Port(line)**
+"""Port.
+
 The following example demonstrates Port object.
 """
 

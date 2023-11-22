@@ -1,4 +1,4 @@
-"""AddressBase, parent of: Address, AddressAg"""
+"""AddressBase, parent of: Address, AddressAg."""
 
 from abc import abstractmethod
 from functools import total_ordering
@@ -13,18 +13,19 @@ from cisco_acl.wildcard import Wildcard, init_max_ncwb
 
 @total_ordering  # type: ignore
 class AddressBase(Base):
-    """AddressBase, parent of: Address, AddressAg"""
+    """AddressBase, parent of: Address, AddressAg."""
 
     def __init__(self, **kwargs):
-        """AddressBase
-        :param platform: Platform: "ios" (default), "nxos"
+        """Init AddressBase.
+
+        :param platform: Platform: "asa", "ios", "nxos". Default "ios".
         :type platform: str
 
         Helpers
-        :param note: Object description
+        :param note: Object description.
         :type note: Any
 
-        :param max_ncwb: Max count of non-contiguous wildcard bits
+        :param max_ncwb: Max count of non-contiguous wildcard bits.
         :type max_ncwb: int
         """
         self._type = ""
@@ -36,6 +37,7 @@ class AddressBase(Base):
         self.max_ncwb: int = init_max_ncwb(**kwargs)
 
     def __repr__(self):
+        """__repr__."""
         params = self._repr__params()
         params = self._repr__add_param("items", params)
         kwargs = ", ".join(params)
@@ -45,19 +47,20 @@ class AddressBase(Base):
     # ========================== redefined ===========================
 
     def __hash__(self) -> int:
+        """__hash__."""
         wildcard = ""
         if isinstance(self._wildcard, Wildcard):
             wildcard = self._wildcard.line
         return (self._addrgroup, wildcard).__hash__()
 
     def __eq__(self, other) -> bool:
-        """== equality"""
+        """== equality."""
         if self.__class__ == other.__class__:
             return self.__hash__() == other.__hash__()
         return False
 
     def __lt__(self, other) -> bool:
-        """< less than"""
+        """< less than."""
         if self.__class__ == other.__class__:
             if self.ipnet and other.ipnet:
                 return self.ipnet < other.ipnet
@@ -73,7 +76,7 @@ class AddressBase(Base):
         return False
 
     def __contains__(self, other) -> bool:
-        """Returns True if other.ipnet is subnet of self.ipnet"""
+        """Return True if other.ipnet is subnet of self.ipnet."""
         self_ipnet = self._get_ipnet(self)
         if not self_ipnet:
             raise TypeError(f"{self_ipnet=} {IPv4Network} expected")
@@ -101,10 +104,10 @@ class AddressBase(Base):
     @property
     @abstractmethod
     def items(self):
-        """List of *Address* or *AddressAg* objects for address group"""
+        """List of Address or AddressAg objects for address group."""
 
     def _init_items(self, items) -> list:
-        """Init items of *Address*, *AddressAg* objects for address group"""
+        """Init items of Address, AddressAg objects for address group."""
         if isinstance(items, (str, dict, self.__class__)):
             items = [items]
         if not isinstance(items, (list, tuple)):
@@ -128,31 +131,32 @@ class AddressBase(Base):
 
     @property
     def addrgroup(self) -> str:
-        """Address group name, if type="addrgroup". Value of "object-group NAME", "addrgroup NAME"
+        """Address group name, if type="addrgroup". Value of "object-group NAME", "addrgroup NAME".
+
         :return: Address group name
 
         :example:
-            self: Address("object-group NAME", platform="ios")
-            return: "NAME"
+            address = Address("object-group NAME", platform="ios")
+            address.addrgroup -> "NAME"
 
-        :example:
-            self: Address("addrgroup NAME", platform="nxos")
-            return: "NAME"
+            address = Address("addrgroup NAME", platform="nxos")
+            address.addrgroup -> "NAME"
         """
         return self._addrgroup
 
     @property
     def ipnet(self) -> OIpNet:
-        """Address IPv4Network object, None if type="addrgroup"
-        :return: *IPv4Network* or None
+        """Address IPv4Network object, None if type="addrgroup".
+
+        :return: IPv4Network or None.
 
         :example:
-            self: Address("10.0.0.0 0.0.0.3", platform="ios")
-            return: IPv4Network("10.0.0.0/30")
+            address = Address("10.0.0.0 0.0.0.3", platform="ios")
+            address.ipnet -> IPv4Network("10.0.0.0/30")
 
         :example:
-            self: Address("object-group NAME", platform="ios")
-            return: None
+            address = Address("object-group NAME", platform="ios")
+            address.ipnet is None
         """
         if not isinstance(self._wildcard, Wildcard):
             return None
@@ -160,12 +164,14 @@ class AddressBase(Base):
 
     @property
     def line(self) -> str:
-        """ACE address line: "A.B.C.D A.B.C.D", "A.B.C.D/LEN", "any", "host A.B.C.D",
-        "object-group NAME", "addrgroup NAME"
+        """ACE address line.
+
+        "A.B.C.D A.B.C.D", "A.B.C.D/LEN", "any", "host A.B.C.D",
+        "object-group NAME", "addrgroup NAME".
 
         :example:
-            self: Address("host 10.0.0.1", platform="nxos")
-            return: "host 10.0.0.0.1"
+            address = Address("host 10.0.0.1", platform="nxos")
+            address.line -> "host 10.0.0.0.1"
         """
         if self._type == "addrgroup":
             return f"{self._cmd_addrgroup()} {self._addrgroup}"
@@ -199,13 +205,14 @@ class AddressBase(Base):
 
     @property
     def platform(self) -> str:
-        """Platform: "ios" Cisco IOS, "nxos" Cisco Nexus NX-OS"""
+        """Platform: Platform: "asa", "ios", "nxos"."""
         return self._platform
 
     @platform.setter
     def platform(self, platform: str) -> None:  # pylint: disable=too-many-branches)
-        """Changes platform, normalizes self regarding the new platform
-        :param platform: Platform: "ios" (default), "nxos"
+        """Change platform, normalizes self regarding the new platform.
+
+        :param platform: Platform: "asa", "ios", "nxos". Default "ios".
         """
         line = self.line
         self._platform = h.init_platform(platform=platform)
@@ -241,12 +248,13 @@ class AddressBase(Base):
 
     @property
     def prefix(self) -> str:
-        """Address prefix, "" if type="addrgroup"
-        :return: Subnet with prefix length "A.B.C.D/LEN"
+        """Address prefix, "" if type="addrgroup".
+
+        :return: Subnet with prefix length "A.B.C.D/LEN".
 
         :example:
-            self: Address("10.0.0.0 0.0.0.3", platform="ios")
-            return: "10.0.0.0/32"
+            address = Address("10.0.0.0 0.0.0.3", platform="ios")
+            address.prefix -> "10.0.0.0/32"
         """
         if not isinstance(self.ipnet, IPv4Network):
             return ""
@@ -258,12 +266,13 @@ class AddressBase(Base):
 
     @property
     def subnet(self) -> str:
-        """Address subnet, "" if type="addrgroup"
-        :return: Subnet with mask "A.B.C.D A.B.C.D"
+        """Address subnet, "" if type="addrgroup".
+
+        :return: Subnet with mask "A.B.C.D A.B.C.D".
 
         :example:
-            self: Address("10.0.0.0 0.0.0.3", platform="ios")
-            return: "10.0.0.0 255.255.255.252"
+            address = Address("10.0.0.0 0.0.0.3", platform="ios")
+            address.subnet -> "10.0.0.0 255.255.255.252"
         """
         if not isinstance(self.ipnet, IPv4Network):
             return ""
@@ -271,12 +280,13 @@ class AddressBase(Base):
 
     @property
     def wildcard(self) -> str:
-        """Address wildcard, "" if type="addrgroup"
-        :return: Subnet with wildcard mask "A.B.C.D A.B.C.D"
+        """Address wildcard, "" if type="addrgroup".
+
+        :return: Subnet with wildcard mask "A.B.C.D A.B.C.D".
 
         :example:
-            self: Address("10.0.0.0/30", platform="nxos")
-            return: "10.0.0.0 0.0.0.3"
+            address = Address("10.0.0.0/30", platform="nxos")
+            address.wildcard -> "10.0.0.0 0.0.0.3"
         """
         if not isinstance(self._wildcard, Wildcard):
             return ""
@@ -284,38 +294,41 @@ class AddressBase(Base):
 
     @property
     def type(self) -> str:
-        """Address type: "addrgroup", "prefix", "subnet", "wildcard"
-        :return: Address type
+        """Address type: "addrgroup", "prefix", "subnet", "wildcard".
+
+        :return: Address type.
 
         :example:
-            self: Address("10.0.0.0 0.0.0.3", platform="ios")
-            return: "wildcard"
+            address = Address("10.0.0.0 0.0.0.3", platform="ios")
+            address.type == "wildcard"
         """
         return self._type
 
     # =========================== method =============================
 
     def data(self, uuid: bool = False) -> DAny:
-        """Converts *Address* object to *dict*
-        :param uuid: Returns self.uuid in data
+        """Convert Address object to the dictionary.
+
+        :param uuid: Return self.uuid in data.
         :type uuid: bool
 
-        :return: Address data
+        :return: Address data.
 
         :example:
             address = Address("10.0.0.0/24", platform="nxos")
-            address.data() ->
-                {"line": "10.0.0.0/24",
-                 "platform": "nxos",
-                 "note": "",
-                 "items": [],
-                 "max_ncwb": 16,
-                 "type": "prefix",
-                 "addrgroup": "",
-                 "ipnet": IPv4Network("10.0.0.0/24"),
-                 "prefix": "10.0.0.0/24",
-                 "subnet": "10.0.0.0 255.255.255.0",
-                 "wildcard": "10.0.0.0 0.0.0.255"}
+            address.data() -> {
+                "line": "10.0.0.0/24",
+                "platform": "nxos",
+                "note": "",
+                "items": [],
+                "max_ncwb": 16,
+                "type": "prefix",
+                "addrgroup": "",
+                "ipnet": IPv4Network("10.0.0.0/24"),
+                "prefix": "10.0.0.0/24",
+                "subnet": "10.0.0.0 255.255.255.0",
+                "wildcard": "10.0.0.0 0.0.0.255",
+            }
         """
         data = dict(
             # init
@@ -337,16 +350,16 @@ class AddressBase(Base):
         return data
 
     def ipnets(self) -> LIpNet:
-        """All IPv4Networks, including address group and wildcard items
+        """All IPv4Networks, including address group and wildcard items.
+
         :return: List of IPv4Network
 
         :example: contiguous wildcard
-            addr = Address("10.0.0.0 0.0.0.3")
-            addr.ipnets() -> [IPv4Network("10.0.0.0/30")]
+            address = Address("10.0.0.0 0.0.0.3")
+            address.ipnets() -> [IPv4Network("10.0.0.0/30")]
 
-        :example: non-contiguous wildcard
-            addr = Address("10.0.0.0 0.0.1.3")
-            addr.ipnets() -> [IPv4Network("10.0.0.0/30"), IPv4Network("10.0.1.0/30")]
+            address = Address("10.0.0.0 0.0.1.3")
+            address.ipnets() -> [IPv4Network("10.0.0.0/30"), IPv4Network("10.0.1.0/30")]
         """
         if isinstance(self.ipnet, IPv4Network):
             return [self.ipnet]
@@ -366,26 +379,27 @@ class AddressBase(Base):
         return ipnets
 
     def prefixes(self) -> LStr:
-        """All prefixes, including address group and wildcard items
-        :return: Subnets with prefix length
+        """All prefixes, including address group and wildcard items.
+
+        :return: Subnets with prefix length.
 
         :example:
-            addr = Address("object-group NAME")
-            addr.prefixes() -> ["10.0.1.0/30", "10.0.2.0/30"]
+            address = Address("object-group NAME")
+            address.prefixes() -> ["10.0.1.0/30", "10.0.2.0/30"]
 
-        :example:
-            addr = Address("10.0.0.0 0.0.0.3")
-            addr.prefixes() -> ["10.0.0.0/30", "10.0.1.0/30", "10.0.2.0/30", "10.0.3.0/30"]
+            address = Address("10.0.0.0 0.0.0.3")
+            address.prefixes() -> ["10.0.0.0/30", "10.0.1.0/30", "10.0.2.0/30", "10.0.3.0/30"]
         """
         ipnets: LIpNet = self.ipnets()
         return [str(o) for o in ipnets]
 
     def subnet_of(self, other) -> bool:
-        """Checks self *Address* (all ipnets) is subnet of `other` *Address* (any of ipnet)
-        :param other: Other *Address* (top)
+        """Check self Address (all ipnets) is subnet of `other` Address (any of ipnet).
+
+        :param other: Other Address (top).
         :type other: Address, AddressAg
 
-        :return: True - if *Address* is subnet of `other` *Address*
+        :return: True - if Address is subnet of `other` Address.
         """
         tops = other.ipnets()
         bottoms = self.ipnets()
@@ -393,31 +407,31 @@ class AddressBase(Base):
         return is_subnet
 
     def subnets(self) -> LStr:
-        """All subnets, including address group and wildcard items
-        :return: Subnets with mask
+        """All subnets, including address group and wildcard items.
+
+        :return: Subnets with mask.
 
         :example:
-            addr = Address("object-group NAME")
-            addr.subnets() -> ["10.0.1.0 255.255.255.252", "10.0.2.0 255.255.255.252"]
+            address = Address("object-group NAME")
+            address.subnets() -> ["10.0.1.0 255.255.255.252", "10.0.2.0 255.255.255.252"]
 
-        :example:
-            addr = Address("10.0.0.0 0.0.1.3")
-            addr.subnets() -> ["10.0.0.0 255.255.255.252", "10.0.1.0 255.255.255.252"]
+            address = Address("10.0.0.0 0.0.1.3")
+            address.subnets() -> ["10.0.0.0 255.255.255.252", "10.0.1.0 255.255.255.252"]
         """
         ipnets = self.ipnets()
         return [o.with_netmask.replace("/", " ") for o in ipnets]
 
     def wildcards(self) -> LStr:
-        """All wildcards, including address group and wildcard items
-        :return: LIst of wildcard *str*
+        """All wildcards, including address group and wildcard items.
+
+        :return: LIst of wildcard string.
 
         :example:
-            addr = Address("object-group NAME")
-            return: ["10.0.1.0 0.0.0.3", "10.0.2.0 0.0.0.3"]
+            address = Address("object-group NAME")
+            address.wildcards() -> ["10.0.1.0 0.0.0.3", "10.0.2.0 0.0.0.3"]
 
-        :example:
-            self: Address("10.0.0.0 0.0.1.3")
-            addr.wildcards() -> ["10.0.0.0 0.0.1.3"]
+            address = Address("10.0.0.0 0.0.1.3")
+            address.wildcards() -> ["10.0.0.0 0.0.1.3"]
         """
         if isinstance(self._wildcard, Wildcard):
             return [self._wildcard.line]
@@ -432,8 +446,9 @@ class AddressBase(Base):
     # =========================== helper =============================
 
     def _cmd_addrgroup(self) -> str:
-        """Address group line beginning
-        :return: nxos: "addrgroup", ios: "object-group"
+        """Address group line beginning.
+
+        :return: nxos: "addrgroup", ios: "object-group".
         """
         if self._platform == "nxos":
             return "addrgroup"
@@ -441,7 +456,7 @@ class AddressBase(Base):
 
     @staticmethod
     def _get_ipnet(obj) -> OIpNet:
-        """Gets IPv4Network from object"""
+        """Get IPv4Network from object."""
         if hasattr(obj, "ipnet"):
             if ipnet := getattr(obj, "ipnet"):
                 if isinstance(ipnet, IPv4Network):
@@ -450,7 +465,7 @@ class AddressBase(Base):
 
     @staticmethod
     def _get_items(obj) -> Optional[list]:
-        """Gets list of items from object"""
+        """Get list of items from object."""
         if hasattr(obj, "items"):
             if items := getattr(obj, "items"):
                 if isinstance(items, list):
@@ -459,31 +474,31 @@ class AddressBase(Base):
 
     @staticmethod
     def _is_address_any(line: str) -> bool:
-        """True if address is any"""
+        """Return True if address is any."""
         return line == "any"
 
     def _is_addrgroup(self, line: str) -> bool:
-        """True if address is group "object-group NAME" or "addrgroup NAME" """
+        """Return True if address is group "object-group NAME" or "addrgroup NAME"."""
         addrgroup_ = self._cmd_addrgroup()
         return line.startswith(addrgroup_)
 
     @staticmethod
     def _is_address_host(line: str) -> bool:
-        """True if address is "host A.B.C.D" """
+        """Return True if address is "host A.B.C.D"."""
         return line.startswith("host ")
 
     @staticmethod
     def _is_address_prefix(line: str) -> bool:
-        """True if address is prefix "A.B.C.D/LEN" """
+        """Return True if address is prefix "A.B.C.D/LEN"."""
         return bool(line) and line[0].isdigit() and line.find("/") != -1
 
     @staticmethod
     def _is_address_wildcard(line: str) -> bool:
-        """True if address is wildcard: "A.B.C.D A.B.C.D" """
+        """Return True if address is wildcard: "A.B.C.D A.B.C.D"."""
         return bool(line) and line[0].isdigit() and line.find(" ") != -1
 
     def _line_addrgroup(self, line):
-        """Sets attributes for address group: "object-group NAME" or "addrgroup NAME" """
+        """Set attributes for address group: "object-group NAME" or "addrgroup NAME"."""
         regex = f"^{self._cmd_addrgroup()} (.+)"
         addrgroup = h.findall1(regex, line)
         h.check_name(addrgroup)
@@ -492,14 +507,14 @@ class AddressBase(Base):
         self._wildcard = None
 
     def _line__any(self) -> None:
-        """ACE address line, any"""
+        """ACE address line, any."""
         self._type = "any"
         self._addrgroup = ""
         wildcard = "0.0.0.0 255.255.255.255"
         self._wildcard = Wildcard(wildcard, platform=self._platform, max_ncwb=self.max_ncwb)
 
     def _line__host(self, line: str) -> None:
-        """Sets attributes for host: host A.B.C.D"""
+        """Set attributes for host: host A.B.C.D."""
         ip_ = h.findall1(f"^host ({h.OCTETS})", line)
         self._type = "host"
         self._addrgroup = ""
@@ -507,7 +522,7 @@ class AddressBase(Base):
         self._wildcard = Wildcard(wildcard, platform=self._platform, max_ncwb=self.max_ncwb)
 
     def _line__prefix(self, line: str) -> None:
-        """Sets attributes for prefix: A.B.C.D/LEN"""
+        """Set attributes for prefix: A.B.C.D/LEN."""
         self._type = "prefix"
         self._addrgroup = ""
         ipnet = h.prefix_to_ipnet(line)
@@ -525,7 +540,7 @@ class AddressBase(Base):
             self._type = "wildcard"
 
     def _line__wildcard(self, line: str) -> None:
-        """Sets attributes for wildcard: A.B.C.D A.B.C.D"""
+        """Set attributes for wildcard: A.B.C.D A.B.C.D."""
         self._type = "wildcard"
         self._addrgroup = ""
         self._wildcard = Wildcard(line, platform=self._platform, max_ncwb=self.max_ncwb)
@@ -542,10 +557,11 @@ class AddressBase(Base):
 # ============================ functions =============================
 
 def collapse_(addresses: list) -> list:
-    """Collapses *LAddress*, *LAddressAg*
-    :param addresses: List of Address objects
-    :return: Collapsed Address objects
-    :raises TypeError: Passed addresses not match: Address.ipnet is not *IPv4Network*
+    """Collapse LAddress, LAddressAg.
+
+    :param addresses: List of Address objects.
+    :return: Collapsed Address objects.
+    :raises TypeError: Passed addresses not match: Address.ipnet is not IPv4Network.
     """
     if not addresses:
         return []

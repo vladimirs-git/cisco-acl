@@ -1,4 +1,4 @@
-"""Remark - comments in ACL"""
+"""Remark - comments in ACL."""
 from cisco_acl import Remark
 
 remark = Remark(line="10 remark text")

@@ -1,4 +1,4 @@
-"""Address - Source or destination address in ACE"""
+"""Address - Source or destination address in ACE."""
 from __future__ import annotations
 
 from functools import total_ordering
@@ -11,10 +11,11 @@ from cisco_acl.types_ import LStr, DAny, LDAny
 
 @total_ordering
 class Address(AddressBase):
-    """Address - Source or destination address in ACE"""
+    """Address - Source or destination address in ACE."""
 
     def __init__(self, line: str, **kwargs):
-        """Address
+        """Init Address.
+
         :param line: Address line
             Line pattern        Platform    Description
             ==================  ==========  ===========================
@@ -26,14 +27,14 @@ class Address(AddressBase):
             addrgroup NAME      nxos        Network object group
         :type line: str
 
-        :param platform: Platform: "ios" (default), "nxos"
+        :param platform: Platform: "asa", "ios", "nxos". Default "ios".
         :type platform: str
 
         Helpers
         :param note: Object description
         :type note: Any
 
-        :param items: List of *Address* objects for address group
+        :param items: List of Address objects for address group
         :type items: str, List[str], dict, List[dict], Address, List[Address]
 
         :param max_ncwb: Max count of non-contiguous wildcard bits
@@ -79,7 +80,7 @@ class Address(AddressBase):
 
     @property
     def items(self) -> LAddress:
-        """List of *Address* objects for address group (type="addrgroup")"""
+        """List of Address objects for address group (type="addrgroup")."""
         return self._items
 
     @items.setter
@@ -102,19 +103,20 @@ DDLAddress = Dict[str, DLAddress]
 # ============================ functions =============================
 
 def collapse(addresses: IAddress) -> LAddress:
-    """Collapses a list of *Address* objects and deletes subnets in the shadow
-        :param addresses: Iterable *Address* objects
-        :return: List of collapsed *Address* objects
+    """Collapse a list of Address objects and deletes subnets in the shadow.
 
-        :raises TypeError: Passed addresses not match conditions:
-            - Item of `addresses` is not *Address*
-            - Address is non-contiguous wildcard
+    :param addresses: Iterable Address objects.
+    :return: List of collapsed Address objects.
 
-        :example:
-            wildcard = Address("10.0.0.0 0.0.0.1")
-            host2 = Address("host 10.0.0.2")
-            host3 = Address("host 10.0.0.3")
-            collapse([wildcard, host2, host3]) -> [Address("10.0.0.0 0.0.0.3")]
+    :raises TypeError: Passed addresses not match conditions:
+        - Item of `addresses` is not Address
+        - Address is non-contiguous wildcard
+
+    :example:
+        wildcard = Address("10.0.0.0 0.0.0.1")
+        host2 = Address("host 10.0.0.2")
+        host3 = Address("host 10.0.0.3")
+        collapse([wildcard, host2, host3]) -> [Address("10.0.0.0 0.0.0.3")]
     """
     addresses = list(addresses)
     for address in addresses:

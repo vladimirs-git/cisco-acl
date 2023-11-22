@@ -1,12 +1,14 @@
-"""AddressAg - Address of AddrGroup. A "group-object" item of "object-group network " command"""
+"""AddressAg - Address of AddrGroup.
+
+A "group-object" item of "object-group network " command.
+"""
 from __future__ import annotations
 
 from functools import total_ordering
 from ipaddress import IPv4Network
 from typing import Iterable, List, Optional, Union
 
-from cisco_acl import address_base
-from cisco_acl import helpers as h
+from cisco_acl import address_base, parsers, helpers as h
 from cisco_acl.address_base import AddressBase
 from cisco_acl.types_ import StrInt, LStr, DAny, LDAny
 from cisco_acl.wildcard import Wildcard
@@ -14,10 +16,14 @@ from cisco_acl.wildcard import Wildcard
 
 @total_ordering
 class AddressAg(AddressBase):
-    """AddressAg - Address of AddrGroup. A "group-object" item of "object-group network " command"""
+    """AddressAg - Address of AddrGroup.
+
+    A "group-object" item of "object-group network " command.
+    """
 
     def __init__(self, line: str, **kwargs):
-        """Address of AddrGroup
+        """Init AddressAg.
+
         :param line: Address line
             Line pattern        Platform    Description
             ==================  ==========  ================================
@@ -29,51 +35,51 @@ class AddressAg(AddressBase):
             A.B.C.D/LEN         nxos        Network prefix and length
         :type line: str
 
-        :param platform: Platform: "ios" (default), "nxos"
+        :param platform: Platform: "asa", "ios", "nxos". Default "ios".
         :type platform: str
 
         Helpers
-        :param note: Object description
+        :param note: Object description.
         :type note: Any
 
-        :param items: List of *AddressAg*
+        :param items: List of AddressAg.
         :type items: str, List[str], dict, List[dict], AddressAg, List[AddressAg]
 
-        :param max_ncwb: Max count of non-contiguous wildcard bits
+        :param max_ncwb: Max count of non-contiguous wildcard bits.
         :type max_ncwb: int
 
         :example: wildcard
             address = AddressAg("10 10.0.0.0 0.0.0.3", platform="nxos")
             result:
-                address.line == "10 10.0.0.0 0.0.0.3"
-                address.addrgroup == ""
-                address.ipnet == IPv4Network("10.0.0.0/30")
-                address.prefix == "10.0.0.0/30"
-                address.sequence == 10
-                address.subnet == "10.0.0.0 255.255.255.252"
-                address.wildcard == "10.0.0.0 0.0.0.3"
+                address.line -> "10 10.0.0.0 0.0.0.3"
+                address.addrgroup -> ""
+                address.ipnet -> IPv4Network("10.0.0.0/30")
+                address.prefix -> "10.0.0.0/30"
+                address.sequence -> 10
+                address.subnet -> "10.0.0.0 255.255.255.252"
+                address.wildcard -> "10.0.0.0 0.0.0.3"
 
         :example: host
             address = AddressAg("host 10.0.0.1", platform="nxos")
             result:
-                address.line == "10.0.0.1/32"
-                address.addrgroup == ""
-                address.ipnet == IPv4Network("10.0.0.1/32")
-                address.prefix == "10.0.0.1/32"
-                address.sequence == 0
-                address.subnet == "10.0.0.1 255.255.255.255"
-                address.wildcard == "10.0.0.1 0.0.0.0"
+                address.line -> "10.0.0.1/32"
+                address.addrgroup -> ""
+                address.ipnet -> IPv4Network("10.0.0.1/32")
+                address.prefix -> "10.0.0.1/32"
+                address.sequence -> 0
+                address.subnet -> "10.0.0.1 255.255.255.255"
+                address.wildcard -> "10.0.0.1 0.0.0.0"
 
         :example: address group
             address = AddressAg("group-object NAME", platform="ios")
             result:
-                address.line == "group-object NAME"
-                address.addrgroup == "NAME"
-                address.ipnet == None
-                address.prefix == ""
-                address.sequence == 0
-                address.subnet == ""
-                address.wildcard == ""
+                address.line -> "group-object NAME"
+                address.addrgroup -> "NAME"
+                address.ipnet -> None
+                address.prefix -> ""
+                address.sequence -> 0
+                address.subnet -> ""
+                address.wildcard -> ""
         """
         self._items: LAddressAg = []
         self._sequence: int = 0
@@ -86,7 +92,7 @@ class AddressAg(AddressBase):
 
     @property
     def items(self) -> LAddressAg:
-        """List of *AddressAg* objects for address group (type="addrgroup")"""
+        """List of AddressAg objects for address group (type="addrgroup")."""
         return self._items
 
     @items.setter
@@ -96,7 +102,7 @@ class AddressAg(AddressBase):
 
     @property
     def line(self) -> str:
-        """Address group address line
+        """Address group address line.
 
         :example:
             self: AddressAg("10 10.0.0.0/24", platform="nxos")
@@ -110,7 +116,7 @@ class AddressAg(AddressBase):
     @line.setter
     def line(self, line: str) -> None:
         line = h.init_line(line)
-        line_d = h.parse_address(line)
+        line_d = parsers.parse_address(line)
         line = line_d["address"]
         self._sequence = h.init_int(line_d["sequence"])
 
@@ -135,13 +141,14 @@ class AddressAg(AddressBase):
 
     @property
     def platform(self) -> str:
-        """Platform: "ios" Cisco IOS, "nxos" Cisco Nexus NX-OS"""
+        """Platform: Platform: "asa", "ios", "nxos"."""
         return self._platform
 
     @platform.setter
     def platform(self, platform: str) -> None:
-        """Changes platform, normalizes self regarding the new platform
-        :param platform: Platform: "ios" (default), "nxos"
+        """Change platform, normalizes self regarding the new platform.
+
+        :param platform: Platform: "asa", "ios", "nxos". Default "ios".
         """
         line = self.line
         self._platform = h.init_platform(platform=platform)
@@ -175,10 +182,11 @@ class AddressAg(AddressBase):
 
     @property
     def sequence(self) -> int:
-        """Address group address sequence number
-        :return: Sequence number
+        """Address group address sequence number.
 
-        :example: Address with sequence number
+        :return: Sequence number.
+
+        :example: Address with sequence number.
             self: Address("111 10.0.0.0/24", platform="nxos")
             return: 111
 
@@ -195,11 +203,12 @@ class AddressAg(AddressBase):
     # =========================== method =============================
 
     def data(self, uuid: bool = False) -> DAny:
-        """Converts *AddressAg* object to *dict*
-        :param uuid: Returns self.uuid in data
+        """Convert AddressAg object to the dictionary.
+
+        :param uuid: Return self.uuid in data
         :type uuid: bool
 
-        :return: *AddressAg* data
+        :return: AddressAg data
         """
         data = super().data(uuid)
         data["sequence"] = self._sequence
@@ -208,17 +217,18 @@ class AddressAg(AddressBase):
     # =========================== helper =============================
 
     def _cmd_addrgroup(self) -> str:
-        """Address group line beginning
+        """Address group line beginning.
+
         :return: "group-object"
         """
         return "group-object"
 
     def _is_addrgroup(self, line: str) -> bool:
-        """True if address is group "group-object NAME" """
+        """Return True if address is group "group-object NAME"."""
         return line.startswith("group-object")
 
     def _line_addrgroup(self, line):
-        """Sets attributes for address group: "group-object NAME" """
+        """Set attributes for address group: "group-object NAME"."""
         if self._platform == "nxos":
             raise ValueError(f"invalid address {line=} for platform={self._platform!r}")
         addrgroup = h.findall1("^group-object (.+)", line)
@@ -228,7 +238,7 @@ class AddressAg(AddressBase):
         self._wildcard = None
 
     def _line__prefix(self, line: str) -> None:
-        """Sets attributes for prefix: A.B.C.D/LEN"""
+        """Set attributes for prefix: A.B.C.D/LEN."""
         self._addrgroup = ""
         ipnet = h.prefix_to_ipnet(line)
         wildcard = ipnet.with_hostmask.replace("/", " ")
@@ -246,7 +256,7 @@ class AddressAg(AddressBase):
             self._wildcard = Wildcard(wildcard, platform=self._platform, max_ncwb=self.max_ncwb)
 
     def _line__subnet(self, line: str) -> None:
-        """Sets attributes for subnet "A.B.C.D A.B.C.D" """
+        """Set attributes for subnet "A.B.C.D A.B.C.D"."""
         if line == "0.0.0.0 0.0.0.0" and self._platform == "ios":
             raise ValueError(f"{line!r} is denied for platform={self._platform!r}")
 
@@ -259,7 +269,7 @@ class AddressAg(AddressBase):
                 self._type = "host"
 
     def _line__wildcard(self, line: str) -> None:
-        """Sets attributes for wildcard: A.B.C.D A.B.C.D"""
+        """Set attributes for wildcard: A.B.C.D A.B.C.D."""
         super()._line__wildcard(line)
         if self._type == "any":
             if self._platform == "ios":
@@ -279,19 +289,20 @@ LUSAddressAg = List[Union[str, AddressAg]]
 # ============================ functions =============================
 
 def collapse(addresses: IAddressAg) -> LAddressAg:
-    """Collapses a list of *AddressAg* objects and deletes subnets in the shadow
-        :param addresses: Iterable *AddressAg* objects
-        :return: List of collapsed *AddressAg* objects
+    """Collapse a list of AddressAg objects and deletes subnets in the shadow.
 
-        :raises TypeError: Passed addresses not match conditions:
-            - Item of `addresses` is not *AddressAg*
-            - AddressAg is non-contiguous wildcard
+    :param addresses: Iterable AddressAg objects.
+    :return: List of collapsed AddressAg objects
 
-        :example:
-            wildcard = AddressAg("10.0.0.0 255.255.255.254")
-            host2 = AddressAg("host 10.0.0.2")
-            host3 = AddressAg("host 10.0.0.3")
-            collapse([wildcard, host2, host3]) -> [AddressAg("10.0.0.0 255.255.255.252")]
+    :raises TypeError: Passed addresses not match conditions:
+        - Item of `addresses` is not AddressAg
+        - AddressAg is non-contiguous wildcard
+
+    :example:
+        wildcard = AddressAg("10.0.0.0 255.255.255.254")
+        host2 = AddressAg("host 10.0.0.2")
+        host3 = AddressAg("host 10.0.0.3")
+        collapse([wildcard, host2, host3]) -> [AddressAg("10.0.0.0 255.255.255.252")]
     """
     addresses = list(addresses)
     for address in addresses:

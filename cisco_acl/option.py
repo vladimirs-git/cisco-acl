@@ -1,4 +1,4 @@
-"""ACE. Option"""
+"""ACE. Option."""
 from __future__ import annotations
 
 from functools import total_ordering
@@ -12,26 +12,24 @@ LOGS = ("log", "log-input")
 
 @total_ordering
 class Option(Base):
-    """ACE. Option"""
+    """ACE. Option."""
 
     def __init__(self, line: str = "", **kwargs):
-        """ACE. Option
-        :param line: Option line
-        :type line: str
+        """Init Option.
 
-        :param platform: Platform: "ios" (default), "nxos"
+        :param line: Option line.
+        :param platform: Platform: "asa", "ios", "nxos". Default "ios".
         :type platform: str
 
         Helpers
-        :param note: Object description
+        :param note: Object description.
         :type note: Any
 
         :example:
             option = Option("ack dscp ef log")
-            result:
-                option.line == "ack log"
-                option.flags == {"ack", "dscp", "ef"}
-                option.logs == {"log"}
+            option.line -> "ack log"
+            option.flags -> {"ack", "dscp", "ef"}
+            option.logs -> {"log"}
         """
         self._line: str = ""
         self._flags: LStr = []
@@ -42,14 +40,15 @@ class Option(Base):
     # ========================== redefined ===========================
 
     def __hash__(self) -> int:
+        """__hash__."""
         return tuple(self._flags).__hash__()
 
     def __eq__(self, other) -> bool:
-        """== equality"""
+        """== equality."""
         return self.__hash__() == other.__hash__()
 
     def __lt__(self, other) -> bool:
-        """< less than"""
+        """< less than."""
         if self.__class__ == other.__class__:
             return self._flags < self._flags
         return False
@@ -58,12 +57,12 @@ class Option(Base):
 
     @property
     def flags(self) -> LStr:
-        """ACE Option flags, items that related to packet forwarding"""
+        """ACE Option flags, items that related to packet forwarding."""
         return self._flags
 
     @property
     def line(self) -> str:
-        """ACE Option items as **str"""
+        """ACE Option items as string."""
         return self._line
 
     @line.setter
@@ -78,26 +77,28 @@ class Option(Base):
 
     @property
     def logs(self) -> LStr:
-        """ACE Option logs, items that not related to packet forwarding"""
+        """ACE Option logs, items that not related to packet forwarding."""
         return self._logs
 
     # =========================== method =============================
 
     def data(self, uuid: bool = False) -> DAny:
-        """Returns *Option* data as *dict*
-        :param uuid: Returns self.uuid in data
+        """Return Option data as dictionary.
+
+        :param uuid: Return self.uuid in data.
         :type uuid: bool
 
-        :return: Option data
+        :return: Option data.
 
         :example:
         option = Option("ack log")
-            option.data() ->
-                {"line": "ack log",
-                 "platform": "ios",
-                 "note": "",
-                 "flags": ["ack"],
-                 "logs": ["log"]}
+        option.data() -> {
+            "line": "ack log",
+            "platform": "ios",
+            "note": "",
+            "flags": ["ack"],
+            "logs": ["log"],
+        }
         """
         data = dict(
             # init

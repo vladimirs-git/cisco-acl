@@ -1,4 +1,4 @@
-"""CISCO config parser"""
+"""CISCO config parser."""
 
 import re
 from abc import ABC
@@ -9,29 +9,31 @@ from cisco_acl.types_ import DAny, DLStr, DStr, LDAny, LStr, OLStr
 
 
 class ConfigParser(ABC):
-    """CISCO config parser"""
+    """CISCO config parser."""
 
     def __init__(self, config: str = "", **kwargs):
-        """CISCO config parser
-        :param config: Cisco config, "show running-config" output
+        """Init ConfigParser.
+
+        :param config: Cisco config, "show running-config" output.
         :type config: str
 
-        :param platform: Platform: "ios" (default), "nxos"
+        :param platform: Platform: "asa", "ios", "nxos". Default "ios".
         :type platform: str
 
-        :param version: Software version (not implemented, planned for compatability)
+        :param version: Software version (not implemented, planned for compatability).
         """
         self.config: str = str(config)  # raw config
         self.platform: str = h.init_platform(**kwargs)
         self.version: str = str(kwargs.get("version") or "")
 
-        self.lines: LStr = []  # config in *list* format
-        self.dic: DLStr = {}  # config in *dict* format, commands as *LStr*
-        self.mdic: DAny = {}  # config in multidimensional *dict* format, commands as *LStr*
-        self.dic_text: DStr = {}  # config in *dict* format, commands as *str*
-        self.mdic_text: DAny = {}  # config in multidimensional *dict* format, commands as *str*
+        self.lines: LStr = []  # config in list format
+        self.dic: DLStr = {}  # config in dict format, commands as LStr
+        self.mdic: DAny = {}  # config in multidimensional dict format, commands as LStr
+        self.dic_text: DStr = {}  # config in dict format, commands as string
+        self.mdic_text: DAny = {}  # config in multidimensional dict format, commands as string
 
     def __repr__(self):
+        """__repr__."""
         name = self.__class__.__name__
         platform = self.platform
         version = self.version
@@ -40,8 +42,9 @@ class ConfigParser(ABC):
     # =========================== method =============================
 
     def addgrs(self) -> LDAny:
-        """Parses address groups from config
-        :return: data ready for AddrGroup
+        """Parse address groups from config.
+
+        :return: data ready for AddrGroup.
 
         :example:
             config: "object-group ip address NAME
@@ -64,15 +67,15 @@ class ConfigParser(ABC):
 
     # noinspection PyShadowingBuiltins,PyIncorrectDocstring
     def acls(self, type: str = "", **kwargs) -> LDAny:  # pylint: disable=redefined-builtin
-        """Parses ACLs from config
+        """Parse ACLs from config.
 
-        :param type: ACL type: "extended", "standard", "any" (default "any")
+        :param type: ACL type: "extended", "standard", "any" (default "any").
         :type type: str
 
-        :param names: Parse only ACLs with specified names
+        :param names: Parse only ACLs with specified names.
         :type names: List[str]
 
-        :return: Parsed ACLs
+        :return: Parsed ACLs.
         :rtype: List[dict]
 
         :example:
@@ -118,13 +121,13 @@ class ConfigParser(ABC):
         return acls
 
     def pattern__cfg_acl(self) -> str:
-        """Pattern for extended ACL, by platform"""
+        """Pattern for extended ACL, by platform."""
         if self.platform == "nxos":
             return "ip access-list "
         return "ip access-list extended "
 
     def pattern__object_group(self) -> str:
-        """Pattern for object-group, by platform"""
+        """Pattern for object-group, by platform."""
         if self.platform == "nxos":
             return "object-group network "
         return "object-group ip address "
@@ -132,10 +135,11 @@ class ConfigParser(ABC):
     # ========================= parse_config =========================
 
     def parse_config(self) -> None:
-        """Parses config rows to specific format: list, dict, multidimensional dict
+        """Parse config rows to specific format: list, dict, multidimensional dict.
+
         # make rows, main_rows, dic, mdic, etc.
-        self.dic_text - config in *dict* format, commands as *str*
-        self.mdic_text - config in multidimensional *dict* format, commands as *str*
+        self.dic_text - config in dict format, commands as string,
+        self.mdic_text - config in multidimensional dict format, commands as string.
         """
         config_l = [s.rstrip() for s in self.config.splitlines()]
         config_l = [s for s in config_l if s and not s.startswith("!")]
@@ -149,17 +153,17 @@ class ConfigParser(ABC):
 
     @staticmethod
     def _parse_lines(config_l: LStr) -> LStr:
-        """Returns command lines without indentation"""
+        """Return command lines without indentation."""
         lines = [s.strip() for s in config_l]
         lines = [s for s in lines if s]
         return lines
 
     @staticmethod
     def _join_mdic_text(mdic: DAny) -> DAny:
-        """Joins self.mdic[key]["_config_"] from List[str] to str"""
+        """Join self.mdic[key]["_config_"] from List[str] to str."""
 
         def join_config(mdic_text_: DAny) -> None:
-            """join self.mdic[key]["_config_"] from List[str] to str"""
+            """Join self.mdic[key]["_config_"] from List[str] to str."""
             for key, values in mdic_text_.items():
                 if key == "_config_" and isinstance(values, list):
                     mdic_text_[key] = "\n".join(values)
@@ -172,7 +176,8 @@ class ConfigParser(ABC):
 
     @staticmethod
     def _parse_dic(config_l: LStr) -> DLStr:
-        """Config in dictionary format (indented strings in dictionary)
+        """Config in dictionary format (indented strings in dictionary).
+
         :example:
             data: {"interface Ethernet1/1": ["ip address 1.1.1.1/24",
                                              "no shutdown",
@@ -195,7 +200,8 @@ class ConfigParser(ABC):
         return data
 
     def _parse_mdic(self, config_l: LStr) -> DAny:
-        """Parses config in multidimensional dict format
+        """Parse config in multidimensional dict format.
+
         :example:
             data: {"interface Ethernet1/1": {"_config_": ["ip address 1.1.1.1/24",
                                                            "no shutdown"],
@@ -253,8 +259,9 @@ class ConfigParser(ABC):
     # =========================== helper =============================
 
     def _add_acl_interfaces(self, acls: LDAny) -> None:
-        """Adds input/output interfaces to parsed `acls`
-        :result: Side effect `acls`
+        """Add input/output interfaces to parsed `acls`.
+
+        :result: Side effect `acls`.
         """
         intf_acls_all: LDAny = self._acls_on_interfaces()
         for acl_d in acls:
@@ -269,7 +276,8 @@ class ConfigParser(ABC):
             acl_d["output"] = sorted(set(acl_d["output"]))
 
     def _acls_on_interfaces(self) -> LDAny:
-        """Returns data of ACLs applied to the interfaces
+        """Return data of ACLs applied to the interfaces.
+
         :example:
             self.config: "interface GigabitEthernet1/1/1
                             ip address 10.0.2.1 255.255.255.0
@@ -299,8 +307,10 @@ class ConfigParser(ABC):
         return access_groups
 
     def _get_indented_dic(self, i, config_l) -> tuple:
-        """Config in multidimensional dict format,
-        multi indented strings as dictionary in dictionary"""
+        """Config in multidimensional dict format.
+
+        Multi indented strings as dictionary in dictionary.
+        """
         # init
         key = config_l[i].strip()
         i += 1
@@ -348,7 +358,8 @@ class ConfigParser(ABC):
         return i, indent_next, {key: data}
 
     def _interfaces_w_acl(self) -> DStr:
-        """Returns dict of interfaces with access-group, skips interfaces without ACLs
+        r"""Return dict of interfaces with access-group, skip interfaces without ACLs.
+
         :example:
             self.config: "interface GigabitEthernet1/1/1
                             ip address 10.0.1.1 255.255.255.0
