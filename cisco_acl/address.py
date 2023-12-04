@@ -102,6 +102,7 @@ DDLAddress = Dict[str, DLAddress]
 
 # ============================ functions =============================
 
+
 def collapse(addresses: IAddress) -> LAddress:
     """Collapse a list of Address objects and deletes subnets in the shadow.
 

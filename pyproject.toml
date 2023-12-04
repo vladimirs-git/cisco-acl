@@ -1,42 +1,79 @@
-[project]
+[tool.poetry]
 name = "cisco_acl"
-version = "3.1.0"
-authors = [{ name="Vladimir Prusakov", email="vladimir.prusakovs@gmail.com" }]
+version = "3.2.0"
 description = "Python package to parse and manage Cisco ACL (Access Control List)"
+authors = ["Vladimirs Prusakovs <vladimir.prusakovs@gmail.com>"]
 readme = "README.rst"
-license = { text="MIT" }
-requires-python = ">=3.8"
-dependencies = ["netports ~= 0.6"]
-keywords = ["cisco", "nexus", "acl", "ios", "nx-os", "networking", "telecommunication"]
+license = "Apache-2.0"
+homepage = "https://github.com/vladimirs-git/cisco-acl"
+repository = "https://github.com/vladimirs-git/cisco-acl"
+keywords = ["cisco", "acl", "ios", "nexus", "nx-os"]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
-    "Intended Audience :: System Administrators",
-    "Intended Audience :: Telecommunications Industry",
-    # "Operating System :: Cisco IOS",
-    # "Operating System :: Cisco NX-OS",
     "Topic :: System :: Networking",
-    "License :: OSI Approved :: MIT License",
+    "License :: OSI Approved :: Apache Software License",
     "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
     "Natural Language :: English",
 ]
-[project.urls]
-"Homepage" = "https://github.com/vladimirs-git/cisco-acl"
-"Repository" = "https://github.com/vladimirs-git/cisco-acl"
-"Bug Tracker" = "https://github.com/vladimirs-git/cisco-acl/issues"
-"Download URL" = "https://github.com/vladimirs-git/cisco-acl/archive/refs/tags/3.1.0.tar.gz"
-[tool.setuptools.packages.find]
-include = ["cisco_acl"]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+netports = "^0.11.1"
+
+[tool.poetry.group.dev.dependencies]
+dictdiffer = "^0.9.0"
+mypy = "^1.6.1"
+pygments = "^2.16.1"
+pylint = "^3.0.1"
+pytest = "^7.4.2"
+restructuredtext-lint = "^1.4.0"
+ruff = "^0.1.6"
+twine = "^4.0.2"
+typing-extensions = "^4.8.0"
+vhelpers = "^0.1.14"
+
 [tool.setuptools.package-data]
 cisco_acl = ["py.typed"]
-[project.optional-dependencies]
-dev = [
-    "dictdiffer ~= 0.9",
-    "mypy < 1",
-    "pylint == 2.13.9",
-    "pytest ~= 7.2",
-    "restructuredtext-lint ~= 1.4",
-    "twine ~= 4.0",
+
+[tool.poetry.extras]
+test = ["pytest"]
+
+[tool.poetry.urls]
+"Bug Tracker" = "https://github.com/vladimirs-git/cisco-acl/issues"
+"Download URL" = "https://github.com/vladimirs-git/cisco-acl/archive/refs/tags/3.2.0.tar.gz"
+
+[tool.mypy]
+python_version = "3.8"
+
+[tool.ruff]
+exclude = [
+    ".git",
+    ".idea",
+    ".mypy_cache",
+    ".pytype",
+    ".ruff_cache",
+    ".venv",
+    "_notes",
+    "dist",
+    "examples",
+    "temp",
+    "tmp",
+    "venv",
 ]
+line-length = 100
+indent-width = 4
+target-version = "py38"
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false  # arguments on separate lines
+line-ending = "auto"
+
+[tool.ruff.lint.pydocstyle]
+convention = "pep257"  # docstring style
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

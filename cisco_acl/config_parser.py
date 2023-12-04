@@ -109,12 +109,14 @@ class ConfigParser(ABC):
                 continue
             if names is None or name in names:
                 acl_type = h.init_type(type=acl_type, platform=self.platform)
-                acl_d: DAny = dict(line=f"{acl_key}\n{acl_cfg}",
-                                   platform=self.platform,
-                                   name=name,
-                                   type=acl_type,
-                                   input=[],
-                                   output=[])
+                acl_d: DAny = dict(
+                    line=f"{acl_key}\n{acl_cfg}",
+                    platform=self.platform,
+                    name=name,
+                    type=acl_type,
+                    input=[],
+                    output=[],
+                )
                 if not type or type == acl_type:
                     acls.append(acl_d)
         self._add_acl_interfaces(acls)

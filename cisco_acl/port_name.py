@@ -293,6 +293,7 @@ class PortName:
 
 # ============================ functions =============================
 
+
 def all_known_names() -> LStr:
     """Return all known names, that can be used in Cisco ACL (platform does not matter)."""
     items = set()

@@ -25,6 +25,7 @@ OCTETS = r"\d+\.\d+\.\d+\.\d+"
 
 # =============================== str ================================
 
+
 def acl_help_to_name_port(output: str) -> DInt:
     """Transform `output` of ACL help to the dictionary where key is name, value is port.
 
@@ -331,6 +332,7 @@ def replace_spaces(line: str) -> str:
 
 # =============================== int ================================
 
+
 def init_int(line: StrInt) -> int:
     """Convert string to positive int."""
     if not isinstance(line, (int, str)):
@@ -347,6 +349,7 @@ def init_int(line: StrInt) -> int:
 
 
 # =============================== list ===============================
+
 
 def convert_to_lstr(items: Any) -> LStr:
     """Convert items to List[str].
@@ -367,6 +370,7 @@ def convert_to_lstr(items: Any) -> LStr:
 
 
 # ============================== ipnet ===============================
+
 
 def prefix_to_ipnet(prefix: str) -> IPv4Network:
     """Convert prefix to ipnet, logging WARNING if invalid prefixlen.
@@ -404,6 +408,7 @@ def subnet_of(tops: LIpNet, bottoms: LIpNet) -> bool:
 
 
 # ============================== ports ===============================
+
 
 class PortRange(NamedTuple):
     """TCP/UDP ports range."""
@@ -481,6 +486,7 @@ def _port_range_min_max(ranges) -> List[PortRange]:
 
 
 # ============================= wrapper ==============================
+
 
 def check_start_step_sequence(method):
     """Wrap and check sequence numbers."""

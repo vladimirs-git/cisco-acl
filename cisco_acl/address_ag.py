@@ -288,6 +288,7 @@ LUSAddressAg = List[Union[str, AddressAg]]
 
 # ============================ functions =============================
 
+
 def collapse(addresses: IAddressAg) -> LAddressAg:
     """Collapse a list of AddressAg objects and deletes subnets in the shadow.
 

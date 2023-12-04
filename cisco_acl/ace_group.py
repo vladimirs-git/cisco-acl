@@ -406,12 +406,14 @@ class AceGroup(AceBase, Group):
         action = parsers.parse_action(line)["action"]
         if action in ["remark"]:
             return Remark(line, platform=self._platform, type=self._type)
-        ace_o = Ace(line=line,
-                    platform=self._platform,
-                    type=self._type,
-                    protocol_nr=self._protocol_nr,
-                    port_nr=self._port_nr,
-                    max_ncwb=self.max_ncwb)
+        ace_o = Ace(
+            line=line,
+            platform=self._platform,
+            type=self._type,
+            protocol_nr=self._protocol_nr,
+            port_nr=self._port_nr,
+            max_ncwb=self.max_ncwb,
+        )
         return ace_o
 
     def _line_to_oace(self, line: str, warning: bool = False) -> OUAce:

@@ -1,4 +1,4 @@
-"""cisco-acl."""
+"""cisco_acl."""
 
 from cisco_acl.ace import Ace
 from cisco_acl.ace_group import AceGroup

@@ -196,18 +196,24 @@ class Ace(AceBase):
 
         self._sequence = h.init_int(ace_d["sequence"])
         self._action = h.init_ace_action(ace_d["action"])
-        self._srcaddr = Address(ace_d["srcaddr"],
-                                platform=self._platform,
-                                items=self._srcaddr.items,
-                                max_ncwb=self.max_ncwb)
-        self._dstaddr = Address(ace_d["dstaddr"],
-                                platform=self._platform,
-                                items=self._dstaddr.items,
-                                max_ncwb=self.max_ncwb)
-        protocol_o = Protocol(line=ace_d["protocol"],
-                              platform=self._platform,
-                              port_nr=self._port_nr,
-                              protocol_nr=self._protocol_nr)
+        self._srcaddr = Address(
+            ace_d["srcaddr"],
+            platform=self._platform,
+            items=self._srcaddr.items,
+            max_ncwb=self.max_ncwb,
+        )
+        self._dstaddr = Address(
+            ace_d["dstaddr"],
+            platform=self._platform,
+            items=self._dstaddr.items,
+            max_ncwb=self.max_ncwb,
+        )
+        protocol_o = Protocol(
+            line=ace_d["protocol"],
+            platform=self._platform,
+            port_nr=self._port_nr,
+            protocol_nr=self._protocol_nr,
+        )
         kwargs_port = dict(platform=self._platform, protocol=protocol_o.name, port_nr=self._port_nr)
         self._srcport = Port(ace_d["srcport"], **kwargs_port)
         self._dstport = Port(ace_d["dstport"], **kwargs_port)

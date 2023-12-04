@@ -556,6 +556,7 @@ class AddressBase(Base):
 
 # ============================ functions =============================
 
+
 def collapse_(addresses: list) -> list:
     """Collapse LAddress, LAddressAg.
 

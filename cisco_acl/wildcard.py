@@ -11,7 +11,7 @@ from cisco_acl.base import Base
 from cisco_acl.types_ import LIpNet, LInt, DAny, OIpNet, T2IpAddr, TLintInt
 
 PREFIX_LEN = 32  # IPv4 prefix length
-ALL_ONES = (2 ** PREFIX_LEN) - 1
+ALL_ONES = (2**PREFIX_LEN) - 1
 DEF_NCWB = 16  # Default count of non-contiguous wildcard bits
 MAX_NCWB = 30  # Maximum allowed count of non-contiguous wildcard bits
 
@@ -293,6 +293,7 @@ class Wildcard(Base):
 
 # ============================ functions =============================
 
+
 # noinspection PyIncorrectDocstring
 def init_max_ncwb(**kwargs) -> int:
     """Init max non-contiguous wildcard bits count.
@@ -362,4 +363,4 @@ def sum_octets(mask: str) -> int:
     octets: LInt = [int(s) for s in mask.split(".")]
     if len(octets) != 4:
         raise ValueError(f"invalid {mask=}, expected 4 octets")
-    return sum([octets[0] * 256 ** 3, octets[1] * 256 ** 2, octets[2] * 256, octets[3]])
+    return sum([octets[0] * 256**3, octets[1] * 256**2, octets[2] * 256, octets[3]])

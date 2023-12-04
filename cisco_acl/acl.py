@@ -394,13 +394,15 @@ class Acl(AceGroup):
         grouped_items: LUAceg = []
         for group_name, aces_items in grouped_items_d.items():
             if aces_items:
-                aceg_o = AceGroup(platform=self._platform,
-                                  type=self._type,
-                                  group_by=group_by,
-                                  protocol_nr=self._protocol_nr,
-                                  port_nr=self._port_nr,
-                                  name=group_name,
-                                  items=aces_items)
+                aceg_o = AceGroup(
+                    platform=self._platform,
+                    type=self._type,
+                    group_by=group_by,
+                    protocol_nr=self._protocol_nr,
+                    port_nr=self._port_nr,
+                    name=group_name,
+                    items=aces_items,
+                )
                 grouped_items.append(aceg_o)
         self._items = grouped_items
         self._group_by = group_by
@@ -495,7 +497,7 @@ class Acl(AceGroup):
         shading_d: DLStr = {}  # result
         shadow: SStr = set()
         for idx, ace_top in enumerate(aces):
-            aces_bottom = aces[idx + 1:]
+            aces_bottom = aces[idx + 1 :]
             for ace_bottom in aces_bottom:
                 if ace_bottom.shadow_of(other=ace_top, skip=skip):
                     if ace_bottom.line not in shadow:

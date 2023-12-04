@@ -290,6 +290,7 @@ def subnet_of(top: UAddress, bottom: UAddress) -> bool:
 
 # ============================= helper ===============================
 
+
 def _create_acls_w_acegs(parser: ConfigParser, group_by: str) -> LAcl:
     """Create Acls with AceGroups. Groups ACEs to AceGroup by `group_by` in startswith remarks.
 
@@ -407,10 +408,12 @@ def _range__port(sdst: str, **kwargs) -> LAce:
         if operator not in expected:
             raise ValueError(f"invalid {operator=}, {expected=}")
 
-        port_o = Port(line=f"{operator} {port}",
-                      platform=ace_o.platform,
-                      protocol=ace_o.protocol.name,
-                      port_nr=ace_o.port_nr)
+        port_o = Port(
+            line=f"{operator} {port}",
+            platform=ace_o.platform,
+            protocol=ace_o.protocol.name,
+            port_nr=ace_o.port_nr,
+        )
         setattr(ace_o, f"_{sdst}port", port_o)
         aces_.append(ace_o)
     return aces_
