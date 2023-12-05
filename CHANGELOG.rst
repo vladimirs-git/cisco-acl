@@ -40,7 +40,7 @@ CHANGELOG
 * [new] kwargs for cisco_acl.acls() cisco_acl.aces() cisco_acl.addrgroups()
 * [change] Address "nxos" + "0.0.0.0/0" = "any"
 * [change] Address "nxos" + "0.0.0.0/32" = "host 0.0.0.0"
-* [fix] AceGroup._line_to_oace(), known_skip = ["statistics ", "description ", "ignore "]
+* [fix] AceGroup._line_to_oace(), known_skip = ["statistics ", "description ", "ignore"]
 
 
 2.1.0 (2022-10-25)
