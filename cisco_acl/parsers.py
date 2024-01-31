@@ -87,6 +87,7 @@ def parse_ace_standard(line: str) -> DStr:
         f"(?:object-group|addrgroup) {text}",  # ios: "object-group NAME", nxos: "addrgroup NAME"
         h.OCTETS + r"/\d+",  # "A.B.C.D/LEN"
         f"{h.OCTETS} {h.OCTETS}",  # "A.B.C.D A.B.C.D"
+        h.OCTETS,  # host
     ])
 
     re_sequence = r"(\d+)?"

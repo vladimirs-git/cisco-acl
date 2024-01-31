@@ -13,6 +13,7 @@ from tests.helpers_test import (
     GROUPOBJ,
     GROUPOBJ_D,
     HOST,
+    HOST_,
     HOST_0_D,
     HOST_D,
     Helpers,
@@ -167,6 +168,7 @@ class Test(Helpers):
             (dict(platform="ios", line=WILD00), HOST_0_D, "ios", HOST_0_D),
             (dict(platform="ios", line=WILD_NC252), SUBNET30_D, "ios", SUBNET30_D),
             (dict(platform="ios", line=HOST), HOST_D, "ios", HOST_D),
+            (dict(platform="ios", line=HOST_), HOST_D, "ios", HOST_D),
             (dict(platform="ios", line=GROUPOBJ), GROUPOBJ_D, "ios", GROUPOBJ_D),
             # ios to nxos
             (dict(platform="ios", line=PREFIX30), SUBNET30_D, "nxos", PREFIX30_D),
@@ -176,6 +178,7 @@ class Test(Helpers):
             (dict(platform="ios", line=WILD00), HOST_0_D, "nxos", HOST_0_D),
             (dict(platform="ios", line=WILD_NC252), SUBNET30_D, "nxos", PREFIX30_D),
             (dict(platform="ios", line=HOST), HOST_D, "nxos", HOST_D),
+            (dict(platform="ios", line=HOST_), HOST_D, "nxos", HOST_D),
             (dict(platform="ios", line=GROUPOBJ), GROUPOBJ_D, "nxos", {}),
             # nxos to nxos
             (dict(platform="nxos", line=PREFIX00), PREFIX00_D, "nxos", PREFIX00_D),

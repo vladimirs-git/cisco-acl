@@ -13,6 +13,7 @@ from tests.helpers_test import (
     CNX_ADDGR,
     CNX_ADDGR_D,
     HOST,
+    HOST_,
     HOST_0_D,
     HOST_D,
     Helpers,
@@ -107,6 +108,7 @@ class Test(Helpers):
             ("ios", WILD_NC252, NetmaskValueError),
             ("ios", ANY, ANY_D),
             ("ios", HOST, HOST_D),
+            ("ios", HOST_, HOST_D),
             ("ios", IOS_ADDGR, IOS_ADDGR_D),
             # nxos
             ("nxos", PREFIX00, ANY_D),
@@ -162,7 +164,6 @@ class Test(Helpers):
     def test_invalid__line(self):
         """Address.line"""
         for kwargs, error in [
-            (dict(line="10.0.0.0", platform="nxos"), ValueError),
             (dict(line="10.0.0.0/24/24", platform="nxos"), ValueError),
             (dict(line="10.0.0.0/33", platform="nxos"), ValueError),
             (dict(line=IOS_ADDGR, platform="nxos"), ValueError),
@@ -192,6 +193,7 @@ class Test(Helpers):
             (dict(platform="ios", line=WILD_NC252), WILD_NC252_D, "ios", WILD_NC252_D),
             (dict(platform="ios", line=ANY), ANY_D, "ios", ANY_D),
             (dict(platform="ios", line=HOST), HOST_D, "ios", HOST_D),
+            (dict(platform="ios", line=HOST_), HOST_D, "ios", HOST_D),
             (dict(platform="ios", line=IOS_ADDGR), IOS_ADDGR_D, "ios", IOS_ADDGR_D),
             # ios to nxos
             (dict(platform="ios", line=PREFIX00), WILD_ANY_D, "nxos", ANY_D),
@@ -207,6 +209,7 @@ class Test(Helpers):
             (dict(platform="ios", line=WILD_NC252), WILD_NC252_D, "nxos", WILD_NC252_D),
             (dict(platform="ios", line=ANY), ANY_D, "nxos", ANY_D),
             (dict(platform="ios", line=HOST), HOST_D, "nxos", HOST_D),
+            (dict(platform="ios", line=HOST_), HOST_D, "nxos", HOST_D),
             (dict(platform="ios", line=IOS_ADDGR), IOS_ADDGR_D, "nxos", CNX_ADDGR_D),
             # nxos to nxos
             (dict(platform="nxos", line=PREFIX00), ANY_D, "nxos", ANY_D),

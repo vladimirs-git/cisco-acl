@@ -54,6 +54,7 @@ GROUPOBJ = "group-object NAME"
 
 ANY = "any"
 HOST = "host 10.0.0.1"
+HOST_ = "10.0.0.1"
 PREFIX00 = "0.0.0.0/0"
 PREFIX00_32 = "0.0.0.0/32"
 PREFIX24 = "10.0.0.0/24"

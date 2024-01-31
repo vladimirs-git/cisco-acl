@@ -344,6 +344,9 @@ class Test(Helpers):
         host_std = f"{ACL_NAME_IOS_STD}\n" \
                    f"  {REMARK}\n" \
                    f"  permit host 10.0.0.1"
+        host_std_ = f"{ACL_NAME_IOS_STD}\n" \
+                    f"  {REMARK}\n" \
+                    f"  permit 10.0.0.1"
         host_ext_ = f"{ACL_NAME_IOS}\n" \
                     f"  {REMARK}\n  permit ip host 10.0.0.1 any"
         wild_ext = f"{ACL_NAME_IOS}\n" \
@@ -381,10 +384,12 @@ class Test(Helpers):
             ("extended", "standard", aceg_ext, aceg_std),
             # standard to standard
             ("standard", "standard", host_std, host_std),
+            ("standard", "standard", host_std_, host_std),
             ("standard", "standard", wild_std, wild_std),
             ("standard", "standard", aceg_std, aceg_std),
             # standard to extended
             ("standard", "extended", host_std, host_ext_),
+            ("standard", "extended", host_std_, host_ext_),
             ("standard", "extended", wild_std, wild_ext_),
             ("standard", "extended", aceg_std, aceg_ext_),
         ]:

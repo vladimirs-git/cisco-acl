@@ -1,5 +1,5 @@
 """AddressBase, parent of: Address, AddressAg."""
-
+import re
 from abc import abstractmethod
 from functools import total_ordering
 from ipaddress import IPv4Network
@@ -485,17 +485,17 @@ class AddressBase(Base):
     @staticmethod
     def _is_address_host(line: str) -> bool:
         """Return True if address is "host A.B.C.D"."""
-        return line.startswith("host ")
+        return line.startswith("host ") or bool(re.match(f"{h.OCTETS}$", line))
 
     @staticmethod
     def _is_address_prefix(line: str) -> bool:
         """Return True if address is prefix "A.B.C.D/LEN"."""
-        return bool(line) and line[0].isdigit() and line.find("/") != -1
+        return bool(line) and line[0].isdigit() and line.find("/") > -1
 
     @staticmethod
     def _is_address_wildcard(line: str) -> bool:
         """Return True if address is wildcard: "A.B.C.D A.B.C.D"."""
-        return bool(line) and line[0].isdigit() and line.find(" ") != -1
+        return bool(line) and line[0].isdigit() and line.find(" ") > -1
 
     def _line_addrgroup(self, line):
         """Set attributes for address group: "object-group NAME" or "addrgroup NAME"."""
@@ -515,7 +515,7 @@ class AddressBase(Base):
 
     def _line__host(self, line: str) -> None:
         """Set attributes for host: host A.B.C.D."""
-        ip_ = h.findall1(f"^host ({h.OCTETS})", line)
+        ip_ = h.findall1(f"({h.OCTETS})", line)
         self._type = "host"
         self._addrgroup = ""
         wildcard = f"{ip_} 0.0.0.0"
