@@ -8,6 +8,7 @@ from tests.helpers_test import (
     CNX_ADDGR,
     GROUPOBJ,
     HOST,
+    HOST_,
     Helpers,
     IOS_ADDGR,
     PREFIX00,
@@ -34,6 +35,7 @@ class Test(Helpers):
             (WILD30, ("", WILD30)),
             (PREFIX30, ("", WILD30)),
             (HOST, ("", "10.0.0.1 0.0.0.0")),
+            (HOST_, ("", "10.0.0.1 0.0.0.0")),
             (ANY, ("", "0.0.0.0 255.255.255.255")),
             (IOS_ADDGR, ("NAME", "")),
         ]:
@@ -174,12 +176,13 @@ class Test(Helpers):
             self.assertEqual(result, req, msg=f"{items=}")
 
     def test_valid__repr__(self):
-        """Port.__repr__()"""
+        """AddressBase.__repr__()"""
         for obj, req in [
             # Address
             (Address(line=HOST, platform="ios", note=""), f"Address(\"{HOST}\")"),
             (Address(line=HOST, platform="nxos", note="a"),
              f"Address(\"{HOST}\", platform=\"nxos\", note=\"a\")"),
+            (Address(line=HOST_, platform="ios", note=""), f"Address(\"{HOST}\")"),
             (Address(line=CNX_ADDGR, platform="nxos", items=HOST),
              f"Address(\"{CNX_ADDGR}\", platform=\"nxos\", "
              f"items=[Address(\"{HOST}\", platform=\"nxos\")])"),
@@ -193,6 +196,20 @@ class Test(Helpers):
             result = obj.__repr__()
             result = self._quotation(result)
             self.assertEqual(result, req, msg=f"{result=}")
+
+    def test_valid__is_address_host(self):
+        """AddressBase._is_address_host()"""
+        for line, req in [
+            (ANY, False),
+            (HOST, True),
+            (HOST_, True),
+            (PREFIX30, False),
+            (WILD30, False),
+            (CNX_ADDGR, False),
+            (IOS_ADDGR, False),
+        ]:
+            result = Address._is_address_host(line=line)
+            self.assertEqual(result, req, msg=f"{line=}")
 
 
 if __name__ == "__main__":

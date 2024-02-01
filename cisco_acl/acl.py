@@ -12,7 +12,7 @@ from cisco_acl.ace import Ace, LAce
 from cisco_acl.ace_group import AceGroup, UAceg, UAce, LUAceg, OUAce, LUAce
 from cisco_acl.helpers import DEF_INDENT
 from cisco_acl.remark import Remark
-from cisco_acl.types_ import LStr, UStr, DAny, DLStr, SStr, T2Str
+from cisco_acl.types_ import LStr, UStr, DAny, DLStr, SStr, T2Str, OLStr
 
 
 @total_ordering
@@ -407,7 +407,7 @@ class Acl(AceGroup):
         self._items = grouped_items
         self._group_by = group_by
 
-    def delete_shadow(self, skip: LStr = None) -> DLStr:
+    def delete_shadow(self, skip: OLStr = None) -> DLStr:
         """Remove ACEs in the shadow (in the bottom, without hits) from ACL.
 
         :param skip: Skips checking specified address type: "addrgroup", "nc_wildcard".
@@ -449,7 +449,7 @@ class Acl(AceGroup):
         self.items = acl_new.items
         return shading_d
 
-    def shadow_of(self, skip: LStr = None) -> LStr:
+    def shadow_of(self, skip: OLStr = None) -> LStr:
         """Return ACEs in the shadow (in the bottom).
 
         NOTES:
@@ -470,7 +470,7 @@ class Acl(AceGroup):
         shadow: LStr = [s for ls in shading_d.values() for s in ls]
         return shadow
 
-    def shading(self, skip: LStr = None) -> DLStr:
+    def shading(self, skip: OLStr = None) -> DLStr:
         """Return shading `in the top` and shadow `in the bottom` ACEs as dict.
 
         In dict key is shading rule, value shadow rules.

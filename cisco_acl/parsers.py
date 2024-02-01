@@ -5,7 +5,7 @@ from cisco_acl.port_name import all_known_names
 from cisco_acl.types_ import DStr, LStr
 
 
-def parse_ace_extended(line: str) -> DStr:
+def parse_ace_extended(line: str) -> DStr:  # pylint: disable=too-many-locals
     """Parse extended ACE line to the dictionary.
 
     :param line: ACE string.
@@ -87,6 +87,7 @@ def parse_ace_standard(line: str) -> DStr:
         f"(?:object-group|addrgroup) {text}",  # ios: "object-group NAME", nxos: "addrgroup NAME"
         h.OCTETS + r"/\d+",  # "A.B.C.D/LEN"
         f"{h.OCTETS} {h.OCTETS}",  # "A.B.C.D A.B.C.D"
+        h.OCTETS,  # host
     ])
 
     re_sequence = r"(\d+)?"

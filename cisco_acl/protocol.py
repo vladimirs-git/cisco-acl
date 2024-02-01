@@ -132,8 +132,8 @@ class Protocol(Base):
             protocol.number == 255
         """
         self._number = PROTOCOL_IP
-        self._protocol_nr = bool(kwargs.get("protocol_nr") or False)
-        self._has_port = bool(kwargs.get("has_port") or False)
+        self._protocol_nr = bool(kwargs.get("protocol_nr"))
+        self._has_port = bool(kwargs.get("has_port"))
         super().__init__(**kwargs)
         self.line = line
 

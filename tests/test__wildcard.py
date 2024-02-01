@@ -283,7 +283,7 @@ class Test(Helpers):
     def test_valid__is_contiguous_wildmask(self):
         """wildcard.is_contiguous_wildmask()"""
         for line, req in [
-            # ("0.0.0.0", True),
+            ("0.0.0.0", True),
             ("0.0.0.1", True),
             ("0.0.0.2", False),
             ("0.0.0.3", True),

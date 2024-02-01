@@ -25,7 +25,7 @@ interface Ethernet1
 """
 
 # Create ACL, TCP/UDP ports and IP protocols as well-known names
-acls = cisco_acl.acls(config=config, platform="ios", )
+acls = cisco_acl.acls(config=config, platform="ios")
 acl = acls[0]
 print(acl.line, "\n")
 # ip access-list extended ACL_NAME

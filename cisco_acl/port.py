@@ -60,7 +60,7 @@ class Port(Base):
         """
         super().__init__(**kwargs)  # platform, note
         self._protocol = h.init_protocol(line=line, **kwargs)
-        self._port_nr = bool(kwargs.get("port_nr") or False)
+        self._port_nr = bool(kwargs.get("port_nr"))
         self.line = line
 
     def __repr__(self):
