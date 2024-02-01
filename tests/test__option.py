@@ -67,6 +67,15 @@ class Test(Helpers):
                 obj1.line = line
                 self._test_attrs(obj=obj1, req_d=req_d, msg=f"{line=}")
 
+    def test_invalid__line(self):
+        """Option.line()"""
+        for platform in h.PLATFORMS:
+            for line, error in [
+                ("1", ValueError),
+            ]:
+                with self.assertRaises(error, msg=f"{line=}"):
+                    Option(line=line, platform=platform)
+
     def test_valid__platform(self):
         """Option.platform()"""
         option_d = dict(line="syn")

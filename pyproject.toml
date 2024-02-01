@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "cisco_acl"
-version = "3.2.2"
+version = "3.2.3"
 description = "Python package to parse and manage Cisco ACL (Access Control List)"
 authors = ["Vladimirs Prusakovs <vladimir.prusakovs@gmail.com>"]
 readme = "README.rst"
@@ -40,7 +40,7 @@ test = ["pytest"]
 
 [tool.poetry.urls]
 "Bug Tracker" = "https://github.com/vladimirs-git/cisco-acl/issues"
-"Download URL" = "https://github.com/vladimirs-git/cisco-acl/archive/refs/tags/3.2.2.tar.gz"
+"Download URL" = "https://github.com/vladimirs-git/cisco-acl/archive/refs/tags/3.2.3.tar.gz"
 
 [tool.pylint]
 max-line-length = 100

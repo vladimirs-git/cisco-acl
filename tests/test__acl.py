@@ -213,12 +213,23 @@ class Test(Helpers):
             obj.line = kwargs["line"]
             self._test_attrs(obj=obj, req_d=req_d, msg=f"{kwargs=}")
 
-    def test_invalid__line(self):
-        """Acl.line"""
+    def test_invalid__line__skip(self):
+        """Acl.line skip invalid line"""
+        expected = ACL_NAME_IOS
+        for line in [
+            f"{ACL_NAME_IOS}\npermit ip any any 0.0.0.0"  # option
+            f"{ACL_NAME_IOS_STD}\npermit host 10.0.0.1 0.0.0.0"  # option
+        ]:
+            obj = Acl(line, platform="ios")
+            result = str(obj).strip()
+            self.assertEqual(result, expected, msg=f"{line=}")
+
+    def test_invalid__line__error(self):
+        """Acl.line raise error"""
         for line, error, in [
             ("ip access-list extended\n permit ip any any", ValueError),  # no name
             ("ip access-listy\n permit ip any any", ValueError),  # no name
-            ("ip access-list extended NAME NAME\n permit ip any any", ValueError),  # 2 names
+            (f"{ACL_NAME_IOS} NAME\n permit ip any any", ValueError),  # 2 names
             (PERMIT_IP, ValueError),
         ]:
             with self.assertRaises(error, msg=f"{line=}"):
@@ -341,12 +352,15 @@ class Test(Helpers):
         host_ext = f"{ACL_NAME_IOS}\n" \
                    f"  {REMARK}\n" \
                    f"  permit tcp host 10.0.0.1 eq 1 host 10.0.0.2 eq 2 ack log"
-        host_std = f"{ACL_NAME_IOS_STD}\n" \
-                   f"  {REMARK}\n" \
-                   f"  permit host 10.0.0.1"
-        host_std_ = f"{ACL_NAME_IOS_STD}\n" \
+        host1_std = f"{ACL_NAME_IOS_STD}\n" \
+                    f"  {REMARK}\n" \
+                    f"  permit host 10.0.0.1"
+        host2_std = f"{ACL_NAME_IOS_STD}\n" \
                     f"  {REMARK}\n" \
                     f"  permit 10.0.0.1"
+        host3_std = f"{ACL_NAME_IOS_STD}\n" \
+                    f"  {REMARK}\n" \
+                    f"  permit 10.0.0.1 0.0.0.0"
         host_ext_ = f"{ACL_NAME_IOS}\n" \
                     f"  {REMARK}\n  permit ip host 10.0.0.1 any"
         wild_ext = f"{ACL_NAME_IOS}\n" \
@@ -379,17 +393,19 @@ class Test(Helpers):
             ("extended", "extended", wild_ext, wild_ext),
             ("extended", "extended", aceg_ext, aceg_ext),
             # extended to standard
-            ("extended", "standard", host_ext, host_std),
+            ("extended", "standard", host_ext, host1_std),
             ("extended", "standard", wild_ext, wild_std),
             ("extended", "standard", aceg_ext, aceg_std),
             # standard to standard
-            ("standard", "standard", host_std, host_std),
-            ("standard", "standard", host_std_, host_std),
+            ("standard", "standard", host1_std, host1_std),
+            ("standard", "standard", host2_std, host1_std),
+            ("standard", "standard", host3_std, host1_std),
             ("standard", "standard", wild_std, wild_std),
             ("standard", "standard", aceg_std, aceg_std),
             # standard to extended
-            ("standard", "extended", host_std, host_ext_),
-            ("standard", "extended", host_std_, host_ext_),
+            ("standard", "extended", host1_std, host_ext_),
+            ("standard", "extended", host2_std, host_ext_),
+            ("standard", "extended", host3_std, host_ext_),
             ("standard", "extended", wild_std, wild_ext_),
             ("standard", "extended", aceg_std, aceg_ext_),
         ]:

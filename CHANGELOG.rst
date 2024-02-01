@@ -23,7 +23,7 @@ instead of
      permit host 10.0.0.1
 
 
-3.2.2 (2024-02-01)
+3.2.3 (2024-02-01)
 ------------------
 **Fixed:** ip access-list standard, permit A.B.C.D (without host keyword)
 

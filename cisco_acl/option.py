@@ -1,6 +1,7 @@
 """ACE. Option."""
 from __future__ import annotations
 
+import string
 from functools import total_ordering
 
 from cisco_acl import helpers as h
@@ -70,10 +71,14 @@ class Option(Base):
         line = h.init_line(line)
         self._line = line
 
-        items: LStr = [s.strip() for s in line.split()]
-        items = [s for s in items if s]
-        self._flags = [s for s in items if s not in LOGS]
-        self._logs = [s for s in items if s in LOGS]
+        options: LStr = [s.strip() for s in line.split()]
+        options = [s for s in options if s]
+        for option in options:
+            if option[0] not in string.ascii_lowercase:
+                raise ValueError(f"invalid {option=}")
+
+        self._flags = [s for s in options if s not in LOGS]
+        self._logs = [s for s in options if s in LOGS]
 
     @property
     def logs(self) -> LStr:

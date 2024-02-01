@@ -6,8 +6,9 @@ lines1 = """
 ip access-list standard ACL1
   permit 10.0.0.1
   permit host 10.0.0.2
-  permit host 10.0.0.3 0.0.0.0
+  permit 10.0.0.3 0.0.0.0
   permit 10.0.0.4 0.0.0.3
+  permit 10.0.0.5 0.0.0.3
 """
 
 # Create ACL.
@@ -16,7 +17,8 @@ print(str(acl1))
 # ip access-list standard ACL1
 #   permit host 10.0.0.1
 #   permit host 10.0.0.2
-#   permit host 10.0.0.3 0.0.0.0
+#   permit host 10.0.0.3
+#   permit 10.0.0.4 0.0.0.3
 #   permit 10.0.0.4 0.0.0.3
 
 # todo
@@ -25,5 +27,6 @@ print(str(acl1))
 # ip access-list standard ACL1
 #   permit 10.0.0.1
 #   permit 10.0.0.2
-#   permit 10.0.0.3 0.0.0.0
+#   permit 10.0.0.3
+#   permit 10.0.0.4 0.0.0.3
 #   permit 10.0.0.4 0.0.0.3

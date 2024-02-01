@@ -1141,6 +1141,25 @@ class Test(Helpers):
             result = [o.line for o in aces]
             self.assertEqual(result, req, msg=f"{line=}")
 
+    def test_valid__check_parsed_elements(self):
+        """Ace._check_parsed_elements()"""
+        for data, req, in [
+            (dict(protocol="ip", srcport="", dstport=""), True),
+        ]:
+            result = Ace._check_parsed_elements(line="", data=data)
+            self.assertEqual(result, req, msg=f"{data=}")
+
+    def test_invalid__check_parsed_elements(self):
+        """Ace._check_parsed_elements()"""
+        for data, error, in [
+            (dict(protocol="", srcport="", dstport=""), ValueError),
+            (dict(protocol="ip", srcport="1", dstport=""), ValueError),
+            (dict(protocol="ip", srcport="", dstport="1"), ValueError),
+            (dict(protocol="ip", srcport="1", dstport="1"), ValueError),
+        ]:
+            with self.assertRaises(error, msg=f"{data=}"):
+                Ace._check_parsed_elements(line="", data=data)
+
 
 if __name__ == "__main__":
     unittest.main()
