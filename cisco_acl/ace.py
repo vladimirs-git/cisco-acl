@@ -10,7 +10,7 @@ from cisco_acl.address import Address
 from cisco_acl.option import Option
 from cisco_acl.port import Port
 from cisco_acl.protocol import Protocol
-from cisco_acl.types_ import DAny, OBool, DStr, LStr
+from cisco_acl.types_ import DAny, OBool, DStr, OLStr
 
 
 @total_ordering
@@ -251,7 +251,8 @@ class Ace(AceBase):
         self._dstport.platform = self._platform
         self._option.platform = self._platform
         data = self.data(uuid=True)
-        self.__init__(**data)  # type: ignore
+        obj = Ace(**data)
+        self.__dict__.update(obj.__dict__)
 
     @property
     def protocol(self) -> Protocol:
@@ -313,7 +314,8 @@ class Ace(AceBase):
             self.option.line = ""
         self._type = type_
         data = self.data(uuid=True)
-        self.__init__(**data)  # type: ignore
+        obj = Ace(**data)
+        self.__dict__.update(obj.__dict__)
 
     # =========================== method =============================
 
@@ -409,7 +411,7 @@ class Ace(AceBase):
             data["uuid"] = self.uuid
         return data
 
-    def shadow_of(self, other: Ace, skip: LStr = None) -> bool:
+    def shadow_of(self, other: Ace, skip: OLStr = None) -> bool:
         """Check is ACE in the shadow of other ACE.
 
         NOTES:
@@ -498,17 +500,17 @@ class Ace(AceBase):
         return True
 
     # noinspection DuplicatedCode
-    def _shadow_of__srcaddr(self, other: Ace, skip: LStr = None) -> bool:
+    def _shadow_of__srcaddr(self, other: Ace, skip: OLStr = None) -> bool:
         """Return True if bottom address is in the shadow of the top address.
 
         :param other: Ace in the top.
         :param skip: Skips checking specified address type: "addrgroup", "nc_wildcard".
         """
-        skip = skip or []
-        if "addrgroup" in skip:
+        skip_ = list(skip or [])
+        if "addrgroup" in skip_:
             if "addrgroup" in [self.srcaddr.type, other.srcaddr.type]:
                 return False
-        elif "nc_wildcard" in skip:
+        elif "nc_wildcard" in skip_:
             if "wildcard" in [self.srcaddr.type, other.srcaddr.type]:
                 if not (self.srcaddr.ipnet and other.srcaddr.ipnet):
                     return False
@@ -519,17 +521,17 @@ class Ace(AceBase):
         return is_subnet
 
     # noinspection DuplicatedCode
-    def _shadow_of__dstaddr(self, other: Ace, skip: LStr = None) -> bool:
+    def _shadow_of__dstaddr(self, other: Ace, skip: OLStr = None) -> bool:
         """Return True if bottom address is in the shadow of the top address.
 
         :param other: Ace in the top.
         :param skip: Skips checking specified address type: "addrgroup", "nc_wildcard".
         """
-        skip = skip or []
-        if "addrgroup" in skip:
+        skip_ = list(skip or [])
+        if "addrgroup" in skip_:
             if "addrgroup" in [self.dstaddr.type, other.dstaddr.type]:
                 return False
-        elif "nc_wildcard" in skip:
+        elif "nc_wildcard" in skip_:
             if "wildcard" in [self.dstaddr.type, other.dstaddr.type]:
                 if not (self.dstaddr.ipnet and other.dstaddr.ipnet):
                     return False

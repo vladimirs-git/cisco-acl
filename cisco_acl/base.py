@@ -63,9 +63,9 @@ class Base(ABC):
         return ""
 
     @line.setter
-    def line(self, line: str) -> None:  # pylint: disable=no-self-use
+    def line(self, line: str) -> None:
         """Stub."""
-        return
+        _ = line  # noqa
 
     @property
     def platform(self) -> str:

@@ -337,7 +337,7 @@ def is_contiguous_wildmask(mask: str) -> bool:
         is_contiguous_wildmask("255.255.255.252") -> False
     """
     if mask_i := sum_octets(mask):
-        bits = "{0:b}".format(mask_i)
+        bits = f"{mask_i:b}"
         return "0" not in set(bits)
     return True
 

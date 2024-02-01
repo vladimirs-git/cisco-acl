@@ -52,7 +52,7 @@ class AceBase(Base, ABC):
         if protocol_nr := kwargs.get("protocol_nr"):
             self._protocol_nr = bool(protocol_nr)
         if port_nr := kwargs.get("port_nr"):
-            self._port_nr: bool = bool(port_nr)
+            self._port_nr = bool(port_nr)
 
     def __hash__(self) -> int:
         """__hash__."""

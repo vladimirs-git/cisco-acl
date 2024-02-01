@@ -178,7 +178,8 @@ class AddressAg(AddressBase):
             item.platform = self._platform
 
         data = self.data(uuid=True)
-        self.__init__(**data)  # type: ignore
+        obj = AddressAg(**data)
+        self.__dict__.update(obj.__dict__)
 
     @property
     def sequence(self) -> int:

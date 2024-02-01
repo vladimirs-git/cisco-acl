@@ -8,7 +8,6 @@ from string import ascii_letters, digits, punctuation
 from time import time
 from typing import Any, List, NamedTuple
 
-from cisco_acl.port_name import all_known_names
 from cisco_acl.types_ import LStr, StrInt, LInt, OInt, SInt, T2Str, T3Str, DInt, SStr, LIpNet
 
 IOS = "ios"
@@ -18,7 +17,6 @@ PLATFORMS = ("asa", "ios", "nxos")
 ACTIONS = ("remark", "permit", "deny")
 OPERATORS = ("eq", "gt", "lt", "neq", "range")
 
-ALL_KNOWN_TUDP_NAMES = all_known_names()
 DEF_INDENT = "  "
 OCTETS = r"\d+\.\d+\.\d+\.\d+"
 
@@ -526,7 +524,7 @@ def time_spent(func):
         started = time()
         _return = func(*args, **kwargs)
         elapsed = time() - started
-        print("====== {:s}, spent {:.3f}s ======".format(func.__name__, elapsed))
+        print(f"====== {func.__name__}, spent {elapsed:.3f}s ======")
         return _return
 
     return wrap

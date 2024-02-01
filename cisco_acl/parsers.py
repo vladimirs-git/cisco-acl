@@ -5,7 +5,7 @@ from cisco_acl.port_name import all_known_names
 from cisco_acl.types_ import DStr, LStr
 
 
-def parse_ace_extended(line: str) -> DStr:
+def parse_ace_extended(line: str) -> DStr:  # pylint: disable=too-many-locals
     """Parse extended ACE line to the dictionary.
 
     :param line: ACE string.

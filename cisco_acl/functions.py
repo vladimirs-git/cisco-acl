@@ -252,7 +252,7 @@ def range_protocols(**kwargs) -> LStr:
     range_ = str(kwargs.get("protocols") or "")
     line = str(kwargs.get("line") or "permit ip any any")
     platform = h.init_platform(**kwargs)
-    protocol_nr = bool(kwargs.get("protocol_nr") or False)
+    protocol_nr = bool(kwargs.get("protocol_nr"))
 
     aces_: LAce = []  # result
     protocols: LInt = netports.iip(range_)
@@ -393,7 +393,7 @@ def _range__port(sdst: str, **kwargs) -> LAce:
     range_ = str(kwargs.get("range") or "")
     line = str(kwargs.get("line") or "permit tcp any any")
     platform = h.init_platform(**kwargs)
-    port_nr = bool(kwargs.get("port_nr") or False)
+    port_nr = bool(kwargs.get("port_nr"))
 
     aces_: LAce = []  # result
     ports: LInt = netports.itcp(range_)

@@ -127,7 +127,9 @@ class Test(unittest.TestCase):
         """helpers.parse_dstport_option()"""
         items: LDStr = self._generate_dstport_option_req()
         for req_d in items:
-            line = "{dstport} {option}".format(**req_d)
+            dstport = req_d["dstport"]
+            option = req_d["option"]
+            line = f"{dstport} {option}"
             line = " ".join(line.split())
 
             result_d = parsers._parse_dstport_option(line)

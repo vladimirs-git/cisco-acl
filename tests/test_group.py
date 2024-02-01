@@ -84,9 +84,10 @@ class Test(unittest.TestCase):
 
     def test_valid__iter__(self):
         """Group.__iter__()"""
-        group = Group(["a", "b"])
+        items = ["a", "b"]
+        group = Group(items)
         for idx, result in enumerate(group):
-            req = group[idx]
+            req = items[idx]
             self.assertEqual(result, req, msg=f"{idx=}")
 
     def test_valid__len__(self):
