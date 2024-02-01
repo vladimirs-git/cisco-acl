@@ -4,6 +4,24 @@
 CHANGELOG
 =========
 
+Unreleased
+----------
+
+**Change:**
+Host in standard ACL.
+
+.. code:: python
+
+    ip access-list standard ACL
+     permit 10.0.0.1
+
+instead of
+
+.. code:: python
+
+    ip access-list standard ACL
+     permit host 10.0.0.1
+
 
 3.2.2 (2024-02-01)
 ------------------
