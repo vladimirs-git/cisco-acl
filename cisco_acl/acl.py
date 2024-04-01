@@ -388,7 +388,9 @@ class Acl(AceGroup):
             if isinstance(item, Remark):
                 if item.text.startswith(group_by):
                     group_name = item.text
-                    grouped_items_d[group_name] = []
+                    if item.text not in grouped_items_d:
+                        grouped_items_d[group_name] = [item]
+                    continue
             grouped_items_d[group_name].append(item)
 
         grouped_items: LUAceg = []

@@ -41,8 +41,7 @@ from tests.helpers_test import (
     make_acl,
     remove_acl_name,
 )
-from tests.test__acl__helpers import LINE_GROUP_ACEGS, REQ_GROUPS_ACEGS_D
-from tests.test__acl__helpers import LINE_GROUP_REMARKS, REQ_GROUP_REMARKS_D
+from tests import test__acl__helpers as h2
 
 REMARK_10 = Remark(f"10 {REMARK}")
 REMARK_20 = Remark(f"20 {REMARK}")
@@ -620,8 +619,9 @@ class Test(Helpers):
     def test_valid__group(self):
         """Acl.group()"""
         for line, req_acegs_d in [
-            (LINE_GROUP_ACEGS, REQ_GROUPS_ACEGS_D),
-            (LINE_GROUP_REMARKS, REQ_GROUP_REMARKS_D),
+            (h2.LINE_GROUP_ACEGS, h2.REQ_GROUPS_ACEGS_D),
+            (h2.LINE_GROUP_REMARKS, h2.REQ_GROUP_REMARKS_D),
+            (h2.LINE_DUPLICATE_REMARKS_UNGROUPED, h2.REQ_DUPLICATE_REMARKS),
         ]:
             acl_o = Acl(line, platform="ios")
             acl_o.group(group_by="=== ")

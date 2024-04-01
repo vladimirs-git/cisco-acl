@@ -4,23 +4,9 @@
 CHANGELOG
 =========
 
-Unreleased
-----------
-
-**Change:**
-Host in standard ACL.
-
-.. code:: python
-
-    ip access-list standard ACL
-     permit 10.0.0.1
-
-instead of
-
-.. code:: python
-
-    ip access-list standard ACL
-     permit host 10.0.0.1
+3.2.4 (2024-04-01)
+------------------
+**Fixed:** Acl.group() transform LINE_DUPLICATE_REMARKS_UNGROUPED to LINE_DUPLICATE_REMARKS_GROUPED
 
 
 3.2.3 (2024-02-01)
