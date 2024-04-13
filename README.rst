@@ -18,7 +18,7 @@ Supported platforms:
 Main features:
 
 - Supports wildcards, converts wildcards to prefixes
-- Supports address groups
+- Supports uni-dimensional address groups (address-group inside other address-group is not supported)
 - Represents TCP/UDP ports and IP protocols as numbers or well-known names
 - Converts IOS syntax to NX-OS and vice vera
 - Generates sequence numbers for ACEs
