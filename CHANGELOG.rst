@@ -4,6 +4,11 @@
 CHANGELOG
 =========
 
+3.2.5 (2024-04-17)
+------------------
+**Fixed:** IOS Remark without sequence number
+
+
 3.2.4 (2024-04-01)
 ------------------
 **Fixed:** Acl.group() transform LINE_DUPLICATE_REMARKS_UNGROUPED to LINE_DUPLICATE_REMARKS_GROUPED

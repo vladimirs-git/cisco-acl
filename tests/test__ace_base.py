@@ -1,51 +1,91 @@
 """Unittest ace_base.py"""
+from typing import Any
 
-import unittest
+import pytest
 
 from cisco_acl import Ace, AceGroup, Remark
-from tests.helpers_test import Helpers, PERMIT_IP, REMARK
+from tests.helpers_test import PERMIT_IP, REMARK
+
+SEQUENCES = [
+    ("", 0),
+    ("0", 0),
+    ("1", 1),
+    (0, 0),
+    (1, 1),
+    (-1, ValueError),
+    ("a", ValueError),
+    ("-1", ValueError),
+]
 
 
-class Test(Helpers):
-    """AceBase"""
+@pytest.mark.parametrize("sequence, expected", SEQUENCES)
+def test_valid__remark__sequence(sequence, expected: Any):
+    """Remark.sequence"""
+    for platform in ["ios", "nxos"]:
+        if isinstance(expected, int):
+            obj = Remark(f"{sequence} {REMARK}", platform=platform)
+            actual = obj.sequence
+            assert actual == expected
 
-    # =========================== property ===========================
+            # setter
+            obj.sequence = sequence
+            actual = obj.sequence
+            assert actual == expected
 
-    def test_valid__sequence(self):
-        """AceBase.sequence"""
-        for sequence, req in [
-            ("", 0),
-            ("0", 0),
-            ("1", 1),
-            (0, 0),
-            (1, 1),
-        ]:
-            for obj in [
-                Remark(f"{sequence} {REMARK}"),
-                Ace(f"{sequence} {PERMIT_IP}"),
-                AceGroup(f"{sequence} {REMARK}\nPERMIT_IP"),
-            ]:
-                result = obj.sequence
-                self.assertEqual(result, req, msg=f"{sequence=}")
-                # setter
+        else:
+            with pytest.raises(expected):
+                Remark(f"{sequence} {REMARK}", platform=platform)
+
+            # setter
+            obj = Remark(REMARK, platform=platform)
+            with pytest.raises(expected):
                 obj.sequence = sequence
-                result = obj.sequence
-                self.assertEqual(result, req, msg=f"{sequence=}")
 
-    def test_invalid__sequence(self):
-        """AceBase.sequence"""
-        for sequence, error in [
-            ({}, TypeError),
-            (-1, ValueError),
-            ("a", ValueError),
-            ("-1", ValueError),
-        ]:
-            obj = Ace(PERMIT_IP)
-            with self.assertRaises(error, msg=f"deleted {sequence=}"):
+
+@pytest.mark.parametrize("sequence, expected", SEQUENCES)
+def test_valid__ace__sequence(sequence, expected):
+    """Ace.sequence"""
+    for platform in ["ios", "nxos"]:
+        if isinstance(expected, int):
+            obj = Ace(f"{sequence} {PERMIT_IP}", platform=platform)
+            actual = obj.sequence
+            assert actual == expected
+
+            # setter
+            obj.sequence = sequence
+            actual = obj.sequence
+            assert actual == expected
+
+        else:
+            with pytest.raises(expected):
+                Ace(f"{sequence} {PERMIT_IP}", platform=platform)
+
+            # setter
+            obj = Ace(PERMIT_IP, platform=platform)
+            with pytest.raises(expected):
                 obj.sequence = sequence
-            with self.assertRaises(ValueError, msg=f"{sequence=}"):
-                Ace(f"{sequence} {PERMIT_IP}")
 
 
-if __name__ == "__main__":
-    unittest.main()
+@pytest.mark.parametrize("sequence, expected", SEQUENCES)
+def test_valid__ace_group__sequence(sequence, expected):
+    """AceGroup.sequence"""
+    for platform in ["ios", "nxos"]:
+        if isinstance(expected, int):
+            obj = AceGroup(f"{sequence} {REMARK}\n{PERMIT_IP}", platform=platform)
+            actual = obj.sequence
+            assert actual == expected
+
+            # setter
+            obj.sequence = sequence
+            actual = obj.sequence
+            assert actual == expected
+
+        else:
+            obj = AceGroup(f"{sequence} {REMARK}\n{sequence} {PERMIT_IP}", platform=platform)
+            actual = obj.sequence
+            assert actual == 0
+
+            # setter
+            obj = AceGroup(f"{REMARK}\n{PERMIT_IP}", platform=platform)
+            with pytest.raises(expected):
+                obj.sequence = sequence
