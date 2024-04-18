@@ -2,7 +2,7 @@
 from netports import SwVersion
 
 from cisco_acl import helpers as h
-from cisco_acl.types_ import DInt, DiStr, LStr
+from cisco_acl.types_ import DInt, DiStr, LStr, UVersion
 
 # cisco Nexus 3172T, NXOS: version 9.3(8)
 # cisco ISR4331/K9, Cisco IOS XE Software, Version 16.09.06
@@ -205,13 +205,18 @@ class PortName:
             self,
             protocol: str = "tcp",
             platform: str = "",
-            version: str = "",
+            version: UVersion = "",
     ):
         """Init PortName.
 
         :param protocol: Protocol: "tcp", "udp".
+        :type protocol: str
+
         :param platform: Platform: "asa", "ios", "nxos". Default "ios".
+        :type platform: str
+
         :param version: Software version.
+        :type version: str
         """
         self.protocol: str = _init_protocol(protocol)
         self.platform: str = h.init_platform(platform=platform)

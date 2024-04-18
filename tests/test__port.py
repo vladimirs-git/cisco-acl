@@ -219,6 +219,10 @@ class Test(Helpers):
             (dict(line="eq cmd", platform="nxos", protocol="tcp", port_nr=False), EQ_CMD_D),
             (dict(line="eq 514", platform="nxos", protocol="udp", port_nr=False), EQ_SYSL_D),
             (dict(line="eq syslog", platform="nxos", protocol="udp", port_nr=False), EQ_SYSL_D),
+
+            # version
+            (dict(line="eq msrpc", protocol="tcp", version="16.09.06", port_nr=False),
+             dict(line="eq msrpc", operator="eq", items=[135], ports=[135], sport="135")),
         ]:
             obj = Port(**kwargs)
             self._test_attrs(obj=obj, req_d=req_d, msg=f"{kwargs=}")
@@ -249,6 +253,13 @@ class Test(Helpers):
             (dict(line="eq 2 4 5 6", platform="nxos"), ValueError),
             (dict(line="neq 1 3", platform="nxos"), ValueError),
             (dict(line="eq syslog", platform="nxos", protocol="tcp", port_nr=False), ValueError),
+        ]:
+            with self.assertRaises(error, msg=f"{kwargs=}"):
+                Port(**kwargs)
+
+        # version
+        for kwargs, error in [
+            (dict(line="eq msrpc", protocol="tcp", version="15.2(02)SY"), ValueError),
         ]:
             with self.assertRaises(error, msg=f"{kwargs=}"):
                 Port(**kwargs)
@@ -509,8 +520,16 @@ class Test(Helpers):
     def test_valid__data(self):
         """Port.data()"""
         kwargs1 = dict(line="eq www 443", platform="ios", protocol="tcp", note="a", port_nr=True)
-        req1 = dict(line="eq 80 443", platform="ios", protocol="tcp", note="a", port_nr=True,
-                    items=[80, 443], operator="eq", ports=[80, 443], sport="80,443")
+        req1 = dict(line="eq 80 443",
+                    platform="ios",
+                    version="0",
+                    protocol="tcp",
+                    note="a",
+                    port_nr=True,
+                    items=[80, 443],
+                    operator="eq",
+                    ports=[80, 443],
+                    sport="80,443")
 
         for kwargs, req_d in [
             (kwargs1, req1),

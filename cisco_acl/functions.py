@@ -22,7 +22,7 @@ UAddress = Union[Address, AddressAg]
 
 
 # noinspection PyIncorrectDocstring,DuplicatedCode
-def acls(config: str, **kwargs) -> LAcl:
+def acls(config: str, **kwargs) -> LAcl:  # TODO version
     """Create Acl objects based on the "show running-config" output.
 
     Support address group objects.
@@ -35,7 +35,7 @@ def acls(config: str, **kwargs) -> LAcl:
     :param platform: Platform: "asa", "ios", "nxos". Default "ios".
     :type platform: str
 
-    :param version: Software version (not implemented, planned for compatability).
+    :param version: Software version, default is "0".
     :type version: str
 
     :param names: Parses only ACLs with specified names, skips any other.
@@ -97,7 +97,7 @@ def aces(config: str, **kwargs) -> LUAceg:
     :param platform: Platform: "asa", "ios", "nxos". Default "ios".
     :type platform: str
 
-    :param version: Software version (not implemented, planned for compatability).
+    :param version: Software version, default is "0".
     :type version: str
 
     :param max_ncwb: Max count of non-contiguous wildcard bits.
@@ -153,7 +153,7 @@ def addrgroups(config: str, **kwargs) -> LAddrGroup:
     :param platform: Platform: "asa", "ios", "nxos". Default "ios".
     :type platform: str
 
-    :param version: Software version (not implemented, planned for compatability).
+    :param version: Software version, default is "0".
     :type version: str
 
     :param max_ncwb: Max count of non-contiguous wildcard bits.
@@ -196,6 +196,9 @@ def range_ports(**kwargs) -> LStr:
     :param platform: Platform: "asa", "ios", "nxos". Default "ios".
     :type platform: str
 
+    :param version: Software version, default is "0".
+    :type version: str
+
     :param port_nr: Well-known TCP/UDP ports as numbers.
         True  - all tcp/udp ports as numbers,
         False - well-known tcp/udp ports as names (default).
@@ -234,6 +237,9 @@ def range_protocols(**kwargs) -> LStr:
 
     :param platform: Platform: "asa", "ios", "nxos". Default "ios".
     :type platform: str
+
+    :param version: Software version, default is "0".
+    :type version: str
 
     :param protocol_nr: Well-known ip protocols as numbers.
         True  - all ip protocols as numbers,

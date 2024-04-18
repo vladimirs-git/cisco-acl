@@ -38,6 +38,8 @@ PERMIT_TCP1 = "permit tcp any any eq 1"
 PERMIT_TCP2 = "permit tcp any any eq 2"
 PERMIT_UDP1 = "permit udp any any eq 1"
 PERMIT_WILD_252 = "permit ip 0.0.0.0 255.255.255.252 0.0.0.0 255.255.255.252"
+PERMIT_MSRPC = "permit tcp any any eq msrpc"
+PERMIT_135 = "permit tcp any any eq 135"
 
 REMARK = "remark TEXT"
 REMARK1 = "1 remark TEXT"

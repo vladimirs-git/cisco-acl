@@ -122,6 +122,7 @@ class Test(Helpers):
         kwargs1 = dict(line="ack log", platform="ios", note="a")
         req1 = dict(line="ack log",
                     platform="ios",
+                    version="0",
                     note="a",
                     flags=["ack"],
                     logs=["log"])

@@ -38,6 +38,9 @@ class AddressAg(AddressBase):
         :param platform: Platform: "asa", "ios", "nxos". Default "ios".
         :type platform: str
 
+        :param version: Software version, default is "0".
+        :type version: str
+
         Helpers
         :param note: Object description.
         :type note: Any

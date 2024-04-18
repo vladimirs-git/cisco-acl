@@ -145,8 +145,8 @@ class Test(Helpers):
         """Ace.__repr__()"""
         for kwargs, req in [
             (dict(line=PERMIT_IP1, platform="ios", note=""), "Ace(\"1 permit ip any any\")"),
-            (dict(line=PERMIT_IP1, platform="nxos", note="a", protocol_nr=True, port_nr=True),
-             "Ace(\"1 permit 0 any any\", platform=\"nxos\", note=\"a\", "
+            (dict(line=PERMIT_IP1, platform="nxos", version="5.2(02)SY", note="a", protocol_nr=True, port_nr=True),
+             "Ace(\"1 permit 0 any any\", platform=\"nxos\", version=\"5.2(02)sy\", note=\"a\", "
              "protocol_nr=True, port_nr=True)"),
         ]:
             obj = Ace(**kwargs)

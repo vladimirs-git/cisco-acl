@@ -13,21 +13,23 @@ class Test(Helpers):
 
     def test_valid__repr__(self):
         """Base.__repr__() __str__()"""
-        for class_, line, platform, note, req_repr in [
-            (Remark, REMARK, "", None, f"Remark(\"{REMARK}\")"),
-            (Remark, REMARK, "", "", f"Remark(\"{REMARK}\")"),
-            (Remark, REMARK, "", 0, f"Remark(\"{REMARK}\")"),
-            (Remark, REMARK, "ios", None, f"Remark(\"{REMARK}\")"),
-            (Remark, REMARK, "ios", "a", f"Remark(\"{REMARK}\", note=\"a\")"),
-            (Remark, REMARK, "nxos", None, f"Remark(\"{REMARK}\", platform=\"nxos\")"),
-            (Remark, REMARK, "nxos", "a", f"Remark(\"{REMARK}\", platform=\"nxos\", note=\"a\")"),
-            (Ace, PERMIT_IP, "", None, f"Ace(\"{PERMIT_IP}\")"),
-            (Ace, PERMIT_IP, "ios", None, f"Ace(\"{PERMIT_IP}\")"),
-            (Ace, PERMIT_IP, "ios", "a", f"Ace(\"{PERMIT_IP}\", note=\"a\")"),
-            (Ace, PERMIT_IP, "nxos", None, f"Ace(\"{PERMIT_IP}\", platform=\"nxos\")"),
-            (Ace, PERMIT_IP, "nxos", "a", f"Ace(\"{PERMIT_IP}\", platform=\"nxos\", note=\"a\")"),
+        for class_, line, platform, version, note, req_repr in [
+            (Remark, REMARK, "", "", None, f"Remark(\"{REMARK}\")"),
+            (Remark, REMARK, "", "15.2(02)SY", None, f"Remark(\"{REMARK}\", version=\"15.2(02)sy\")"),
+            (Remark, REMARK, "", "", "", f"Remark(\"{REMARK}\")"),
+            (Remark, REMARK, "", "", 0, f"Remark(\"{REMARK}\")"),
+            (Remark, REMARK, "ios", "", None, f"Remark(\"{REMARK}\")"),
+            (Remark, REMARK, "ios", "", "a", f"Remark(\"{REMARK}\", note=\"a\")"),
+            (Remark, REMARK, "nxos", "", None, f"Remark(\"{REMARK}\", platform=\"nxos\")"),
+            (Remark, REMARK, "nxos", "", "a", f"Remark(\"{REMARK}\", platform=\"nxos\", note=\"a\")"),
+            (Ace, PERMIT_IP, "", "", None, f"Ace(\"{PERMIT_IP}\")"),
+            (Ace, PERMIT_IP, "", "15.2(02)SY", None, f"Ace(\"{PERMIT_IP}\", version=\"15.2(02)sy\")"),
+            (Ace, PERMIT_IP, "ios", "", None, f"Ace(\"{PERMIT_IP}\")"),
+            (Ace, PERMIT_IP, "ios", "", "a", f"Ace(\"{PERMIT_IP}\", note=\"a\")"),
+            (Ace, PERMIT_IP, "nxos", "", None, f"Ace(\"{PERMIT_IP}\", platform=\"nxos\")"),
+            (Ace, PERMIT_IP, "nxos", "", "a", f"Ace(\"{PERMIT_IP}\", platform=\"nxos\", note=\"a\")"),
         ]:
-            obj = class_(line, platform=platform, note=note)
+            obj = class_(line, platform=platform, version=version, note=note)
             result = str(obj)
             req = line
             self.assertEqual(result, req, msg=f"{obj=} str")
@@ -103,6 +105,21 @@ class Test(Helpers):
                 obj = class_(line, note=note)
                 result = obj.note
                 self.assertEqual(result, req, msg=f"{note=}")
+
+    def test_valid__version(self):
+        """Base.version"""
+        for version, req in [
+            (None, 0),
+            ("0", 0),
+            ("15.2(02)SY", 15),
+        ]:
+            for class_, line in [
+                (Remark, REMARK),
+                (Ace, PERMIT_IP),
+            ]:
+                obj = class_(line, version=version)
+                result = obj.version.major
+                self.assertEqual(result, req, msg=f"{version=}")
 
 
 if __name__ == "__main__":

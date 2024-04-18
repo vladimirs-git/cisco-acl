@@ -82,6 +82,7 @@ Parameter       Type         Description
 =============== ============ =======================================================================
 config          *str*        Cisco config, "show running-config" output
 platform        *str*        Platform: "ios" (default), "nxos"
+version         *str*        Software version, default is "0".
 names           *List[str]*  Parses only ACLs with specified names, skips any other
 max_ncwb        *int*        Max count of non-contiguous wildcard bits
 indent          *str*        ACE lines indentation (default "  ")
@@ -108,6 +109,7 @@ Parameter       Type         Description
 =============== ============ =======================================================================
 config          *str*        Cisco config, "show running-config" output
 platform        *str*        Platform: "ios" (default), "nxos"
+version         *str*        Software version, default is "0".
 max_ncwb        *int*        Max count of non-contiguous wildcard bits
 protocol_nr     *bool*       Well-known ip protocols as numbers, True  - all ip protocols as numbers, False - well-known ip protocols as names (default)
 port_nr         *bool*       Well-known TCP/UDP ports as numbers, True  - all tcp/udp ports as numbers, False - well-known tcp/udp ports as names (default)
@@ -132,6 +134,7 @@ Parameter       Type         Description
 =============== ============ =======================================================================
 config          *str*        Cisco config, "show running-config" output
 platform        *str*        Platform: "ios" (default), "nxos"
+version         *str*        Software version, default is "0".
 max_ncwb        *int*        Max count of non-contiguous wildcard bits
 indent          *str*        ACE lines indentation (default "  ")
 =============== ============ =======================================================================
@@ -152,6 +155,7 @@ srcports        *str*        Range of TCP/UDP source ports
 dstports        *str*        Range of TCP/UDP destination ports
 line            *str*        ACE pattern, on whose basis new ACEs will be generated (default "permit tcp any any", operator "eq")
 platform        *str*        Platform: "ios" (default), "nxos"
+version         *str*        Software version, default is "0".
 port_nr         *bool*       Well-known TCP/UDP ports as numbers, True  - all tcp/udp ports as numbers, False - well-known tcp/udp ports as names (default)
 =============== ============ =======================================================================
 
@@ -174,6 +178,7 @@ Parameter       Type         Description
 protocols       *str*        Range of IP protocols
 line            *str*        ACE pattern, on whose basis new ACEs will be generated (default "permit ip any any")
 platform        *str*        Platform: "ios" (default), "nxos"
+version         *str*        Software version, default is "0".
 protocol_nr     *bool*       Well-known ip protocols as numbers, True  - all ip protocols as numbers, False - well-known ip protocols as names (default)
 =============== ============ =======================================================================
 

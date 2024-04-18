@@ -26,6 +26,9 @@ class Ace(AceBase):
         :param platform: Platform: "asa", "ios", "nxos". Default "ios".
         :type platform: str
 
+        :param version: Software version, default is "0".
+        :type version: str
+
         Helpers
         :param note: Object description.
         :type note: Any
@@ -199,27 +202,35 @@ class Ace(AceBase):
         self._srcaddr = Address(
             ace_d["srcaddr"],
             platform=self._platform,
+            version=self.version,
             items=self._srcaddr.items,
             max_ncwb=self.max_ncwb,
         )
         self._dstaddr = Address(
             ace_d["dstaddr"],
             platform=self._platform,
+            version=self.version,
             items=self._dstaddr.items,
             max_ncwb=self.max_ncwb,
         )
         protocol_o = Protocol(
             line=ace_d["protocol"],
             platform=self._platform,
+            version=self.version,
             port_nr=self._port_nr,
             protocol_nr=self._protocol_nr,
         )
-        kwargs_port = dict(platform=self._platform, protocol=protocol_o.name, port_nr=self._port_nr)
+        kwargs_port = dict(platform=self._platform,
+                           version=self.version,
+                           protocol=protocol_o.name,
+                           port_nr=self._port_nr)
         self._srcport = Port(ace_d["srcport"], **kwargs_port)
         self._dstport = Port(ace_d["dstport"], **kwargs_port)
         protocol_o.has_port = bool(self._srcport.line or self._dstport.line)
         self._protocol = protocol_o
-        self._option = Option(ace_d["option"], platform=self._platform)
+        self._option = Option(ace_d["option"],
+                              platform=self._platform,
+                              version=self.version)
 
     @property
     def option(self) -> Option:
@@ -332,11 +343,13 @@ class Ace(AceBase):
             ace.data() -> {
                 "line": "10 permit tcp host 10.0.0.1 10.0.0.0 0.0.0.3 eq www log",
                 "platform": "ios",
+                "version": "0",
                 "type": "extended",
                 "sequence": 10,
                 "action": "permit",
                 "protocol": {"line": "tcp",
                              "platform": "ios",
+                             "version": "0",
                              "note": "",
                              "protocol_nr": False,
                              "has_port": True,
@@ -344,6 +357,7 @@ class Ace(AceBase):
                              "number": 6},
                 "srcaddr": {"line": "host 10.0.0.1",
                             "platform": "ios",
+                            "version": "0",
                             "items": [],
                             "note": "",
                             "addrgroup": "",
@@ -353,6 +367,7 @@ class Ace(AceBase):
                             "wildcard": "10.0.0.1 0.0.0.0"},
                 "srcport": {"line": "",
                             "platform": "ios",
+                            "version": "0",
                             "protocol": "",
                             "note": "",
                             "port_nr": False,
@@ -362,6 +377,7 @@ class Ace(AceBase):
                             "sport": ""},
                 "dstaddr": {"line": "10.0.0.0 0.0.0.3",
                             "platform": "ios",
+                            "version": "0",
                             "items": [],
                             "note": "",
                             "addrgroup": "",
@@ -371,6 +387,7 @@ class Ace(AceBase):
                             "wildcard": "10.0.0.0 0.0.0.3"},
                 "dstport": {"line": "eq www 443",
                             "platform": "ios",
+                            "version": "0",
                             "protocol": "tcp",
                             "note": "",
                             "port_nr": False,
@@ -382,6 +399,7 @@ class Ace(AceBase):
                             "sport": "80,443"},
                 "option": {"line": "log",
                            "platform": "ios",
+                           "version": "0",
                            "note": "",
                            "flags": [],
                            "logs": ["log"]},
@@ -392,6 +410,7 @@ class Ace(AceBase):
             # init
             line=self.line,
             platform=self._platform,
+            version=str(self.version),
             type=self._type,
             note=self.note,
             max_ncwb=self.max_ncwb,

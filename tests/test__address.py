@@ -341,9 +341,11 @@ class Test(Helpers):
         kwargs1 = dict(line=IOS_ADDGR, platform="ios", items=[WILD30])
         req1 = dict(line="object-group NAME",
                     platform="ios",
+                    version="0",
                     items=[
                         dict(line="10.0.0.0 0.0.0.3",
                              platform="ios",
+                             version="0",
                              items=[],
                              note="",
                              max_ncwb=16,
@@ -366,6 +368,7 @@ class Test(Helpers):
         kwargs2 = dict(line=PREFIX30, platform="nxos")
         req2 = dict(line="10.0.0.0/30",
                     platform="nxos",
+                    version="0",
                     items=[],
                     note="",
                     max_ncwb=16,

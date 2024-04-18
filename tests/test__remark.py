@@ -167,8 +167,13 @@ class Test(Helpers):
     def test_valid__data(self):
         """Remark.data()"""
         kwargs1 = {"line": "10 remark TEXT", "platform": "ios", "note": "a"}
-        req1 = {"line": "10 remark TEXT", "platform": "ios", "note": "a", 
-                "sequence": 10, "action": "remark", "text": "TEXT"}
+        req1 = {"line": "10 remark TEXT",
+                "platform": "ios",
+                "version": "0",
+                "note": "a",
+                "sequence": 10,
+                "action": "remark",
+                "text": "TEXT"}
 
         for kwargs, req_d in [
             (kwargs1, req1),

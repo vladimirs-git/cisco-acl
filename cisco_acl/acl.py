@@ -30,6 +30,9 @@ class Acl(AceGroup):
         :param platform: Platform: "asa", "ios", "nxos". Default "ios".
         :type platform: str
 
+        :param version: Software version, default is "0".
+        :type version: str
+
         :param input: Interfaces, where Acl is used on input.
         :type input: str
 
@@ -274,6 +277,7 @@ class Acl(AceGroup):
             "items": [
                 {"line": "10 permit tcp host 10.0.0.1 10.0.0.0 0.0.0.3 eq www 443 log",
                  "platform": "ios",
+                 "version": "0",
                  "note": "",
                  "protocol_nr": False,
                  "port_nr": False,
@@ -281,6 +285,7 @@ class Acl(AceGroup):
                  "action": "permit",
                  "protocol": {"line": "tcp",
                               "platform": "ios",
+                              "version": "0",
                               "note": "",
                               "protocol_nr": False,
                               "has_port": True,
@@ -288,6 +293,7 @@ class Acl(AceGroup):
                               "number": 6},
                  "srcaddr": {"line": "host 10.0.0.1",
                              "platform": "ios",
+                             "version": "0",
                              "note": "",
                              "items": [],
                              "addrgroup": "",
@@ -297,6 +303,7 @@ class Acl(AceGroup):
                              "wildcard": "10.0.0.1 0.0.0.0"},
                  "srcport": {"line": "",
                              "platform": "ios",
+                             "version": "0",
                              "note": "",
                              "protocol": "",
                              "port_nr": False,
@@ -306,6 +313,7 @@ class Acl(AceGroup):
                              "sport": ""},
                  "dstaddr": {"line": "10.0.0.0 0.0.0.3",
                              "platform": "ios",
+                             "version": "0",
                              "note": "",
                              "items": [],
                              "addrgroup": "",
@@ -315,6 +323,7 @@ class Acl(AceGroup):
                              "wildcard": "10.0.0.0 0.0.0.3"},
                  "dstport": {"line": "eq www 443",
                              "platform": "ios",
+                             "version": "0",
                              "note": "",
                              "protocol": "tcp",
                              "port_nr": False,
@@ -337,6 +346,7 @@ class Acl(AceGroup):
             # init
             line=self.line,
             platform=self._platform,
+            version=str(self.version),
             type=self._type,
             input=self._input.copy(),
             output=self._output.copy(),

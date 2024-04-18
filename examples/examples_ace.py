@@ -14,6 +14,7 @@ ace = Ace(line="10 permit tcp host 10.0.0.1 range 21 23 10.0.0.0 0.0.0.3 eq 80 4
 assert ace.note == "allow web"
 assert ace.line == "10 permit tcp host 10.0.0.1 range ftp telnet 10.0.0.0 0.0.0.3 eq www 443 log"
 assert ace.platform == "ios"
+assert ace.version.major == 0
 assert ace.sequence == 10
 assert ace.action == "permit"
 assert ace.protocol.line == "tcp"

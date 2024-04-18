@@ -275,6 +275,7 @@ class Test(Helpers):
         kwargs1 = dict(line="tcp", platform="ios", note="a")
         req1 = dict(line="tcp",
                     platform="ios",
+                    version="0",
                     note="a",
                     protocol_nr=False,
                     has_port=False,

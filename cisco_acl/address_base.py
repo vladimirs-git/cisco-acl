@@ -21,6 +21,9 @@ class AddressBase(Base):
         :param platform: Platform: "asa", "ios", "nxos". Default "ios".
         :type platform: str
 
+        :param version: Software version, default is "0".
+        :type version: str
+
         Helpers
         :param note: Object description.
         :type note: Any
@@ -319,6 +322,7 @@ class AddressBase(Base):
             address.data() -> {
                 "line": "10.0.0.0/24",
                 "platform": "nxos",
+                "version": "0",
                 "note": "",
                 "items": [],
                 "max_ncwb": 16,
@@ -334,6 +338,7 @@ class AddressBase(Base):
             # init
             line=self.line,
             platform=self._platform,
+            version=str(self.version),
             note=self.note,
             items=[o.data(uuid=uuid) for o in self._items],
             max_ncwb=self.max_ncwb,

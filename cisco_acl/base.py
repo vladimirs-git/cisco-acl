@@ -1,8 +1,10 @@
-"""Base - Parent of: Address, Port, Protocol, AceBase."""
+"""Base - Parent of: Address, Port, Protocol, Ace, AceBase, Acl, AceGroup."""
 
 from abc import ABC, abstractmethod
 from typing import Any
 from uuid import uuid1
+
+from netports import SwVersion
 
 from cisco_acl import helpers as h
 from cisco_acl.helpers import IOS
@@ -10,13 +12,16 @@ from cisco_acl.types_ import LStr, DAny
 
 
 class Base(ABC):
-    """Base - Parent of: Address, Port, Protocol, AceBase."""
+    """Base - Parent of: Address, Port, Protocol, Ace, AceBase, Acl, AceGroup."""
 
     def __init__(self, **kwargs):
         """Init Base.
 
         :param platform: Platform: "asa", "ios", "nxos". Default "ios".
         :type platform: str
+
+        :param version: Software version, default is "0".
+        :type version: str
 
         Helpers
         :param uuid: Unique identifier.
@@ -27,6 +32,7 @@ class Base(ABC):
         """
         self._platform: str = h.init_platform(**kwargs)
         self._uuid: str = self._init_uuid(**kwargs)
+        self.version: SwVersion = h.init_version(**kwargs)
         self.note: Any = self._init_note(**kwargs)
 
     def __repr__(self):
@@ -120,5 +126,8 @@ class Base(ABC):
         params: LStr = [f"{self.line!r}"]
         if self._platform != IOS:
             params.append(f"platform={self._platform!r}")
+        version = str(self.version)
+        if version != "0":
+            params.append(f"{version=!r}")
         params = self._repr__add_param("note", params)
         return params

@@ -263,7 +263,7 @@ def init_version(**kwargs) -> SwVersion:
     :param version: software version string.
     :return: SwVersion object.
     """
-    version = kwargs.get("version")
+    version = str(kwargs.get("version") or "")
     if not version:
         version = "0"
     return SwVersion(version)

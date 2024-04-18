@@ -19,9 +19,11 @@ from tests.helpers_test import (
     HOST,
     Helpers,
     PERMIT_0,
+    PERMIT_135,
     PERMIT_ICMP,
     PERMIT_IP,
     PERMIT_IP2,
+    PERMIT_MSRPC,
     PERMIT_NAM,
     PERMIT_NUM,
     PERMIT_OBJ_GR,
@@ -62,10 +64,12 @@ class Test(Helpers):
         for kwargs, req in [
             (dict(line=f"{ACL_NAME_IOS}\n{PERMIT_IP2}\""),
              f"Acl(\"{ACL_NAME_IOS}\\n  {PERMIT_IP2}\")"),
-            (dict(line=f"{ACL_NAME_CNX}\n{PERMIT_NAM}", platform="nxos", note="a",
+            (dict(line=f"{ACL_NAME_CNX}\n{PERMIT_NAM}",
+                  platform="nxos", version="15.2(02)SY", note="a",
                   input="intf1", output="intf2", indent=" ", protocol_nr=True, port_nr=True),
              "Acl(\"ip access-list NAME\\n permit tcp any eq 21 any eq 80\", "
-             "platform=\"nxos\", note=\"a\", input=[\"intf1\"], output=[\"intf2\"], "
+             "platform=\"nxos\", version=\"15.2(02)sy\", note=\"a\", "
+             "input=[\"intf1\"], output=[\"intf2\"], "
              "indent=\" \", protocol_nr=True, port_nr=True)"),
         ]:
             obj = Acl(**kwargs)
@@ -205,6 +209,11 @@ class Test(Helpers):
              dict(line=f"{ACL_NAME_IOS}\n", name="NAME")),
             (dict(line=f"{ACL_NAME_IOS}\nignore routable", platform="ios"),
              dict(line=f"{ACL_NAME_IOS}\n", name="NAME")),
+            # version
+            (dict(line=f"{ACL_NAME_IOS}\n{PERMIT_135}", platform="ios"),
+             dict(line=f"{ACL_NAME_IOS}\n  {PERMIT_MSRPC}")),
+            (dict(line=f"{ACL_NAME_IOS}\n{PERMIT_135}", platform="ios", version="15.2(02)SY"),
+             dict(line=f"{ACL_NAME_IOS}\n  {PERMIT_MSRPC}")),
         ]:
             obj = Acl(**kwargs)
             self._test_attrs(obj=obj, req_d=req_d, msg=f"{kwargs=}")
@@ -489,6 +498,7 @@ class Test(Helpers):
         req1 = dict(
             line="ip access-list extended NAME\n permit 0 any any",
             platform="ios",
+            version="0",
             type="extended",
             input=["interface Ethernet1"],
             output=["interface Ethernet2"],
@@ -496,6 +506,7 @@ class Test(Helpers):
             items=[
                 dict(line="permit 0 any any",
                      platform="ios",
+                     version="0",
                      type="extended",
                      note="",
                      max_ncwb=16,
@@ -505,6 +516,7 @@ class Test(Helpers):
                      action="permit",
                      protocol=dict(line="0",
                                    platform="ios",
+                                   version="0",
                                    note="",
                                    protocol_nr=True,
                                    has_port=False,
@@ -512,6 +524,7 @@ class Test(Helpers):
                                    number=0),
                      srcaddr=dict(line="any",
                                   platform="ios",
+                                  version="0",
                                   items=[],
                                   note="",
                                   max_ncwb=16,
@@ -523,6 +536,7 @@ class Test(Helpers):
                                   wildcard="0.0.0.0 255.255.255.255"),
                      srcport=dict(line="",
                                   platform="ios",
+                                  version="0",
                                   note="",
                                   protocol="",
                                   port_nr=True,
@@ -532,6 +546,7 @@ class Test(Helpers):
                                   sport=""),
                      dstaddr=dict(line="any",
                                   platform="ios",
+                                  version="0",
                                   items=[],
                                   note="",
                                   max_ncwb=16,
@@ -543,6 +558,7 @@ class Test(Helpers):
                                   wildcard="0.0.0.0 255.255.255.255"),
                      dstport=dict(line="",
                                   platform="ios",
+                                  version="0",
                                   note="",
                                   protocol="",
                                   port_nr=True,
@@ -552,6 +568,7 @@ class Test(Helpers):
                                   sport=""),
                      option=dict(line="",
                                  platform="ios",
+                                 version="0",
                                  note="",
                                  flags=[],
                                  logs=[])),

@@ -20,7 +20,8 @@ class ConfigParser(ABC):
         :param platform: Platform: "asa", "ios", "nxos". Default "ios".
         :type platform: str
 
-        :param version: Software version (not implemented, planned for compatability).
+        :param version: Software version, default is "0".
+        :type version: str
         """
         self.config: str = str(config)  # raw config
         self.platform: str = h.init_platform(**kwargs)

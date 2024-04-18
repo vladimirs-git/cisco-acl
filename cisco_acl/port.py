@@ -23,6 +23,9 @@ class Port(Base):
         :param platform: Platform: "asa", "ios", "nxos". Default "ios".
         :type platform: str
 
+        :param version: Software version, default is "0".
+        :type version: str
+
         :param protocol: ACL protocol: "tcp", "udp", "".
         :type protocol: str
 
@@ -122,7 +125,9 @@ class Port(Base):
         if self._port_nr:
             items_s = " ".join([str(i) for i in self._items])
             return f"{self._operator} {items_s}"
-        port_name = PortName(protocol=self._protocol, platform=self._platform)
+        port_name = PortName(protocol=self._protocol,
+                             platform=self._platform,
+                             version=self.version)
         data = port_name.ports()
         items_s = " ".join([str(data.get(i) or i) for i in self._items])
         return f"{self._operator} {items_s}"
@@ -230,6 +235,7 @@ class Port(Base):
             address.data() -> {
                 "line": "10.0.0.0/24",
                 "platform": "nxos",
+                "version": "0",
                 "items": [],
                 "note": "",
                 "addrgroup": "",
@@ -243,6 +249,7 @@ class Port(Base):
             # init
             line=self.line,
             platform=self._platform,
+            version=str(self.version),
             note=self.note,
             protocol=self._protocol,
             port_nr=self._port_nr,
@@ -286,7 +293,9 @@ class Port(Base):
             if item.isdigit():
                 ports.append(int(item))
                 continue
-            port_name = PortName(protocol=self._protocol, platform=self._platform)
+            port_name = PortName(protocol=self._protocol,
+                                 platform=self._platform,
+                                 version=self.version)
             data = port_name.names()
             if port_nr := data.get(item):
                 ports.append(port_nr)

@@ -17,6 +17,9 @@ class AceBase(Base, ABC):
         :param platform: Platform: "asa", "ios", "nxos". Default "ios".
         :type platform: str
 
+        :param version: Software version, default is "0".
+        :type version: str
+
         Helpers
         :param note: Object description.
         :type note: Any
@@ -66,11 +69,11 @@ class AceBase(Base, ABC):
 
     def __repr__(self):
         """__repr__."""
+        name = self.__class__.__name__
         params = self._repr__params()
         params = self._repr__add_param("protocol_nr", params)
         params = self._repr__add_param("port_nr", params)
         kwargs = ", ".join(params)
-        name = self.__class__.__name__
         return f"{name}({kwargs})"
 
     # =========================== property ===========================

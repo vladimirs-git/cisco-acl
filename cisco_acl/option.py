@@ -22,6 +22,9 @@ class Option(Base):
         :param platform: Platform: "asa", "ios", "nxos". Default "ios".
         :type platform: str
 
+        :param version: Software version, default is "0".
+        :type version: str
+
         Helpers
         :param note: Object description.
         :type note: Any
@@ -100,6 +103,7 @@ class Option(Base):
         option.data() -> {
             "line": "ack log",
             "platform": "ios",
+            "version": "0",
             "note": "",
             "flags": ["ack"],
             "logs": ["log"],
@@ -109,6 +113,7 @@ class Option(Base):
             # init
             line=self.line,
             platform=self._platform,
+            version=str(self.version),
             note=self.note,
             # property
             flags=self._flags,

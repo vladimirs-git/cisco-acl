@@ -2,6 +2,8 @@
 from ipaddress import IPv4Network, IPv4Address
 from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, Union
 
+from netports import SwVersion
+
 DAny = Dict[str, Any]
 DInt = Dict[str, int]
 DStr = Dict[str, str]
@@ -24,6 +26,7 @@ T2Str = Tuple[str, str]
 T3Str = Tuple[str, str, str]
 TStr = Tuple[str, ...]
 UIInt = Union[bytes, float, int, str, Iterable[Union[bytes, float, int, str]]]
+UVersion = Union[SwVersion, str]
 
 DDAny = Dict[str, DAny]
 DLAny = Dict[str, LAny]

@@ -343,12 +343,14 @@ class Test(Helpers):
         kwargs1 = dict(platform="ios", name="NAME", items=[f"10 {SUBNET30}"], ident="  ")
         req1 = dict(line="object-group network NAME\n  10 10.0.0.0 255.255.255.252",
                     platform="ios",
+                    version="0",
                     note="",
                     indent="  ",
                     name="NAME",
                     items=[
                         dict(line="10 10.0.0.0 255.255.255.252",
                              platform="ios",
+                             version="0",
                              items=[],
                              note="",
                              max_ncwb=16,

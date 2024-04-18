@@ -169,6 +169,7 @@ class Wildcard(Base):
             line=self.line,
             max_ncwb=self.max_ncwb,
             platform=self._platform,
+            version=str(self.version),
             note=self.note,
             # property
             ipnet=self.ipnet,

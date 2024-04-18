@@ -4,6 +4,7 @@ import unittest
 from ipaddress import IPv4Network
 from logging import WARNING
 
+from netports import SwVersion
 from packaging.version import InvalidVersion
 
 from cisco_acl import helpers as h
@@ -256,6 +257,8 @@ class Test(unittest.TestCase):
             (dict(version=0), 0),
             (dict(version="0.0"), 0),
             (dict(version="15.2(02)SY"), 15),
+            (dict(version=SwVersion("0")), 0),
+            (dict(version=SwVersion("15.2(02)SY")), 15),
         ]:
             version_o = h.init_version(**kwargs)
             result = version_o.major

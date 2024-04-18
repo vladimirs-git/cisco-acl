@@ -12,7 +12,7 @@ Unreleased
 
 3.2.5 (2024-04-18)
 ------------------
-**Fixed:** IOS version="15.2(02)SY" tcp msrpc 135
+**Added:** SwVersion
 
 
 3.2.4 (2024-04-01)

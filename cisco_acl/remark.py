@@ -22,6 +22,9 @@ class Remark(AceBase):
         :param platform: Platform: "asa", "ios", "nxos". Default "ios".
         :type platform: str
 
+        :param version: Software version, default is "0".
+        :type version: str
+
         Helpers
         :param note: Object description
         :type note: Any
@@ -117,6 +120,7 @@ class Remark(AceBase):
             # init
             line=self.line,
             platform=self._platform,
+            version=str(self.version),
             note=self.note,
             # property
             sequence=self._sequence,

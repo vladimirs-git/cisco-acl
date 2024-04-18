@@ -106,6 +106,9 @@ class Protocol(Base):
         :param platform: Platform: "asa", "ios", "nxos". Default "ios".
         :type platform: str
 
+        :param version: Software version, default is "0".
+        :type version: str
+
         Helpers
         :param note: Object description.
         :type note: Any
@@ -255,6 +258,7 @@ class Protocol(Base):
             address.data() -> {
                 "line": "tcp",
                 "platform": "ios",
+                "version": "0",
                 "note": "",
                 "protocol_nr": False,
                 "has_port": False,
@@ -266,6 +270,7 @@ class Protocol(Base):
             # init
             line=self.line,
             platform=self._platform,
+            version=str(self.version),
             note=self.note,
             protocol_nr=self._protocol_nr,
             has_port=self._has_port,

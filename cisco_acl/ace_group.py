@@ -46,6 +46,9 @@ class AceGroup(AceBase, Group):
         :param platform: Platform: "asa", "ios", "nxos". Default "ios".
         :type platform: str
 
+        :param version: Software version, default is "0".
+        :type version: str
+
         Helpers
         :param note: Object description.
         :type note: Any
@@ -239,6 +242,7 @@ class AceGroup(AceBase, Group):
             # init
             line=self.line,
             platform=self._platform,
+            version=str(self.version),
             type=self._type,
             name=self._name,
             items=[o.data(uuid=uuid) for o in self._items],

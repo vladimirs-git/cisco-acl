@@ -32,6 +32,9 @@ class AddrGroup(Base, Group):
         :param platform: Platform: "asa", "ios", "nxos". Default "ios".
         :type platform: str
 
+        :param version: Software version, default is "0".
+        :type version: str
+
         Helpers
         :param note: Object description.
         :type note: Any
@@ -255,6 +258,7 @@ class AddrGroup(Base, Group):
             # init
             line=self.line,
             platform=self._platform,
+            version=str(self.version),
             note=self.note,
             indent=self._indent,
             name=self._name,

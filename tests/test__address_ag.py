@@ -333,10 +333,12 @@ class Test(Helpers):
         kwargs1 = dict(line=GROUPOBJ, platform="ios", items=[SUBNET30])
         req1 = dict(line="group-object NAME",
                     platform="ios",
+                    version="0",
                     sequence=0,
                     items=[
                         dict(line="10.0.0.0 255.255.255.252",
                              platform="ios",
+                             version="0",
                              sequence=0,
                              items=[],
                              note="",
@@ -359,6 +361,7 @@ class Test(Helpers):
         kwargs2 = dict(line=PREFIX30, platform="nxos")
         req2 = dict(line="10.0.0.0/30",
                     platform="nxos",
+                    version="0",
                     sequence=0,
                     items=[],
                     note="",
