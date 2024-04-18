@@ -1,4 +1,5 @@
 """TCP/UDP ports and names mapping for Cisco ACL."""
+
 from netports import SwVersion
 
 from cisco_acl import helpers as h
@@ -202,10 +203,10 @@ class PortName:
     """TCP/UDP ports and names mapping for Cisco ACL."""
 
     def __init__(
-            self,
-            protocol: str = "tcp",
-            platform: str = "",
-            version: UVersion = "",
+        self,
+        protocol: str = "tcp",
+        platform: str = "",
+        version: UVersion = "",
     ):
         """Init PortName.
 
@@ -228,7 +229,6 @@ class PortName:
         params = [
             f"protocol={self.protocol!r}",
             f"platform={self.platform!r}",
-
         ]
         if str(self.version) != "0":
             params.append(f"version={str(self.version)!r}")
@@ -292,6 +292,7 @@ class PortName:
         """
         return bool(self.protocol in ["udp", "17"])
 
+
 # ============================ functions =============================
 
 
@@ -313,6 +314,7 @@ def all_known_names() -> LStr:
 
 
 # ============================= helpers ==============================
+
 
 def _init_protocol(protocol: str) -> str:
     """Init protocol.

@@ -25,13 +25,15 @@ def parse_ace_extended(line: str) -> DStr:  # pylint: disable=too-many-locals
     """
     space = r"(?: )"
     text = r"\S+"
-    addr = "|".join([
-        "any",  # "any"
-        f"host {h.OCTETS}",  # "host A.B.C.D"
-        f"(?:object-group|addrgroup) {text}",  # ios: "object-group NAME", nxos: "addrgroup NAME"
-        h.OCTETS + r"/\d+",  # "A.B.C.D/LEN"
-        f"{h.OCTETS} {h.OCTETS}",  # "A.B.C.D A.B.C.D"
-    ])
+    addr = "|".join(
+        [
+            "any",  # "any"
+            f"host {h.OCTETS}",  # "host A.B.C.D"
+            f"(?:object-group|addrgroup) {text}",  # ios: "object-group NAME", nxos: "addrgroup NAME"
+            h.OCTETS + r"/\d+",  # "A.B.C.D/LEN"
+            f"{h.OCTETS} {h.OCTETS}",  # "A.B.C.D A.B.C.D"
+        ]
+    )
 
     re_sequence = r"(\d+)?"
     re_action = f"{space}?(permit|deny)"
@@ -81,14 +83,16 @@ def parse_ace_standard(line: str) -> DStr:
     """
     space = r"(?: )"
     text = r"\S+"
-    addr = "|".join([
-        "any",  # "any"
-        f"host {h.OCTETS}",  # "host A.B.C.D"
-        f"(?:object-group|addrgroup) {text}",  # ios: "object-group NAME", nxos: "addrgroup NAME"
-        h.OCTETS + r"/\d+",  # "A.B.C.D/LEN"
-        f"{h.OCTETS} {h.OCTETS}",  # "A.B.C.D A.B.C.D"
-        h.OCTETS,  # host
-    ])
+    addr = "|".join(
+        [
+            "any",  # "any"
+            f"host {h.OCTETS}",  # "host A.B.C.D"
+            f"(?:object-group|addrgroup) {text}",  # ios: "object-group NAME", nxos: "addrgroup NAME"
+            h.OCTETS + r"/\d+",  # "A.B.C.D/LEN"
+            f"{h.OCTETS} {h.OCTETS}",  # "A.B.C.D A.B.C.D"
+            h.OCTETS,  # host
+        ]
+    )
 
     re_sequence = r"(\d+)?"
     re_action = f"{space}?(permit|deny)"

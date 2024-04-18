@@ -1,4 +1,5 @@
 """Functions to create Acl objects From the "show running-config" output."""
+
 import logging
 from ipaddress import IPv4Network
 from typing import Union

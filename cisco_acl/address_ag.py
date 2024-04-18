@@ -2,6 +2,7 @@
 
 A "group-object" item of "object-group network " command.
 """
+
 from __future__ import annotations
 
 from functools import total_ordering

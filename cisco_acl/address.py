@@ -1,4 +1,5 @@
 """Address - Source or destination address in ACE."""
+
 from __future__ import annotations
 
 from functools import total_ordering

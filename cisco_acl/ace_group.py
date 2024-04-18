@@ -6,6 +6,7 @@ the AceGroup behaves like a single item and order of ACE items inside AceGroup i
 AceGroup is useful for freezing ACEs section, to hold "deny" after certain "permit".
 This class implements most of the Python list methods: append(), extend(), sort(), etc.
 """
+
 from __future__ import annotations
 
 import logging

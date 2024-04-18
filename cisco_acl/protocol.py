@@ -1,4 +1,5 @@
 """ACE IP protocol object."""
+
 from __future__ import annotations
 
 from functools import total_ordering

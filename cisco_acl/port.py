@@ -1,4 +1,5 @@
 """Port - ACE TCP/UDP source or destination port object."""
+
 from __future__ import annotations
 
 from functools import total_ordering
@@ -125,9 +126,7 @@ class Port(Base):
         if self._port_nr:
             items_s = " ".join([str(i) for i in self._items])
             return f"{self._operator} {items_s}"
-        port_name = PortName(protocol=self._protocol,
-                             platform=self._platform,
-                             version=self.version)
+        port_name = PortName(protocol=self._protocol, platform=self._platform, version=self.version)
         data = port_name.ports()
         items_s = " ".join([str(data.get(i) or i) for i in self._items])
         return f"{self._operator} {items_s}"
@@ -293,9 +292,9 @@ class Port(Base):
             if item.isdigit():
                 ports.append(int(item))
                 continue
-            port_name = PortName(protocol=self._protocol,
-                                 platform=self._platform,
-                                 version=self.version)
+            port_name = PortName(
+                protocol=self._protocol, platform=self._platform, version=self.version
+            )
             data = port_name.names()
             if port_nr := data.get(item):
                 ports.append(port_nr)

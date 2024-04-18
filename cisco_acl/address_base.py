@@ -1,4 +1,5 @@
 """AddressBase, parent of: Address, AddressAg."""
+
 import re
 from abc import abstractmethod
 from functools import total_ordering

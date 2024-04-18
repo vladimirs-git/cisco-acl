@@ -1,4 +1,5 @@
 """ACE - Access Control Entry."""
+
 from __future__ import annotations
 
 from functools import total_ordering
@@ -220,17 +221,17 @@ class Ace(AceBase):
             port_nr=self._port_nr,
             protocol_nr=self._protocol_nr,
         )
-        kwargs_port = dict(platform=self._platform,
-                           version=self.version,
-                           protocol=protocol_o.name,
-                           port_nr=self._port_nr)
+        kwargs_port = dict(
+            platform=self._platform,
+            version=self.version,
+            protocol=protocol_o.name,
+            port_nr=self._port_nr,
+        )
         self._srcport = Port(ace_d["srcport"], **kwargs_port)
         self._dstport = Port(ace_d["dstport"], **kwargs_port)
         protocol_o.has_port = bool(self._srcport.line or self._dstport.line)
         self._protocol = protocol_o
-        self._option = Option(ace_d["option"],
-                              platform=self._platform,
-                              version=self.version)
+        self._option = Option(ace_d["option"], platform=self._platform, version=self.version)
 
     @property
     def option(self) -> Option:

@@ -3,6 +3,7 @@
 Group of AddressAg addresses configured in "object-group network" (ios) or
 "object-group ip address" (nxos).
 """
+
 from __future__ import annotations
 
 import logging

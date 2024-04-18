@@ -6,6 +6,7 @@ from ipaddress import IPv4Network
 import dictdiffer  # type: ignore
 
 from cisco_acl import Ace, AceGroup, Acl, Remark, Address
+from tests import test__acl__helpers as h2
 from tests.helpers_test import (
     ACL_NAME_CNX,
     ACL_NAME_IOS,
@@ -43,7 +44,6 @@ from tests.helpers_test import (
     make_acl,
     remove_acl_name,
 )
-from tests import test__acl__helpers as h2
 
 REMARK_10 = Remark(f"10 {REMARK}")
 REMARK_20 = Remark(f"20 {REMARK}")

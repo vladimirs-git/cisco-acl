@@ -2,6 +2,7 @@
 
 This class implements most of the Python list methods: append(), extend(), sort(), etc.
 """
+
 from __future__ import annotations
 
 from functools import total_ordering
