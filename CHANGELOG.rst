@@ -4,9 +4,15 @@
 CHANGELOG
 =========
 
-3.2.5 (2024-04-17)
+Unreleased
+----------
+
+**Change:**  IOS Remark without sequence number
+
+
+3.2.5 (2024-04-18)
 ------------------
-**Fixed:** IOS Remark without sequence number
+**Fixed:** IOS version="15.2(02)SY" tcp msrpc 135
 
 
 3.2.4 (2024-04-01)

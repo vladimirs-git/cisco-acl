@@ -20,7 +20,7 @@ class Port(Base):
 
         :param line: TCP/UDP ports line.
 
-        :param platform: Platform: "asa", "ios", "nxos". Default "ios"..
+        :param platform: Platform: "asa", "ios", "nxos". Default "ios".
         :type platform: str
 
         :param protocol: ACL protocol: "tcp", "udp", "".

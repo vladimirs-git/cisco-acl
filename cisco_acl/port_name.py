@@ -1,4 +1,5 @@
 """TCP/UDP ports and names mapping for Cisco ACL."""
+from netports import SwVersion
 
 from cisco_acl import helpers as h
 from cisco_acl.types_ import DInt, DiStr, LStr
@@ -100,14 +101,20 @@ TCP_NAME_PORT__NXOS = {
 }
 TCP_NAME_PORT__NXOS = {**TCP_NAME_PORT__BASE, **TCP_NAME_PORT__NXOS}
 
+# cisco C6816-X-LE, Cisco IOS Software, Version 15.2(02)SY
+TCP_NAME_PORT__IOS_15 = {
+    "syslog": 514,  # alias of cmd
+}
+TCP_NAME_PORT__IOS_15 = {**TCP_NAME_PORT__BASE, **TCP_NAME_PORT__IOS_15}
+
 # cisco ISR4331/K9, Cisco IOS XE Software, Version 16.09.06
-TCP_NAME_PORT__IOS = {
+TCP_NAME_PORT__IOS_16 = {
     "msrpc": 135,
     "syslog": 514,  # alias of cmd
     "onep-plain": 15001,
     "onep-tls": 15002,
 }
-TCP_NAME_PORT__IOS = {**TCP_NAME_PORT__BASE, **TCP_NAME_PORT__IOS}
+TCP_NAME_PORT__IOS_16 = {**TCP_NAME_PORT__BASE, **TCP_NAME_PORT__IOS_16}
 
 # cisco Nexus 3172T, NXOS: version 9.3(8)
 # cisco ISR4331/K9, Cisco IOS XE Software, Version 16.09.06
@@ -181,26 +188,34 @@ UDP_NAME_PORT__ASA = {
 # cisco Nexus 3172T, NXOS: version 9.3(8)
 UDP_NAME_PORT__NXOS = UDP_NAME_PORT__BASE
 
+# cisco C6816-X-LE, Cisco IOS Software, Version 15.2(02)SY
+UDP_NAME_PORT__IOS_15 = {**UDP_NAME_PORT__BASE}
+
 # cisco ISR4331/K9, Cisco IOS XE Software, Version 16.09.06
-UDP_NAME_PORT__IOS = {
+UDP_NAME_PORT__IOS_16 = {
     "ripv6": 521,
 }
-UDP_NAME_PORT__IOS = {**UDP_NAME_PORT__BASE, **UDP_NAME_PORT__IOS}
+UDP_NAME_PORT__IOS_16 = {**UDP_NAME_PORT__BASE, **UDP_NAME_PORT__IOS_16}
 
 
 class PortName:
     """TCP/UDP ports and names mapping for Cisco ACL."""
 
-    def __init__(self, protocol: str = "tcp", **kwargs):
+    def __init__(
+            self,
+            protocol: str = "tcp",
+            platform: str = "",
+            version: str = "",
+    ):
         """Init PortName.
 
         :param protocol: Protocol: "tcp", "udp".
         :param platform: Platform: "asa", "ios", "nxos". Default "ios".
-        :param version: Software version (not implemented, planned for compatability).
+        :param version: Software version.
         """
-        self.protocol = self._init_protocol(protocol)
-        self.platform = h.init_platform(**kwargs)
-        self.version = str(kwargs.get("version") or "").lower()
+        self.protocol: str = _init_protocol(protocol)
+        self.platform: str = h.init_platform(platform=platform)
+        self.version: SwVersion = h.init_version(version=version)
 
     def __repr__(self):
         """__repr__."""
@@ -208,52 +223,44 @@ class PortName:
         params = [
             f"protocol={self.protocol!r}",
             f"platform={self.platform!r}",
-            f"version={self.version!r}",
+
         ]
+        if str(self.version) != "0":
+            params.append(f"version={str(self.version)!r}")
         params_s = ", ".join(params)
         return f"{name}({params_s})"
 
-    @staticmethod
-    def _init_protocol(protocol: str) -> str:
-        """Init protocol.
-
-        Converts TCP/UDP numbers to names.
-        :param protocol: Protocol: "tcp", "udp".
-        :return: Protocol: "tcp", "udp".
-        """
-        protocol = str(protocol).lower()
-        expected = ["tcp", "udp"]
-        if protocol in expected:
-            return protocol
-        if str(protocol) == "6":
-            return "tcp"
-        if str(protocol) == "17":
-            return "udp"
-        raise ValueError(f"invalid {protocol=}, {expected=}")
-
+    # noinspection DuplicatedCode
     def names(self) -> DInt:
         """Return TCP/UDP protocol names and ports based on the platform and software version.
 
         :return: Dictionary with protocol names and ports (platform-specific).
         :example: {"echo": 7, "discard": 9, ...}
         """
-        if self.protocol in ["tcp", "6"]:
+        names_d: DInt = {}
+        if self._is_tcp():
             if self.platform == "asa":
-                return TCP_NAME_PORT__ASA.copy()
-            if self.platform == "ios":
-                return TCP_NAME_PORT__IOS.copy()
-            if self.platform == "nxos":
-                return TCP_NAME_PORT__NXOS.copy()
-            return {}
-        if self.protocol in ["udp", "17"]:
+                names_d = TCP_NAME_PORT__ASA.copy()
+            elif self.platform == "ios":
+                if self.version.major == 15:
+                    names_d = TCP_NAME_PORT__IOS_15.copy()
+                else:
+                    names_d = TCP_NAME_PORT__IOS_16.copy()
+            elif self.platform == "nxos":
+                names_d = TCP_NAME_PORT__NXOS.copy()
+
+        elif self._is_udp():
             if self.platform == "asa":
-                return UDP_NAME_PORT__ASA.copy()
-            if self.platform == "ios":
-                return UDP_NAME_PORT__IOS.copy()
-            if self.platform == "nxos":
-                return UDP_NAME_PORT__NXOS.copy()
-            return {}
-        return {}
+                names_d = UDP_NAME_PORT__ASA.copy()
+            elif self.platform == "ios":
+                if self.version.major == 15:
+                    names_d = UDP_NAME_PORT__IOS_15.copy()
+                else:
+                    names_d = UDP_NAME_PORT__IOS_16.copy()
+            elif self.platform == "nxos":
+                names_d = UDP_NAME_PORT__NXOS.copy()
+
+        return names_d
 
     # noinspection DuplicatedCode
     def ports(self) -> DiStr:
@@ -262,34 +269,23 @@ class PortName:
         :return: Dictionary with protocol ports and ports (platform-specific).
         :example: {7: "echo", 9: "discard", ...}
         """
-        if self.protocol in ["tcp", "6"]:
-            if self.platform == "asa":
-                return self._swap(TCP_NAME_PORT__ASA.copy())
-            if self.platform == "ios":
-                return self._swap(TCP_NAME_PORT__IOS.copy())
-            if self.platform == "nxos":
-                return self._swap(TCP_NAME_PORT__NXOS.copy())
-            return {}
+        names_d: DInt = self.names()
+        ports_d: DiStr = _swap(names_d)
+        return ports_d
 
-        if self.protocol in ["udp", "17"]:
-            if self.platform == "asa":
-                return self._swap(UDP_NAME_PORT__ASA.copy())
-            if self.platform == "ios":
-                return self._swap(UDP_NAME_PORT__IOS.copy())
-            if self.platform == "nxos":
-                return self._swap(UDP_NAME_PORT__NXOS.copy())
-            return {}
-        return {}
+    def _is_tcp(self) -> bool:
+        """Check if the protocol is TCP.
 
-    @staticmethod
-    def _swap(name_port: DInt) -> DiStr:
-        """Swap names and ports in dict."""
-        data: DiStr = {}
-        for name, port in name_port.items():
-            if port not in data:
-                data[port] = name
-        return data
+        :return: True if the protocol is TCP, False otherwise.
+        """
+        return bool(self.protocol in ["tcp", "6"])
 
+    def _is_udp(self) -> bool:
+        """Check if the protocol is UDP.
+
+        :return: True if the protocol is UDP, False otherwise.
+        """
+        return bool(self.protocol in ["udp", "17"])
 
 # ============================ functions =============================
 
@@ -300,12 +296,41 @@ def all_known_names() -> LStr:
     # tcp
     items.update(set(TCP_NAME_PORT__BASE))
     items.update(set(TCP_NAME_PORT__ASA))
-    items.update(set(TCP_NAME_PORT__IOS))
+    items.update(set(TCP_NAME_PORT__IOS_16))
     items.update(set(TCP_NAME_PORT__NXOS))
     items.update(set(UDP_NAME_PORT__BASE))
     # udp
     items.update(set(UDP_NAME_PORT__BASE))
     items.update(set(UDP_NAME_PORT__ASA))
-    items.update(set(UDP_NAME_PORT__IOS))
+    items.update(set(UDP_NAME_PORT__IOS_16))
     items.update(set(UDP_NAME_PORT__NXOS))
     return sorted(items)
+
+
+# ============================= helpers ==============================
+
+def _init_protocol(protocol: str) -> str:
+    """Init protocol.
+
+    Convert TCP/UDP numbers to names.
+    :param protocol: Protocol: "tcp", "udp".
+    :return: Protocol: "tcp", "udp".
+    """
+    protocol = str(protocol).lower()
+    expected = ["tcp", "udp"]
+    if protocol in expected:
+        return protocol
+    if str(protocol) == "6":
+        return "tcp"
+    if str(protocol) == "17":
+        return "udp"
+    raise ValueError(f"invalid {protocol=}, {expected=}")
+
+
+def _swap(name_port: DInt) -> DiStr:
+    """Swap names and ports in dict."""
+    data: DiStr = {}
+    for name, port in name_port.items():
+        if port not in data:
+            data[port] = name
+    return data

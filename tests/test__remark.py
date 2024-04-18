@@ -56,8 +56,8 @@ class Test(Helpers):
     def test_valid__repr__(self):
         """Remark.__repr__()"""
         for kwargs, req in [
-            (dict(line="remark TEXT", platform="ios", note=""), "Remark(\"remark TEXT\")"),
-            (dict(line="remark TEXT", platform="nxos", note="a"),
+            ({"line": "remark TEXT", "platform": "ios", "note": ""}, "Remark(\"remark TEXT\")"),
+            ({"line": "remark TEXT", "platform": "nxos", "note": "a"},
              "Remark(\"remark TEXT\", platform=\"nxos\", note=\"a\")"),
         ]:
             obj = Remark(**kwargs)
@@ -71,10 +71,12 @@ class Test(Helpers):
         """Remark.line"""
         remark_0 = "remark TEXT TEXT2"
         remark_0_dirty = " remark\tTEXT  TEXT2\n"
-        remark_0_d = dict(line=remark_0,
-                          sequence=0,
-                          action="remark",
-                          text="TEXT TEXT2")
+        remark_0_d = {
+            "line": remark_0,
+            "sequence": 0,
+            "action": "remark",
+            "text": "TEXT TEXT2",
+        }
         remark_10 = "10 remark TEXT TEXT2"
         remark_10_dirty = " 10\tremark  TEXT  TEXT2\n"
         remark_10_d = {**remark_0_d, **{"line": remark_10, "sequence": 10}}
@@ -107,7 +109,7 @@ class Test(Helpers):
 
     def test_valid__platform(self):
         """Remark.platform"""
-        remark_d = dict(line=REMARK, text="TEXT")
+        remark_d = {"line": REMARK, "text": "TEXT"}
         for platform, line, req_d, platform_new, req_new_d in [
             ("ios", REMARK, remark_d, "ios", remark_d),
             ("ios", REMARK, remark_d, "nxos", remark_d),
@@ -123,7 +125,7 @@ class Test(Helpers):
 
     def test_valid__text(self):
         """Remark.text"""
-        rem_d = dict(line="remark TEXT TEXT2", text="TEXT TEXT2")
+        rem_d = {"line": "remark TEXT TEXT2", "text": "TEXT TEXT2"}
         for line, req_d in [
             ("remark TEXT  TEXT2", rem_d),
             ("\tremark\tTEXT  TEXT2\n", rem_d),
@@ -153,26 +155,20 @@ class Test(Helpers):
         obj2 = obj1.copy()
 
         # change obj1 to check obj1 does not depend on obj2
-        new_obj1_kwargs = dict(platform="nxos", sequence=20, text="TEXT2", note="b")
+        new_obj1_kwargs = {"platform": "nxos", "sequence": 20, "text": "TEXT2", "note": "b"}
         for arg, value in new_obj1_kwargs.items():
             setattr(obj1, arg, value)
 
-        req1_d = dict(line="20 remark TEXT2", platform="nxos", note="b")
-        req2_d = dict(line="10 remark TEXT", platform="ios", note="a")
+        req1_d = {"line": "20 remark TEXT2", "platform": "nxos", "note": "b"}
+        req2_d = {"line": "10 remark TEXT", "platform": "ios", "note": "a"}
         self._test_attrs(obj1, req1_d, msg="obj1 does not depend on obj2")
         self._test_attrs(obj2, req2_d, msg="obj2 copied from obj1")
 
     def test_valid__data(self):
         """Remark.data()"""
-        kwargs1 = dict(line="10 remark TEXT",
-                       platform="ios",
-                       note="a")
-        req1 = dict(line="10 remark TEXT",
-                    platform="ios",
-                    note="a",
-                    sequence=10,
-                    action="remark",
-                    text="TEXT")
+        kwargs1 = {"line": "10 remark TEXT", "platform": "ios", "note": "a"}
+        req1 = {"line": "10 remark TEXT", "platform": "ios", "note": "a", 
+                "sequence": 10, "action": "remark", "text": "TEXT"}
 
         for kwargs, req_d in [
             (kwargs1, req1),

@@ -8,6 +8,8 @@ from string import ascii_letters, digits, punctuation
 from time import time
 from typing import Any, List, NamedTuple
 
+from netports import SwVersion
+
 from cisco_acl.types_ import LStr, StrInt, LInt, OInt, SInt, T2Str, T3Str, DInt, SStr, LIpNet
 
 IOS = "ios"
@@ -251,6 +253,20 @@ def init_type(**kwargs) -> str:
         expected = "extended"
         raise ValueError(f"invalid type={_type!r}, {expected=}")
     return _type
+
+
+# noinspection PyIncorrectDocstring
+def init_version(**kwargs) -> SwVersion:
+    """Init version.
+
+    Convert software version string to SwVersion object.
+    :param version: software version string.
+    :return: SwVersion object.
+    """
+    version = kwargs.get("version")
+    if not version:
+        version = "0"
+    return SwVersion(version)
 
 
 def int_to_str(line: StrInt) -> str:
