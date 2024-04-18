@@ -143,9 +143,13 @@ class AceGroup(AceBase, Group):
         for item in items:
             if isinstance(item, (Ace, Remark)):
                 item._platform = self._platform
+                item.version = self.version
                 item._type = self._type
                 _items.append(item)
             elif isinstance(item, dict):
+                item["platform"] = self._platform
+                item["version"] = str(self.version)
+                item["type"] = self._type
                 ace_o: UAce = self._dict_to_ace(**item)
                 _items.append(ace_o)
             elif isinstance(item, str):

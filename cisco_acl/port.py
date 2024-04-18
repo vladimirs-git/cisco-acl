@@ -305,13 +305,13 @@ class Port(Base):
             raise ValueError(msg)
 
         # validation
-        platform = self._platform
         operator = self._operator
         if operator in ["lt", "gt"] and len(ports) != 1:
             raise ValueError(f"invalid {operator=} with {ports=}")
         if operator == "range" and len(ports) != 2:
             raise ValueError(f"invalid {operator=} with {ports=} expected 2 ports")
         if self._operator in ["eq", "neq"]:
+            platform = self._platform
             if platform in ["asa", "nxos"] and len(ports) != 1:
                 raise ValueError(f"invalid count of {ports=}, for {platform=} expected 1 port")
 

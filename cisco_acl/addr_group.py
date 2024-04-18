@@ -144,8 +144,11 @@ class AddrGroup(Base, Group):
         for item in items:
             if isinstance(item, (AddressAg, AddrGroup)):
                 item._platform = self._platform
+                item.version = self.version
                 _items.append(item)
             elif isinstance(item, dict):
+                item["platform"] = self._platform
+                item["version"] = str(self.version)
                 addr_o = AddressAg(**item)
                 _items.append(addr_o)
             elif isinstance(item, str):

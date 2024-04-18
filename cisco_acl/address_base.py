@@ -121,8 +121,11 @@ class AddressBase(Base):
         for item in items:
             if isinstance(item, self.__class__):
                 item.platform = self._platform
+                item.version = self.version
                 items_.append(item)
             elif isinstance(item, dict):
+                item["platform"] = self._platform
+                item["version"] = str(self.version)
                 addr_o = self.__class__(**item)
                 items_.append(addr_o)
             elif isinstance(item, str):

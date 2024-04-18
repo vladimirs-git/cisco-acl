@@ -183,10 +183,13 @@ class Acl(AceGroup):
             # object
             if isinstance(item, (Ace, Remark, AceGroup)):
                 item._platform = self._platform
+                item.version = self.version
                 item._type = self._type
                 _items.append(item)
             # dict
             elif isinstance(item, dict):
+                item["platform"] = self._platform
+                item["version"] = str(self.version)
                 aceg_o: UAceg = self._dict_to_aceg(**item)
                 _items.append(aceg_o)
             # str
