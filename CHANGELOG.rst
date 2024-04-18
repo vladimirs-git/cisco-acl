@@ -7,12 +7,14 @@ CHANGELOG
 Unreleased
 ----------
 
-**Change:**  IOS Remark without sequence number
+**Add:**  IOS Remark without sequence number
+
+**Add:**  Recursive AddrGroup in other AddrGroup items
 
 
 3.2.5 (2024-04-18)
 ------------------
-**Added:** SwVersion
+**Added:** SwVersion, different tcp/udp well-known ports names.
 
 
 3.2.4 (2024-04-01)
