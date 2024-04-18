@@ -28,3 +28,15 @@ assert port.ports == [1, 2, 3, 4, 5]
 assert port.sport == "1-5"
 print(port.line)
 # range 1 5
+
+
+# software version
+port = Port("eq 135", platform="ios", protocol="tcp", version="15")
+assert port.line == "eq 135"
+print(port.line)
+# eq 135
+
+port = Port("eq 135", platform="ios", protocol="tcp")
+assert port.line == "eq msrpc"
+print(port.line)
+# eq msrpc
