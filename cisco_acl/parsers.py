@@ -29,7 +29,7 @@ def parse_ace_extended(line: str) -> DStr:  # pylint: disable=too-many-locals
         [
             "any",  # "any"
             f"host {h.OCTETS}",  # "host A.B.C.D"
-            f"(?:object-group|addrgroup) {text}",  # ios: "object-group NAME", nxos: "addrgroup NAME"
+            f"(?:object-group|addrgroup) {text}",  # ios: "object-group", nxos: "addrgroup"
             h.OCTETS + r"/\d+",  # "A.B.C.D/LEN"
             f"{h.OCTETS} {h.OCTETS}",  # "A.B.C.D A.B.C.D"
         ]
@@ -87,7 +87,7 @@ def parse_ace_standard(line: str) -> DStr:
         [
             "any",  # "any"
             f"host {h.OCTETS}",  # "host A.B.C.D"
-            f"(?:object-group|addrgroup) {text}",  # ios: "object-group NAME", nxos: "addrgroup NAME"
+            f"(?:object-group|addrgroup) {text}",  # ios: "object-group", nxos: "addrgroup"
             h.OCTETS + r"/\d+",  # "A.B.C.D/LEN"
             f"{h.OCTETS} {h.OCTETS}",  # "A.B.C.D A.B.C.D"
             h.OCTETS,  # host
