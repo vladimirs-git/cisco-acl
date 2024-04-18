@@ -368,10 +368,11 @@ class AceGroup(AceBase, Group):
         if action not in ACTIONS:
             raise ValueError(f"invalid action in {kwargs=}, expected {ACTIONS=}")
         kwargs["platform"] = self._platform
+        kwargs["version"] = str(self.version)
         kwargs["type"] = self._type
         kwargs["protocol_nr"] = self._protocol_nr
         kwargs["port_nr"] = self._port_nr
-        if action in ["remark"]:
+        if action == "remark":
             return Remark(**kwargs)
         return Ace(**kwargs)
 
@@ -384,6 +385,7 @@ class AceGroup(AceBase, Group):
         items = kwargs.get("items")
         if isinstance(items, (list, tuple)):
             kwargs["platform"] = self._platform
+            kwargs["version"] = str(self.version)
             kwargs["type"] = self._type
             kwargs["protocol_nr"] = self._protocol_nr
             kwargs["port_nr"] = self._port_nr
@@ -409,11 +411,12 @@ class AceGroup(AceBase, Group):
             return: None
         """
         action = parsers.parse_action(line)["action"]
-        if action in ["remark"]:
-            return Remark(line, platform=self._platform, type=self._type)
+        if action == "remark":
+            return Remark(line, platform=self._platform, version=self.version, type=self._type)
         ace_o = Ace(
             line=line,
             platform=self._platform,
+            version=self.version,
             type=self._type,
             protocol_nr=self._protocol_nr,
             port_nr=self._port_nr,

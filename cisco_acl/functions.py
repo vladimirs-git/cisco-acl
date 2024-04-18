@@ -23,7 +23,7 @@ UAddress = Union[Address, AddressAg]
 
 
 # noinspection PyIncorrectDocstring,DuplicatedCode
-def acls(config: str, **kwargs) -> LAcl:  # TODO version
+def acls(config: str, **kwargs) -> LAcl:
     """Create Acl objects based on the "show running-config" output.
 
     Support address group objects.

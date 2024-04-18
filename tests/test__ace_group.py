@@ -11,8 +11,10 @@ from tests.helpers_test import (
     DENY_IP2,
     HOST,
     Helpers,
+    PERMIT_135,
     PERMIT_IP,
     PERMIT_IP1,
+    PERMIT_MSRPC,
     PERMIT_NAM,
     PERMIT_NUM,
     PERMIT_TCP1,
@@ -421,6 +423,34 @@ class Test(Helpers):
             obj.items = items
             self._test_attrs(obj=obj, req_d=req_d, msg=f"{items=}")
 
+    def test_valid__dict_to_ace(self):
+        """AceGroup._dict_to_ace()"""
+        obj = AceGroup()
+        for params, req in [
+            ({"line": REMARK, "action": "remark"}, REMARK),
+            ({"line": PERMIT_IP, "action": "permit"}, PERMIT_IP),
+            ({"line": DENY_IP, "action": "deny"}, DENY_IP),
+            ({"line": ""}, None),
+            ({"line": "typo"}, None),
+        ]:
+            if req:
+                obj_ = obj._dict_to_ace(**params)
+                result = str(obj_)
+                self.assertEqual(result, req, msg=f"{params=}")
+            else:
+                with self.assertRaises(ValueError, msg=f"{params=}"):
+                    obj._dict_to_ace(**params)
+
+    def test_valid__dict_to_ace__version(self):
+        """AceGroup._dict_to_ace() version"""
+        for version, params, req in [
+            ("", {"line": PERMIT_135, "action": "permit"}, PERMIT_MSRPC),
+            ("15", {"line": PERMIT_135, "action": "permit"}, PERMIT_135),
+        ]:
+            obj = AceGroup(version=version)
+            result = str(obj._dict_to_ace(**params))
+            self.assertEqual(result, req, msg=f"{version=}")
+
     def test_valid__line_to_ace(self):
         """AceGroup._line_to_ace() AceGroup._line_to_oace()"""
         obj = AceGroup()
@@ -440,6 +470,16 @@ class Test(Helpers):
 
             result = obj._line_to_oace(line)
             self.assertEqual(result, req, msg=f"{line=}")
+
+    def test_valid__line_to_ace__version(self):
+        """AceGroup._line_to_ace() version"""
+        for version, req in [
+            ("", PERMIT_MSRPC),
+            ("15", PERMIT_135),
+        ]:
+            obj = AceGroup(version=version)
+            result = str(obj._line_to_ace(PERMIT_135))
+            self.assertEqual(result, req, msg=f"{version=}")
 
 
 if __name__ == "__main__":

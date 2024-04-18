@@ -210,10 +210,10 @@ class Test(Helpers):
             (dict(line=f"{ACL_NAME_IOS}\nignore routable", platform="ios"),
              dict(line=f"{ACL_NAME_IOS}\n", name="NAME")),
             # version
-            (dict(line=f"{ACL_NAME_IOS}\n{PERMIT_135}", platform="ios"),
+            (dict(line=f"{ACL_NAME_IOS}\n{PERMIT_135}", platform="ios", version=""),
              dict(line=f"{ACL_NAME_IOS}\n  {PERMIT_MSRPC}")),
-            (dict(line=f"{ACL_NAME_IOS}\n{PERMIT_135}", platform="ios", version="15.2(02)SY"),
-             dict(line=f"{ACL_NAME_IOS}\n  {PERMIT_MSRPC}")),
+            (dict(line=f"{ACL_NAME_IOS}\n{PERMIT_135}", platform="ios", version="15"),
+             dict(line=f"{ACL_NAME_IOS}\n  {PERMIT_135}")),
         ]:
             obj = Acl(**kwargs)
             self._test_attrs(obj=obj, req_d=req_d, msg=f"{kwargs=}")
