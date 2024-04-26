@@ -198,14 +198,53 @@ class Test(unittest.TestCase):
             result = f.range_ports(**kwargs)
             self.assertEqual(result, req, msg=f"{kwargs=}")
 
-    def test_valid__range_ports_src(self):
-        """functions.range_ports()"""
-        for kwargs, req in [
-            (dict(srcports="20-23", port_nr=True), ["20", "21", "22", "23"]),
-            (dict(srcports="20-23", port_nr=False), ["ftp-data", "ftp", "22", "telnet"]),
+    def test_valid__range_ports__port_nr(self):
+        """functions.range_ports(port_nr)"""
+        for kwargs, srcs, dsts in [
+            (dict(srcports="20-22,80", port_nr=True), ["20", "21", "22", "80"], []),
+            (dict(srcports="20-22,80", port_nr=False), ["ftp-data", "ftp", "22", "www"], []),
+            (dict(dstports="20-22,80", port_nr=True), [], ["20", "21", "22", "80"]),
+            (dict(dstports="20-22,80", port_nr=False), [], ["ftp-data", "ftp", "22", "www"]),
+            (dict(srcports="20-21", dstports="22-23", port_nr=True), ["20", "21"], ["22", "23"]),
+            (dict(srcports="20-21", dstports="22-23", port_nr=False),
+             ["ftp-data", "ftp"], ["22", "telnet"]),
         ]:
             result = f.range_ports(**kwargs)
-            expected = [f"permit tcp any eq {s} any" for s in req]
+            expected = [f"permit tcp any eq {s} any" for s in srcs]
+            expected.extend([f"permit tcp any any eq {s}" for s in dsts])
+            self.assertEqual(result, expected, msg=f"{kwargs=}")
+
+    def test_valid__range_ports__port_count(self):
+        """functions.range_ports(port_count)"""
+        for kwargs, srcs, dsts in [
+            # src
+            (dict(srcports="20-22", port_nr=True), [["20"], ["21"], ["22"]], []),
+            (dict(srcports="20-22", port_nr=True, port_count=0), [["20"], ["21"], ["22"]], []),
+            (dict(srcports="20-22", port_nr=True, port_count=1), [["20"], ["21"], ["22"]], []),
+            (dict(srcports="20-22", port_nr=True, port_count=2), [["20", "21"], ["22"]], []),
+            (dict(srcports="20-22", port_nr=True, port_count=3), [["20", "21", "22"]], []),
+            (dict(srcports="20-22", port_nr=True, port_count=4), [["20", "21", "22"]], []),
+            # dst
+            (dict(dstports="20-22", port_nr=True), [], [["20"], ["21"], ["22"]]),
+            (dict(dstports="20-22", port_nr=True, port_count=0), [], [["20"], ["21"], ["22"]]),
+            (dict(dstports="20-22", port_nr=True, port_count=1), [], [["20"], ["21"], ["22"]]),
+            (dict(dstports="20-22", port_nr=True, port_count=2), [], [["20", "21"], ["22"]]),
+            (dict(dstports="20-22", port_nr=True, port_count=3), [], [["20", "21", "22"]]),
+            (dict(dstports="20-22", port_nr=True, port_count=4), [], [["20", "21", "22"]]),
+            # combo
+            (dict(srcports="20-21", dstports="22-23", port_nr=True),
+             [["20"], ["21"]], [["22"], ["23"]]),
+            (dict(srcports="20-21", dstports="22-23", port_nr=True, port_count=2),
+             [["20", "21"]], [["22", "23"]]),
+        ]:
+            result = f.range_ports(**kwargs)
+            expected = []
+            for ports in srcs:
+                ports_ = " ".join([s for s in ports])
+                expected.append(f"permit tcp any eq {ports_} any")
+            for ports in dsts:
+                ports_ = " ".join([s for s in ports])
+                expected.append(f"permit tcp any any eq {ports_}")
             self.assertEqual(result, expected, msg=f"{kwargs=}")
 
 

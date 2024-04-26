@@ -164,18 +164,21 @@ def init_name(name: str) -> str:
 
 def init_number(number: StrInt) -> str:
     """Init number, convert int to string."""
-    while True:
-        if isinstance(number, int):
-            if number < 0:
-                raise ValueError(f"{number=} positive expected")
-            break
-        if isinstance(number, str):
-            if number.isdigit():
-                number = int(number)
-                break
-            raise ValueError(f"{number=} digit expected")
-        raise TypeError(f"{number=} {str} {int} expected")
-    return str(number)
+    return str(init_number_int(number))
+
+
+def init_number_int(number: StrInt) -> int:
+    """Init positive integer."""
+    if isinstance(number, int):
+        if number >= 0:
+            return number
+        raise ValueError(f"{number=} positive expected")
+
+    if isinstance(number, str):
+        if number.isdigit():
+            return int(number)
+        raise ValueError(f"{number=} digit expected")
+    raise TypeError(f"{number=} {str} {int} expected")
 
 
 # noinspection PyIncorrectDocstring

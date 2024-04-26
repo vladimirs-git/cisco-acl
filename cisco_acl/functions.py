@@ -5,6 +5,7 @@ from ipaddress import IPv4Network
 from typing import Union
 
 import netports
+from vhelpers import vlist
 
 from cisco_acl import helpers as h
 from cisco_acl.ace import Ace, LAce
@@ -206,10 +207,13 @@ def range_ports(**kwargs) -> LStr:
         False - well-known tcp/udp ports as names (default).
     :type port_nr: bool
 
-    :param port_range: Group ACE lines by match type "eq", "range".
-        True  - Each tcp/udp port in separate ACE line with match type "eq",
+    :param port_range: Group ACE lines by match operator "eq", "range".
+        True  - Each tcp/udp port in separate ACE line with match operator "eq",
         False - Port "range" and "eq" in different ACE lines (default).
-    :type port_nr: bool
+    :type port_range: bool
+
+    :param port_count: Count of ports in ACE lines. Default is 1.
+    :type port_count: int
 
     :return: List of newly generated ACE lines.
     :rtype: List[str]
@@ -224,9 +228,9 @@ def range_ports(**kwargs) -> LStr:
     dstports = str(kwargs.get("dstports") or "")
 
     aces_: LAce = []  # result
-    _aces = _range__port(range=srcports, sdst="src", **kwargs)
+    _aces = _range__port(range_=srcports, sdst="src", **kwargs)
     aces_.extend(_aces)
-    _aces = _range__port(range=dstports, sdst="dst", **kwargs)
+    _aces = _range__port(range_=dstports, sdst="dst", **kwargs)
     aces_.extend(_aces)
     return [o.line for o in aces_]
 
@@ -388,29 +392,50 @@ def _check_addgr(ace_o, addgrs, address_o, parser) -> bool:
     return True
 
 
-def _range__port(sdst: str, **kwargs) -> LAce:
+def _range__port(
+        sdst: str,
+        range_: str = "",
+        line: str = "permit tcp any any",
+        platform: str = "",
+        port_nr: bool = False,
+        **kwargs,
+) -> LAce:
     """Generate range of TCP/UDP source/destination ports.
 
     :param sdst: "src", "dst".
     :type sdst: str
 
-    :param range: Range of TCP/UDP source/destination ports.
-    :type range: str
+    :param range_: Range of TCP/UDP source/destination ports.
+    :type range_: str
+
+    :param line: ACE line with interested protocol and match operator.
+    :type line: str
+
+    :param platform: Platform: "asa", "ios", "nxos". Default "ios".
+    :type platform: str
 
     :param port_nr: Well-known TCP/UDP ports as numbers.
     :type port_nr: bool
 
+    :param port_count: Count of ports in ACE lines. Default is 1.
+    :type port_count: int
+
     :return: List of newly generated Ace objects.
     :rtype: List[Ace]
     """
-    range_ = str(kwargs.get("range") or "")
-    line = str(kwargs.get("line") or "permit tcp any any")
-    platform = h.init_platform(**kwargs)
-    port_nr = bool(kwargs.get("port_nr"))
+    _ = kwargs
+    platform = h.init_platform(platform=platform)
+    port_count = int(h.init_number(kwargs.get("port_count") or 1))
 
     aces_: LAce = []  # result
-    ports: LInt = netports.itcp(range_)
-    for port in ports:
+    ports_: LInt = netports.itcp(range_)
+    port_lists = [ports_]
+    if port_count:
+        port_lists = vlist.to_multi(ports_, count=port_count)
+    port_lists = [li for li in port_lists if li]
+
+    for ports in port_lists:
+        port = " ".join([f"{i}" for i in ports])
         ace_o = Ace(line, platform=platform, port_nr=port_nr)
         ace_o.protocol.has_port = True
 
