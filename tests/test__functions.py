@@ -198,6 +198,16 @@ class Test(unittest.TestCase):
             result = f.range_ports(**kwargs)
             self.assertEqual(result, req, msg=f"{kwargs=}")
 
+    def test_valid__range_ports_src(self):
+        """functions.range_ports()"""
+        for kwargs, req in [
+            (dict(srcports="20-23", port_nr=True), ["20", "21", "22", "23"]),
+            (dict(srcports="20-23", port_nr=False), ["ftp-data", "ftp", "22", "telnet"]),
+        ]:
+            result = f.range_ports(**kwargs)
+            expected = [f"permit tcp any eq {s} any" for s in req]
+            self.assertEqual(result, expected, msg=f"{kwargs=}")
+
 
 if __name__ == "__main__":
     unittest.main()

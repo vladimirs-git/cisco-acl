@@ -74,12 +74,13 @@ def acls(config: str, **kwargs) -> LAcl:
     max_ncwb: int = init_max_ncwb(**kwargs)
     protocol_nr = bool(kwargs.get("protocol_nr"))
     port_nr = bool(kwargs.get("port_nr"))
-    acl_kwargs = dict(indent=indent, max_ncwb=max_ncwb, protocol_nr=protocol_nr, port_nr=port_nr)
 
     parser = ConfigParser(config=config, platform=platform, version=version)
     parser.parse_config()
     parsed_acls: LDAny = parser.acls(names=names)
 
+    acl_kwargs = dict(version=version, indent=indent, max_ncwb=max_ncwb,
+                      protocol_nr=protocol_nr, port_nr=port_nr)
     acls_: LAcl = [Acl(**acl_kwargs, **d) for d in parsed_acls]  # type: ignore
     _add_addgr_to_aces(acls_, parser)
     if group_by:
@@ -128,11 +129,11 @@ def aces(config: str, **kwargs) -> LUAceg:
     max_ncwb: int = init_max_ncwb(**kwargs)
     protocol_nr = bool(kwargs.get("protocol_nr"))
     port_nr = bool(kwargs.get("port_nr"))
-    acl_kwargs = dict(max_ncwb=max_ncwb, protocol_nr=protocol_nr, port_nr=port_nr)
 
     parser = ConfigParser(config=config, platform=platform, version=version)
     parser.parse_config()
 
+    acl_kwargs = dict(version=version, max_ncwb=max_ncwb, protocol_nr=protocol_nr, port_nr=port_nr)
     acl_o = Acl(platform=platform, **acl_kwargs)  # type: ignore
     for line in parser.lines:
         # noinspection PyProtectedMember
@@ -170,12 +171,12 @@ def addrgroups(config: str, **kwargs) -> LAddrGroup:
     version = str(kwargs.get("version") or "")
     max_ncwb: int = init_max_ncwb(**kwargs)
     indent: str = h.init_indent(**kwargs)
-    ag_kwargs = dict(max_ncwb=max_ncwb, indent=indent)
 
     parser = ConfigParser(config=config, platform=platform, version=version)
     parser.parse_config()
 
     parsed_addgrs: LDAny = parser.addgrs()
+    ag_kwargs = dict(version=version, max_ncwb=max_ncwb, indent=indent)
     addgrs: LAddrGroup = [AddrGroup(**ag_kwargs, **d) for d in parsed_addgrs]  # type: ignore
     return addgrs
 
@@ -203,6 +204,11 @@ def range_ports(**kwargs) -> LStr:
     :param port_nr: Well-known TCP/UDP ports as numbers.
         True  - all tcp/udp ports as numbers,
         False - well-known tcp/udp ports as names (default).
+    :type port_nr: bool
+
+    :param port_range: Group ACE lines by match type "eq", "range".
+        True  - Each tcp/udp port in separate ACE line with match type "eq",
+        False - Port "range" and "eq" in different ACE lines (default).
     :type port_nr: bool
 
     :return: List of newly generated ACE lines.
