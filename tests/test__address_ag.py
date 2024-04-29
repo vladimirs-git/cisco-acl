@@ -3,7 +3,7 @@
 import unittest
 from ipaddress import IPv4Network
 
-import dictdiffer  # type: ignore
+import dictdiffer
 
 from cisco_acl import AddressAg
 from cisco_acl import address_ag

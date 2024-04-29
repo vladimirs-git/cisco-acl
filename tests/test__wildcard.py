@@ -2,7 +2,7 @@
 
 import unittest
 
-import dictdiffer  # type: ignore
+import dictdiffer
 
 from cisco_acl import wildcard
 from cisco_acl.wildcard import Wildcard

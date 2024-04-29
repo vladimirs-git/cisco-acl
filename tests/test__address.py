@@ -4,7 +4,7 @@ import unittest
 from ipaddress import IPv4Network, NetmaskValueError
 from logging import WARNING
 
-import dictdiffer  # type: ignore
+import dictdiffer
 
 from cisco_acl import Address, AddressAg, address
 from tests.helpers_test import (

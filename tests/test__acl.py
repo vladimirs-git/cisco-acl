@@ -3,7 +3,7 @@
 import unittest
 from ipaddress import IPv4Network
 
-import dictdiffer  # type: ignore
+import dictdiffer
 
 from cisco_acl import Ace, AceGroup, Acl, Remark, Address
 from tests import test__acl__helpers as h2

@@ -2,7 +2,7 @@
 
 import unittest
 
-import dictdiffer  # type: ignore
+import dictdiffer
 
 from cisco_acl import Ace, AceGroup, Remark, Address
 from tests.helpers_test import (

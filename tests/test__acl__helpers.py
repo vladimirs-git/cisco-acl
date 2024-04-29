@@ -2,7 +2,7 @@
 
 from ipaddress import IPv4Network
 
-import dictdiffer  # type: ignore
+import dictdiffer
 
 LINE_GROUP_ACEGS = """
 ip access-list extended ACL_NAME

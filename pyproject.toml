@@ -75,6 +75,10 @@ disable = [
 [tool.mypy]
 python_version = "3.8"
 
+[[tool.mypy.overrides]]
+module = "dictdiffer.*"
+ignore_missing_imports = true
+
 [tool.ruff]
 exclude = [
     ".git",

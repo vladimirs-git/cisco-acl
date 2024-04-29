@@ -2,7 +2,7 @@
 
 import unittest
 
-import dictdiffer  # type: ignore
+import dictdiffer
 
 from cisco_acl import Port
 from cisco_acl import helpers as h

@@ -2,7 +2,7 @@
 
 import unittest
 
-import dictdiffer  # type: ignore
+import dictdiffer
 
 from cisco_acl.config_parser import ConfigParser
 from cisco_acl.types_ import LDAny

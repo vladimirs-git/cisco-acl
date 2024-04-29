@@ -3,7 +3,7 @@
 import re
 import unittest
 
-import dictdiffer  # type: ignore
+import dictdiffer
 
 from cisco_acl import Ace, Remark
 from cisco_acl.address import Address

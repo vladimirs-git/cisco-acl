@@ -2,7 +2,7 @@
 
 import unittest
 
-import dictdiffer  # type: ignore
+import dictdiffer
 
 from cisco_acl import Ace, Remark
 from tests.helpers_test import Helpers, PERMIT_IP, REMARK, REMARK1, REMARK2, UUID, UUID_R

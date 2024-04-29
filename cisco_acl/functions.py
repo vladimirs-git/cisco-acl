@@ -183,7 +183,15 @@ def addrgroups(config: str, **kwargs) -> LAddrGroup:
 
 
 # noinspection PyIncorrectDocstring
-def range_ports(**kwargs) -> LStr:
+def range_ports(
+        srcports: str = "",
+        dstports: str = "",
+        line: str = "permit tcp any any",
+        platform: str = "",
+        port_nr: bool = False,
+        port_count: int = 1,
+        **kwargs,
+) -> LStr:
     """Generate ACEs in required range of TCP/UDP source/destination ports.
 
     :param srcports: Range of TCP/UDP source ports.
@@ -199,21 +207,18 @@ def range_ports(**kwargs) -> LStr:
     :param platform: Platform: "asa", "ios", "nxos". Default "ios".
     :type platform: str
 
-    :param version: Software version, default is "0".
-    :type version: str
-
     :param port_nr: Well-known TCP/UDP ports as numbers.
         True  - all tcp/udp ports as numbers,
         False - well-known tcp/udp ports as names (default).
     :type port_nr: bool
 
-    :param port_range: Group ACE lines by match operator "eq", "range".
-        True  - Each tcp/udp port in separate ACE line with match operator "eq",
-        False - Port "range" and "eq" in different ACE lines (default).
-    :type port_range: bool
-
     :param port_count: Count of ports in ACE lines. Default is 1.
     :type port_count: int
+
+    :param port_range: Transform ACE lines with match-operator "range" to lines with "eq".
+        True - Split match-operator "range" and "eq" to different ACE lines,
+        False - Transform ACEs with "range" to ACEs with "eq", default is True.
+    :type port_range: bool
 
     :return: List of newly generated ACE lines.
     :rtype: List[str]
@@ -224,14 +229,20 @@ def range_ports(**kwargs) -> LStr:
                                     "permit tcp any eq telnet any",
                                     "permit tcp any eq www any"]
     """
-    srcports = str(kwargs.get("srcports") or "")
-    dstports = str(kwargs.get("dstports") or "")
-
     aces_: LAce = []  # result
-    _aces = _range__port(range_=srcports, sdst="src", **kwargs)
+
+    params = {
+        "line": line,
+        "platform": platform,
+        "port_nr": port_nr,
+        "port_count": port_count,
+        **kwargs,
+    }
+    _aces = _range__port(ports_range=srcports, sdst="src", **params)
     aces_.extend(_aces)
-    _aces = _range__port(range_=dstports, sdst="dst", **kwargs)
+    _aces = _range__port(ports_range=dstports, sdst="dst", **params)
     aces_.extend(_aces)
+
     return [o.line for o in aces_]
 
 
@@ -393,20 +404,21 @@ def _check_addgr(ace_o, addgrs, address_o, parser) -> bool:
 
 
 def _range__port(
+        ports_range: str,
         sdst: str,
-        range_: str = "",
         line: str = "permit tcp any any",
         platform: str = "",
         port_nr: bool = False,
+        port_count: int = 1,
         **kwargs,
 ) -> LAce:
     """Generate range of TCP/UDP source/destination ports.
 
+    :param ports_range: Range of TCP/UDP source/destination ports.
+    :type ports_range: str
+
     :param sdst: "src", "dst".
     :type sdst: str
-
-    :param range_: Range of TCP/UDP source/destination ports.
-    :type range_: str
 
     :param line: ACE line with interested protocol and match operator.
     :type line: str
@@ -425,17 +437,17 @@ def _range__port(
     """
     _ = kwargs
     platform = h.init_platform(platform=platform)
-    port_count = int(h.init_number(kwargs.get("port_count") or 1))
+    port_count = int(h.init_number(port_count or 1))
 
     aces_: LAce = []  # result
-    ports_: LInt = netports.itcp(range_)
-    port_lists = [ports_]
+    ports_l: LInt = netports.itcp(ports_range)
+    ports_ll = [ports_l]
     if port_count:
-        port_lists = vlist.to_multi(ports_, count=port_count)
-    port_lists = [li for li in port_lists if li]
+        ports_ll = vlist.to_multi(ports_l, count=port_count)
+    ports_ll = [li for li in ports_ll if li]
 
-    for ports in port_lists:
-        port = " ".join([f"{i}" for i in ports])
+    for ports_ in ports_ll:
+        port = " ".join([f"{i}" for i in ports_])
         ace_o = Ace(line, platform=platform, port_nr=port_nr)
         ace_o.protocol.has_port = True
 

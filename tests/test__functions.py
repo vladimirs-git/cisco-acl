@@ -3,9 +3,10 @@
 import unittest
 from ipaddress import NetmaskValueError
 
-import dictdiffer  # type: ignore
+import dictdiffer
 
 from cisco_acl import functions as f
+from cisco_acl.types_ import LStr, LLStr
 from tests.helpers_test import DENY_IP, PERMIT_IP, REMARK, PERMIT_NUM, PERMIT_WILD_252
 from tests.test__functions__helpers import CNX_ACEG_EXT_D, IOS_ACE_EXT_D, IOS_ACEG_EXT_D
 from tests.test__functions__helpers import CNX_ACL_EXT_CFG, IOS_ADDGR_D, CNX_ACE_EXT_D
@@ -14,7 +15,25 @@ from tests.test__functions__helpers import IOS_ACE_STD_D, IOS_ACEG_STD_D, IOS_AC
 from tests.test__functions__helpers import IOS_ADDGR_CFG, IOS_ACL_EXT_CFG, IOS_ACL_STD_CFG
 
 
-# noinspection DuplicatedCode
+def _expected__range_ports__port_nr(srcs: LStr, dsts: LStr) -> LStr:
+    """Return expected data for range_ports()"""
+    expected = [f"permit tcp any eq {s} any" for s in srcs]
+    expected.extend([f"permit tcp any any eq {s}" for s in dsts])
+    return expected
+
+
+def _expected__range_ports__port_count(srcs: LLStr, dsts: LLStr) -> LStr:
+    """Return expected data for range_ports()"""
+    expected: LStr = []
+    for ports in srcs:
+        ports_ = " ".join([s for s in ports])
+        expected.append(f"permit tcp any eq {ports_} any")
+    for ports in dsts:
+        ports_ = " ".join([s for s in ports])
+        expected.append(f"permit tcp any any eq {ports_}")
+    return expected
+
+
 class Test(unittest.TestCase):
     """functions.py"""
 
@@ -165,13 +184,9 @@ class Test(unittest.TestCase):
         deny_udp1 = ["deny udp host 10.0.0.1 eq 1 any"]
         src_tcp_eq = ["permit tcp any eq ftp-data any", "permit tcp any eq ftp any"]
         src_tcp_eq_ = ["permit tcp any eq 20 any", "permit tcp any eq 21 any"]
-        src_tcp_gt = ["permit tcp any gt 20 any", "permit tcp any gt 21 any"]
-        src_tcp_lt = ["permit tcp any lt 20 any", "permit tcp any lt 21 any"]
         src_udp_neq = ["permit udp any neq 67 any", "permit udp any neq 68 any"]
         dst_tcp_eq = ["permit tcp any any eq ftp-data", "permit tcp any any eq ftp"]
         dst_tcp_eq_ = ["permit tcp any any eq 20", "permit tcp any any eq 21"]
-        dst_tcp_gt = ["permit tcp any any gt 20", "permit tcp any any gt 21"]
-        dst_tcp_lt = ["permit tcp any any lt 20", "permit tcp any any lt 21"]
         dst_udp_neq = ["permit udp any any neq 67", "permit udp any any neq 68"]
         combo = ["permit tcp any eq 20 any", "permit tcp any eq 21 any",
                  "permit tcp any any eq 22", "permit tcp any any eq 23"]
@@ -182,15 +197,11 @@ class Test(unittest.TestCase):
             (dict(srcports="1", line="deny udp host 10.0.0.1 any"), deny_udp1),
             (dict(srcports="20-21", port_nr=False), src_tcp_eq),
             (dict(srcports="20-21", port_nr=True), src_tcp_eq_),
-            (dict(srcports="20-21", line="permit tcp any gt 1 any", port_nr=True), src_tcp_gt),
-            (dict(srcports="20-21", line="permit tcp any lt 1 any", port_nr=True), src_tcp_lt),
             (dict(srcports="67,68", line="permit udp any neq 1 any", port_nr=True), src_udp_neq),
             # dst
             (dict(dstports=""), []),
             (dict(dstports="20,21", port_nr=False), dst_tcp_eq),
             (dict(dstports="20,21", port_nr=True), dst_tcp_eq_),
-            (dict(dstports="20-21", line="permit tcp any any gt 1", port_nr=True), dst_tcp_gt),
-            (dict(dstports="20-21", line="permit tcp any any lt 1", port_nr=True), dst_tcp_lt),
             (dict(dstports="67,68", line="permit udp any any neq 1", port_nr=True), dst_udp_neq),
             # combo
             (dict(srcports="20-21", dstports="22-23", port_nr=True), combo),
@@ -198,27 +209,43 @@ class Test(unittest.TestCase):
             result = f.range_ports(**kwargs)
             self.assertEqual(result, req, msg=f"{kwargs=}")
 
+    def test_invalid__range_ports(self):
+        """functions.range_ports()"""
+        for kwargs, error in [
+            (dict(srcports="20-21", line="permit tcp any gt 1 any"), ValueError),
+            (dict(srcports="20-21", line="permit tcp any lt 1 any"), ValueError),
+            (dict(srcports="20-21", line="permit tcp any range 1 2 any"), ValueError),
+            (dict(dstports="20-21", line="permit tcp any any gt 1"), ValueError),
+            (dict(dstports="20-21", line="permit tcp any any lt 1"), ValueError),
+            (dict(dstports="20-21", line="permit tcp any any range 1 2"), ValueError),
+        ]:
+            with self.assertRaises(error, msg=f"{kwargs=}"):
+                f.range_ports(**kwargs)
+
     def test_valid__range_ports__port_nr(self):
         """functions.range_ports(port_nr)"""
         for kwargs, srcs, dsts in [
+            # port_nr=True
             (dict(srcports="20-22,80", port_nr=True), ["20", "21", "22", "80"], []),
-            (dict(srcports="20-22,80", port_nr=False), ["ftp-data", "ftp", "22", "www"], []),
             (dict(dstports="20-22,80", port_nr=True), [], ["20", "21", "22", "80"]),
-            (dict(dstports="20-22,80", port_nr=False), [], ["ftp-data", "ftp", "22", "www"]),
             (dict(srcports="20-21", dstports="22-23", port_nr=True), ["20", "21"], ["22", "23"]),
+            # port_nr=False
+            (dict(srcports="20-22,80", port_nr=False), ["ftp-data", "ftp", "22", "www"], []),
+            (dict(dstports="20-22,80", port_nr=False), [], ["ftp-data", "ftp", "22", "www"]),
             (dict(srcports="20-21", dstports="22-23", port_nr=False),
              ["ftp-data", "ftp"], ["22", "telnet"]),
         ]:
             result = f.range_ports(**kwargs)
-            expected = [f"permit tcp any eq {s} any" for s in srcs]
-            expected.extend([f"permit tcp any any eq {s}" for s in dsts])
+            expected = _expected__range_ports__port_nr(srcs, dsts)
             self.assertEqual(result, expected, msg=f"{kwargs=}")
 
     def test_valid__range_ports__port_count(self):
         """functions.range_ports(port_count)"""
         for kwargs, srcs, dsts in [
+            # port_nr=True
             # src
-            (dict(srcports="20-22", port_nr=True), [["20"], ["21"], ["22"]], []),
+            (dict(srcports="20-22", port_nr=True, platfprm="ios"), [["20"], ["21"], ["22"]], []),
+            (dict(srcports="20-22", port_nr=True, platfprm="cnx"), [["20"], ["21"], ["22"]], []),
             (dict(srcports="20-22", port_nr=True, port_count=0), [["20"], ["21"], ["22"]], []),
             (dict(srcports="20-22", port_nr=True, port_count=1), [["20"], ["21"], ["22"]], []),
             (dict(srcports="20-22", port_nr=True, port_count=2), [["20", "21"], ["22"]], []),
@@ -236,15 +263,89 @@ class Test(unittest.TestCase):
              [["20"], ["21"]], [["22"], ["23"]]),
             (dict(srcports="20-21", dstports="22-23", port_nr=True, port_count=2),
              [["20", "21"]], [["22", "23"]]),
+            # port_nr=False
+            # src
+            (dict(srcports="20-21", port_nr=False, platfprm="ios"), [["ftp-data"], ["ftp"]], []),
+            (dict(srcports="20-21", port_nr=False, platfprm="cnx"), [["ftp-data"], ["ftp"]], []),
+            (dict(srcports="20-21", port_nr=False, port_count=0), [["ftp-data"], ["ftp"]], []),
+            (dict(srcports="20-21", port_nr=False, port_count=1), [["ftp-data"], ["ftp"]], []),
+            (dict(srcports="20-21", port_nr=False, port_count=2), [["ftp-data", "ftp"]], []),
+            (dict(srcports="20-21", port_nr=False, port_count=3), [["ftp-data", "ftp"]], []),
+            (dict(srcports="20-21", port_nr=False, port_count=4), [["ftp-data", "ftp"]], []),
+            # dst
+            (dict(dstports="20-21", port_nr=False), [], [["ftp-data"], ["ftp"]]),
+            (dict(dstports="20-21", port_nr=False, port_count=0), [], [["ftp-data"], ["ftp"]]),
+            (dict(dstports="20-21", port_nr=False, port_count=1), [], [["ftp-data"], ["ftp"]]),
+            (dict(dstports="20-21", port_nr=False, port_count=2), [], [["ftp-data", "ftp"]]),
+            (dict(dstports="20-21", port_nr=False, port_count=3), [], [["ftp-data", "ftp"]]),
+            (dict(dstports="20-21", port_nr=False, port_count=4), [], [["ftp-data", "ftp"]]),
+            # combo
+            (dict(srcports="20-21", dstports="22-23", port_nr=False),
+             [["ftp-data"], ["ftp"]], [["22"], ["telnet"]]),
+            (dict(srcports="20-21", dstports="22-23", port_nr=False, port_count=2),
+             [["ftp-data", "ftp"]], [["22", "telnet"]]),
         ]:
             result = f.range_ports(**kwargs)
-            expected = []
+            expected = _expected__range_ports__port_count(srcs, dsts)
+            self.assertEqual(result, expected, msg=f"{kwargs=}")
+
+
+    def test_valid__range_ports__port_range(self):
+        """functions.range_ports(port_range)"""
+        for kwargs, srcs, dsts in [
+            # port_nr=True
+            # src
+            (dict(srcports="20-22,80", port_range=True, platfprm="ios"), [], []),
+            # (dict(srcports="20-22", port_nr=True, platfprm="cnx"), [["20"], ["21"], ["22"]], []),
+            # (dict(srcports="20-22", port_nr=True, port_count=0), [["20"], ["21"], ["22"]], []),
+            # (dict(srcports="20-22", port_nr=True, port_count=1), [["20"], ["21"], ["22"]], []),
+            # (dict(srcports="20-22", port_nr=True, port_count=2), [["20", "21"], ["22"]], []),
+            # (dict(srcports="20-22", port_nr=True, port_count=3), [["20", "21", "22"]], []),
+            # (dict(srcports="20-22", port_nr=True, port_count=4), [["20", "21", "22"]], []),
+            # # dst
+            # (dict(dstports="20-22", port_nr=True), [], [["20"], ["21"], ["22"]]),
+            # (dict(dstports="20-22", port_nr=True, port_count=0), [], [["20"], ["21"], ["22"]]),
+            # (dict(dstports="20-22", port_nr=True, port_count=1), [], [["20"], ["21"], ["22"]]),
+            # (dict(dstports="20-22", port_nr=True, port_count=2), [], [["20", "21"], ["22"]]),
+            # (dict(dstports="20-22", port_nr=True, port_count=3), [], [["20", "21", "22"]]),
+            # (dict(dstports="20-22", port_nr=True, port_count=4), [], [["20", "21", "22"]]),
+            # # combo
+            # (dict(srcports="20-21", dstports="22-23", port_nr=True),
+            #  [["20"], ["21"]], [["22"], ["23"]]),
+            # (dict(srcports="20-21", dstports="22-23", port_nr=True, port_count=2),
+            #  [["20", "21"]], [["22", "23"]]),
+            # # port_nr=False
+            # # src
+            # (dict(srcports="20-21", port_nr=False, platfprm="ios"), [["ftp-data"], ["ftp"]], []),
+            # (dict(srcports="20-21", port_nr=False, platfprm="cnx"), [["ftp-data"], ["ftp"]], []),
+            # (dict(srcports="20-21", port_nr=False, port_count=0), [["ftp-data"], ["ftp"]], []),
+            # (dict(srcports="20-21", port_nr=False, port_count=1), [["ftp-data"], ["ftp"]], []),
+            # (dict(srcports="20-21", port_nr=False, port_count=2), [["ftp-data", "ftp"]], []),
+            # (dict(srcports="20-21", port_nr=False, port_count=3), [["ftp-data", "ftp"]], []),
+            # (dict(srcports="20-21", port_nr=False, port_count=4), [["ftp-data", "ftp"]], []),
+            # # dst
+            # (dict(dstports="20-21", port_nr=False), [], [["ftp-data"], ["ftp"]]),
+            # (dict(dstports="20-21", port_nr=False, port_count=0), [], [["ftp-data"], ["ftp"]]),
+            # (dict(dstports="20-21", port_nr=False, port_count=1), [], [["ftp-data"], ["ftp"]]),
+            # (dict(dstports="20-21", port_nr=False, port_count=2), [], [["ftp-data", "ftp"]]),
+            # (dict(dstports="20-21", port_nr=False, port_count=3), [], [["ftp-data", "ftp"]]),
+            # (dict(dstports="20-21", port_nr=False, port_count=4), [], [["ftp-data", "ftp"]]),
+            # # combo
+            # (dict(srcports="20-21", dstports="22-23", port_nr=False),
+            #  [["ftp-data"], ["ftp"]], [["22"], ["telnet"]]),
+            # (dict(srcports="20-21", dstports="22-23", port_nr=False, port_count=2),
+            #  [["ftp-data", "ftp"]], [["22", "telnet"]]),
+        ]:
+            result = f.range_ports(**kwargs)
+
+            expected: LStr = []
             for ports in srcs:
                 ports_ = " ".join([s for s in ports])
                 expected.append(f"permit tcp any eq {ports_} any")
             for ports in dsts:
                 ports_ = " ".join([s for s in ports])
                 expected.append(f"permit tcp any any eq {ports_}")
+
             self.assertEqual(result, expected, msg=f"{kwargs=}")
 
 

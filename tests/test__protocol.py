@@ -2,7 +2,7 @@
 
 import unittest
 
-import dictdiffer  # type: ignore
+import dictdiffer
 
 from cisco_acl import Protocol
 from tests.helpers_test import Helpers, UUID, UUID_R

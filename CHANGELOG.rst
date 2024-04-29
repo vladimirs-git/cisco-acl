@@ -12,7 +12,7 @@ Unreleased
 **Add:**  Recursive AddrGroup in other AddrGroup items
 
 
-3.3.2 (2024-04-26)
+3.3.2 (2024-04-29)
 ------------------
 **Added:** SwVersion, different tcp/udp well-known ports names.
 
