@@ -190,6 +190,7 @@ def range_ports(
         platform: str = "",
         port_nr: bool = False,
         port_count: int = 1,
+        port_range: bool = True,
         **kwargs,
 ) -> LStr:
     """Generate ACEs in required range of TCP/UDP source/destination ports.
@@ -216,8 +217,8 @@ def range_ports(
     :type port_count: int
 
     :param port_range: Transform ACE lines with match-operator "range" to lines with "eq".
-        True - Split match-operator "range" and "eq" to different ACE lines,
-        False - Transform ACEs with "range" to ACEs with "eq", default is True.
+        True - Split match-operator "range" and "eq" to different ACE lines, default is True,
+        False - Transform all ACEs with "range" to ACEs with "eq" (each port in separate ACE).
     :type port_range: bool
 
     :return: List of newly generated ACE lines.
@@ -229,6 +230,10 @@ def range_ports(
                                     "permit tcp any eq telnet any",
                                     "permit tcp any eq www any"]
     """
+    platform = h.init_platform(platform=platform)
+    port_count = int(h.init_number(port_count or 1))
+    _check_operator_eq_range(line, platform, port_range)
+
     aces_: LAce = []  # result
 
     params = {
@@ -236,12 +241,11 @@ def range_ports(
         "platform": platform,
         "port_nr": port_nr,
         "port_count": port_count,
-        **kwargs,
+        "port_range": port_range,
     }
-    _aces = _range__port(ports_range=srcports, sdst="src", **params)
-    aces_.extend(_aces)
-    _aces = _range__port(ports_range=dstports, sdst="dst", **params)
-    aces_.extend(_aces)
+    for sdst, ports_range in [("src", srcports), ("dst", dstports)]:
+        _aces = _range__port(ports_range=ports_range, sdst=sdst, **params)
+        aces_.extend(_aces)
 
     return [o.line for o in aces_]
 
@@ -319,6 +323,48 @@ def subnet_of(top: UAddress, bottom: UAddress) -> bool:
 # ============================= helper ===============================
 
 
+def _check_addgr(ace_o, addgrs, address_o, parser) -> bool:
+    """Check addresses in address group.
+
+    :return: True - Single Address group present in config.
+        False - Address group not found in config or detected multiple groups,
+        with the same name.
+    """
+    ace = ace_o.line
+    addrgroup = address_o.addrgroup
+    addgrs_ = [o for o in addgrs if o.name == addrgroup]
+    count = len(addgrs_)
+    if not count:
+        line = f"{parser.pattern__object_group()} {addrgroup}"
+        msg = f"{ace=} has no addresses, {line=} not found in config"
+        logging.warning(msg)
+        return False
+    if count != 1:
+        msg = f"{ace=} has no addresses, found multiple {addrgroup=}, expected 1"
+        logging.warning(msg)
+        return False
+    return True
+
+
+def _check_operator_eq_range(line: str, platform: str, port_range: bool) -> None:
+    """Check if the operator is one of allowed: "eq", "neq", "range".
+
+    :param line: ACE line with interested match-operators to check.
+
+    :param platform: Platform
+
+    :return: None. Raise a ValueError if the operator is invalid.
+    """
+    ace_o = Ace(line, platform=platform)
+    operators = [ace_o.srcport.operator, ace_o.dstport.operator]
+    operators = [s for s in operators if s]
+
+    expected = ["eq", "neq", "range"]
+    for operator in operators:
+        if operator not in expected:
+            raise ValueError(f"invalid {operator=}, {expected=}")
+
+
 def _create_acls_w_acegs(parser: ConfigParser, group_by: str) -> LAcl:
     """Create Acls with AceGroups. Groups ACEs to AceGroup by `group_by` in startswith remarks.
 
@@ -380,39 +426,16 @@ def _convert_ios_addr(address_ag_d: DAny) -> None:
     address_ag_d["line"] = wildcard
 
 
-def _check_addgr(ace_o, addgrs, address_o, parser) -> bool:
-    """Check addresses in address group.
-
-    :return: True - Single Address group present in config.
-        False - Address group not found in config or detected multiple groups,
-        with the same name.
-    """
-    ace = ace_o.line
-    addrgroup = address_o.addrgroup
-    addgrs_ = [o for o in addgrs if o.name == addrgroup]
-    count = len(addgrs_)
-    if not count:
-        line = f"{parser.pattern__object_group()} {addrgroup}"
-        msg = f"{ace=} has no addresses, {line=} not found in config"
-        logging.warning(msg)
-        return False
-    if count != 1:
-        msg = f"{ace=} has no addresses, found multiple {addrgroup=}, expected 1"
-        logging.warning(msg)
-        return False
-    return True
-
-
 def _range__port(
         ports_range: str,
         sdst: str,
-        line: str = "permit tcp any any",
-        platform: str = "",
-        port_nr: bool = False,
-        port_count: int = 1,
-        **kwargs,
+        line: str,
+        platform: str,
+        port_nr: bool,
+        port_count: int,
+        port_range: bool,
 ) -> LAce:
-    """Generate range of TCP/UDP source/destination ports.
+    """Generate range of TCP/UDP ports with match-operator.
 
     :param ports_range: Range of TCP/UDP source/destination ports.
     :type ports_range: str
@@ -427,6 +450,8 @@ def _range__port(
     :type platform: str
 
     :param port_nr: Well-known TCP/UDP ports as numbers.
+        True  - all tcp/udp ports as numbers,
+        False - well-known tcp/udp ports as names (default).
     :type port_nr: bool
 
     :param port_count: Count of ports in ACE lines. Default is 1.
@@ -435,28 +460,32 @@ def _range__port(
     :return: List of newly generated Ace objects.
     :rtype: List[Ace]
     """
-    _ = kwargs
-    platform = h.init_platform(platform=platform)
-    port_count = int(h.init_number(port_count or 1))
-
     aces_: LAce = []  # result
-    ports_l: LInt = netports.itcp(ports_range)
-    ports_ll = [ports_l]
-    if port_count:
-        ports_ll = vlist.to_multi(ports_l, count=port_count)
-    ports_ll = [li for li in ports_ll if li]
 
-    for ports_ in ports_ll:
+    # ports for one ACE
+    if port_range:
+        ports_l: LStr = ports_range.split(",")
+    else:
+        ports_l = [str(i) for i in netports.itcp(ports_range)]
+    ports_l = [s for s in ports_l if s]
+    ports_for_ace = [ports_l]
+    if port_count:
+        ports_for_ace = vlist.to_multi(ports_l, count=port_count)
+    ports_for_ace = [li for li in ports_for_ace if li]
+
+    for ports_ in ports_for_ace:
         port = " ".join([f"{i}" for i in ports_])
         ace_o = Ace(line, platform=platform, port_nr=port_nr)
         ace_o.protocol.has_port = True
 
-        # check operator=="range"
-        port_o: Port = getattr(ace_o, f"{sdst}port")
-        operator = port_o.operator or "eq"
-        expected = ["eq", "gt", "lt", "neq"]
-        if operator not in expected:
-            raise ValueError(f"invalid {operator=}, {expected=}")
+        # operator
+        attr = f"{sdst}port"
+        port_o: Port = getattr(ace_o, attr)
+        operator = port_o.operator
+        if not operator:
+            operator = "eq"
+            if port.find("-") > -1:
+                operator = "range"
 
         port_o = Port(
             line=f"{operator} {port}",
@@ -464,6 +493,8 @@ def _range__port(
             protocol=ace_o.protocol.name,
             port_nr=ace_o.port_nr,
         )
-        setattr(ace_o, f"_{sdst}port", port_o)
+        attr = f"_{sdst}port"
+        setattr(ace_o, attr, port_o)
         aces_.append(ace_o)
+
     return aces_
