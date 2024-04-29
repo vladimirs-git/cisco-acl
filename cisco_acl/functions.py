@@ -17,7 +17,7 @@ from cisco_acl.address_ag import AddressAg
 from cisco_acl.config_parser import ConfigParser
 from cisco_acl.port import Port
 from cisco_acl.protocol import Protocol
-from cisco_acl.types_ import LDAny, LInt, LStr, DAny
+from cisco_acl.types_ import LDAny, LInt, LStr, DAny, LLStr
 from cisco_acl.wildcard import init_max_ncwb
 
 UAddress = Union[Address, AddressAg]
@@ -457,24 +457,21 @@ def _range__port(
     :param port_count: Count of ports in ACE lines. Default is 1.
     :type port_count: int
 
+    :param port_range: Transform ACE lines with match-operator "range" to lines with "eq".
+        True - Split match-operator "range" and "eq" to different ACE lines, default is True,
+        False - Transform all ACEs with "range" to ACEs with "eq" (each port in separate ACE).
+    :type port_range: bool
+
     :return: List of newly generated Ace objects.
     :rtype: List[Ace]
     """
     aces_: LAce = []  # result
 
-    # ports for one ACE
-    if port_range:
-        ports_l: LStr = ports_range.split(",")
-    else:
-        ports_l = [str(i) for i in netports.itcp(ports_range)]
-    ports_l = [s for s in ports_l if s]
-    ports_for_ace = [ports_l]
-    if port_count:
-        ports_for_ace = vlist.to_multi(ports_l, count=port_count)
-    ports_for_ace = [li for li in ports_for_ace if li]
+    ports_for_ace: LLStr = _split_range_for_ace(ports_range, port_count, port_range)
 
     for ports_ in ports_for_ace:
         port = " ".join([f"{i}" for i in ports_])
+
         ace_o = Ace(line, platform=platform, port_nr=port_nr)
         ace_o.protocol.has_port = True
 
@@ -486,6 +483,7 @@ def _range__port(
             operator = "eq"
             if port.find("-") > -1:
                 operator = "range"
+                port = port.replace("-", " ")
 
         port_o = Port(
             line=f"{operator} {port}",
@@ -498,3 +496,61 @@ def _range__port(
         aces_.append(ace_o)
 
     return aces_
+
+
+def _split_range_for_ace(ports_range: str, port_count: int, port_range: bool) -> LLStr:
+    """Split port_range to strings where each item is for separate ACE.
+
+    :param ports_range: Range of TCP/UDP source/destination ports.
+    :type ports_range: str
+
+    :param port_count: Count of ports in ACE lines. Default is 1.
+    :type port_count: int
+
+    :param port_range: Transform ACE lines with match-operator "range" to lines with "eq".
+        True - Split match-operator "range" and "eq" to different ACE lines, default is True,
+        False - Transform all ACEs with "range" to ACEs with "eq" (each port in separate ACE).
+    :type port_range: bool
+
+    :return: List of newly generated ports.
+    :rtype: List[Ace]
+    """
+    items: LLStr = []
+    ports_i: LStr = []
+    ports = ports_range.split(",")
+    for port in ports:
+        # range
+        if not port.isdigit():
+            if ports_i:
+                items.append(ports_i)
+                ports_i = []
+            if not port:
+                continue
+            if port_range:
+                items.append([port])
+                continue
+            ports_ = [str(i) for i in netports.itcp(port)]
+            items.append(ports_)
+            continue
+
+        # port_count unlimited
+        if not port_count:
+            ports_i.append(port)
+            continue
+
+        # ports
+        if len(ports_i) >= port_count:
+            items.append(ports_i)
+            ports_i = []
+        ports_i.append(port)
+    else:
+        if ports_i:
+            items.append(ports_i)
+
+    if not port_range:
+        items_ = vlist.flatten(items)
+        items = [items_]
+        if port_count:
+            items = vlist.to_multi(items_, count=port_count)
+
+    return items

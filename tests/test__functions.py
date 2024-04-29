@@ -1,5 +1,6 @@
 """unittest functions.py"""
 
+import re
 import unittest
 from ipaddress import NetmaskValueError
 
@@ -27,10 +28,16 @@ def _expected__range_ports__port_count(srcs: LLStr, dsts: LLStr) -> LStr:
     expected: LStr = []
     for ports in srcs:
         ports_ = " ".join([s for s in ports])
-        expected.append(f"permit tcp any eq {ports_} any")
+        operator = "range" if re.match(r"\d+-", ports_) else "eq"
+        if re.match(r"\d+-", ports_):
+            ports_ = ports_.replace("-", " ")
+        expected.append(f"permit tcp any {operator} {ports_} any")
     for ports in dsts:
         ports_ = " ".join([s for s in ports])
-        expected.append(f"permit tcp any any eq {ports_}")
+        operator = "range" if re.match(r"\d+-", ports_) else "eq"
+        if re.match(r"\d+-", ports_):
+            ports_ = ports_.replace("-", " ")
+        expected.append(f"permit tcp any any {operator} {ports_}")
     return expected
 
 
@@ -294,58 +301,63 @@ class Test(unittest.TestCase):
         for kwargs, srcs, dsts in [
             # port_range=True
             # src
-            (dict(srcports="20-22,80", port_nr=True, port_range=True), [["20-22"], ["80"]], []),
-            # (dict(srcports="20-22", port_nr=True, platfprm="cnx"), [["20"], ["21"], ["22"]], []),
-            # (dict(srcports="20-22", port_nr=True, port_count=0), [["20"], ["21"], ["22"]], []),
-            # (dict(srcports="20-22", port_nr=True, port_count=1), [["20"], ["21"], ["22"]], []),
-            # (dict(srcports="20-22", port_nr=True, port_count=2), [["20", "21"], ["22"]], []),
-            # (dict(srcports="20-22", port_nr=True, port_count=3), [["20", "21", "22"]], []),
-            # (dict(srcports="20-22", port_nr=True, port_count=4), [["20", "21", "22"]], []),
-            # # dst
-            # (dict(dstports="20-22", port_nr=True), [], [["20"], ["21"], ["22"]]),
-            # (dict(dstports="20-22", port_nr=True, port_count=0), [], [["20"], ["21"], ["22"]]),
-            # (dict(dstports="20-22", port_nr=True, port_count=1), [], [["20"], ["21"], ["22"]]),
-            # (dict(dstports="20-22", port_nr=True, port_count=2), [], [["20", "21"], ["22"]]),
-            # (dict(dstports="20-22", port_nr=True, port_count=3), [], [["20", "21", "22"]]),
-            # (dict(dstports="20-22", port_nr=True, port_count=4), [], [["20", "21", "22"]]),
-            # # combo
-            # (dict(srcports="20-21", dstports="22-23", port_nr=True),
-            #  [["20"], ["21"]], [["22"], ["23"]]),
-            # (dict(srcports="20-21", dstports="22-23", port_nr=True, port_count=2),
-            #  [["20", "21"]], [["22", "23"]]),
+            (dict(srcports="20-22,80,81", port_nr=True, port_range=True), [["20-22"], ["80"], ["81"]], []),
+            (dict(srcports="20-22,80,81", port_nr=True, platfprm="ios", port_range=True), [["20-22"], ["80"], ["81"]], []),
+            (dict(srcports="20-22,80,81", port_nr=True, platfprm="cnx", port_range=True), [["20-22"], ["80"], ["81"]], []),
+            (dict(srcports="20-22,80,81,82", port_nr=True, port_count=2, port_range=True), [["20-22"], ["80", "81"], ["82"]], []),
+            # dst
+            (dict(dstports="20-22,80,81", port_nr=True, port_range=True), [], [["20-22"], ["80"], ["81"]]),
+            (dict(dstports="20-22,80,81", port_nr=True, platfprm="ios", port_range=True), [], [["20-22"], ["80"], ["81"]]),
+            (dict(dstports="20-22,80,81", port_nr=True, platfprm="cnx", port_range=True), [], [["20-22"], ["80"], ["81"]]),
+            (dict(dstports="20-22,80,81,82", port_nr=True, port_count=2, port_range=True), [], [["20-22"], ["80", "81"], ["82"]]),
+            # combo
+            (dict(srcports="20-21,80,81,82", dstports="30-31,90,91,92", port_nr=True, port_range=True),
+             [["20-21"], ["80"], ["81"], ["82"]], [["30-31"], ["90"], ["91"], ["92"]]),
+            (dict(srcports="20-21,80,81,82", dstports="30-31,90,91,92", port_nr=True, port_count=2, port_range=True),
+             [["20-21"], ["80", "81"], ["82"]], [["30-31"], ["90", "91"], ["92"]]),
             # port_range=False
             # src
-            (dict(srcports="20-22,80", port_nr=True, port_range=False), [["20-22"], ["80"]], []),
-            # (dict(srcports="20-21", port_nr=False, platfprm="cnx"), [["ftp-data"], ["ftp"]], []),
-            # (dict(srcports="20-21", port_nr=False, port_count=0), [["ftp-data"], ["ftp"]], []),
-            # (dict(srcports="20-21", port_nr=False, port_count=1), [["ftp-data"], ["ftp"]], []),
-            # (dict(srcports="20-21", port_nr=False, port_count=2), [["ftp-data", "ftp"]], []),
-            # (dict(srcports="20-21", port_nr=False, port_count=3), [["ftp-data", "ftp"]], []),
-            # (dict(srcports="20-21", port_nr=False, port_count=4), [["ftp-data", "ftp"]], []),
-            # # dst
-            # (dict(dstports="20-21", port_nr=False), [], [["ftp-data"], ["ftp"]]),
-            # (dict(dstports="20-21", port_nr=False, port_count=0), [], [["ftp-data"], ["ftp"]]),
-            # (dict(dstports="20-21", port_nr=False, port_count=1), [], [["ftp-data"], ["ftp"]]),
-            # (dict(dstports="20-21", port_nr=False, port_count=2), [], [["ftp-data", "ftp"]]),
-            # (dict(dstports="20-21", port_nr=False, port_count=3), [], [["ftp-data", "ftp"]]),
-            # (dict(dstports="20-21", port_nr=False, port_count=4), [], [["ftp-data", "ftp"]]),
-            # # combo
-            # (dict(srcports="20-21", dstports="22-23", port_nr=False),
-            #  [["ftp-data"], ["ftp"]], [["22"], ["telnet"]]),
-            # (dict(srcports="20-21", dstports="22-23", port_nr=False, port_count=2),
-            #  [["ftp-data", "ftp"]], [["22", "telnet"]]),
+            (dict(srcports="20-22,80,81", port_nr=True, port_range=False), [["20"], ["21"], ["22"], ["80"], ["81"]], []),
+            (dict(srcports="20-22,80,81", port_nr=True, platfprm="ios", port_range=False), [["20"], ["21"], ["22"], ["80"], ["81"]], []),
+            (dict(srcports="20-22,80,81", port_nr=True, platfprm="cnx", port_range=False), [["20"], ["21"], ["22"], ["80"], ["81"]], []),
+            (dict(srcports="20-22,80,81", port_nr=True, port_count=2, port_range=False), [["20", "21"], ["22", "80"], ["81"]], []),
+            # dst
+            (dict(dstports="20-22,80,81", port_nr=True, port_range=False), [], [["20"], ["21"], ["22"], ["80"], ["81"]]),
+            (dict(dstports="20-22,80,81", port_nr=True, platfprm="ios", port_range=False), [], [["20"], ["21"], ["22"], ["80"], ["81"]]),
+            (dict(dstports="20-22,80,81", port_nr=True, platfprm="cnx", port_range=False), [], [["20"], ["21"], ["22"], ["80"], ["81"]]),
+            (dict(dstports="20-22,80,81", port_nr=True, port_count=2, port_range=False), [], [["20", "21"], ["22", "80"], ["81"]]),
+            # combo
+            (dict(srcports="20-21,80,81,82", dstports="30-31,90,91,92", port_nr=True, port_range=True),
+             [["20-21"], ["80"], ["81"], ["82"]], [["30-31"], ["90"], ["91"], ["92"]]),
+            (dict(srcports="20-21,80,81,82", dstports="30-31,90,91,92", port_nr=True, port_count=2, port_range=False),
+             [["20", "21"], ["80", "81"], ["82"]], [["30", "31"], ["90", "91"], ["92"]]),
         ]:
             result = f.range_ports(**kwargs)
-
-            expected: LStr = []
-            for ports in srcs:
-                ports_ = " ".join([s for s in ports])
-                expected.append(f"permit tcp any eq {ports_} any")
-            for ports in dsts:
-                ports_ = " ".join([s for s in ports])
-                expected.append(f"permit tcp any any eq {ports_}")
-
+            expected = _expected__range_ports__port_count(srcs, dsts)
             self.assertEqual(result, expected, msg=f"{kwargs=}")
+
+    def test_valid__split_range_for_ace(self):
+        """functions._split_range_for_ace()"""
+        for ports_range, port_count, port_range, expected in [
+            # ports unlimited
+            ("", 0, True, []),
+            ("10,11", 0, True, [["10", "11"]]),
+            ("11,10", 0, True, [["11", "10"]]),
+            ("10-11,20,21", 0, True, [["10-11"], ["20", "21"]]),
+            ("10-11,20-21", 0, True, [["10-11"], ["20-21"]]),
+            ("10,11,20-21", 0, True, [["10", "11"], ["20-21"]]),
+            ("10,20-21,30,31", 0, True, [["10"], ["20-21"], ["30", "31"]]),
+            # port_range=True
+            ("", 2, True, []),
+            ("10,11,12", 2, True, [["10", "11"], ["12"]]),
+            ("10,11,12,20-21,30,31,32,40-41", 2, True, [["10", "11"], ["12"], ["20-21"], ["30", "31"], ["32"], ["40-41"]]),
+            # port_range=False
+            ("", 2, False, []),
+            ("10,11,12", 2, False, [["10", "11"], ["12"]]),
+            ("10,11,12,20-21,30,31,32,40-41", 2, False, [["10", "11"], ["12", "20"], ["21", "30"], ["31", "32"], ["40", "41"]]),
+        ]:
+            result = f._split_range_for_ace(ports_range=ports_range, port_count=port_count, port_range=port_range)
+            self.assertEqual(result, expected, msg=f"{ports_range=} {port_count=} {port_range}")
 
 
 if __name__ == "__main__":
