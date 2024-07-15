@@ -11,6 +11,10 @@ Unreleased
 
 **Add:**  Recursive AddrGroup in other AddrGroup items
 
+3.3.3 (2024-07-14)
+------------------
+**Changed:** poetry dependencies
+
 
 3.3.2 (2024-04-30)
 ------------------

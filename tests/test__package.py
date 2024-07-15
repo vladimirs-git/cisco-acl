@@ -43,6 +43,8 @@ def test__last_modified_date():
     text = path.read_text(encoding="utf-8")
     regex = r".+\((\d\d\d\d-\d\d-\d\d)\)$"
     actual = vre.find1(regex, text, re.M)
-    files = vpath.get_files(ROOT, ext=".py")
+
+    extensions = [".py", ".toml"]
+    files = [s for ext in extensions for s in vpath.get_files(ROOT, ext=ext)]
     expected = vdate.last_modified(files)
     assert actual == expected, "last modified file"
