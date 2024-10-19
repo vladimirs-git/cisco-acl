@@ -1,8 +1,8 @@
 
 .. image:: https://img.shields.io/pypi/v/cisco-acl.svg
    :target: https://pypi.python.org/pypi/cisco-acl
-.. image:: https://img.shields.io/pypi/pyversions/cisco-acl.svg
-   :target: https://pypi.python.org/pypi/cisco-acl
+.. image:: https://img.shields.io/badge/Python-3.8%20%7C%203.9%20%7C%203.10%20%7C%203.11-blue.svg
+   :target: https://pypi.python.org/pypi/logger-color
 
 
 cisco-acl
@@ -44,7 +44,7 @@ ACEs        Multiple Access Control Entries
 Requirements
 ------------
 
-Python >=3.8
+Python >=3.8,<3.12
 
 
 Installation
