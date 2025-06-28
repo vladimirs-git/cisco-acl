@@ -11,13 +11,22 @@ Unreleased
 
 **Add:**  Recursive AddrGroup in other AddrGroup items
 
+
+3.3.4 (2025-06-28)
+------------------
+
+**Changed:** dependencies netports-1.0.0
+
+
 3.3.3 (2024-07-14)
 ------------------
+
 **Changed:** poetry dependencies
 
 
 3.3.2 (2024-04-30)
 ------------------
+
 **Added:** SwVersion, different tcp/udp well-known ports names.
 
 **Added:** range_ports(port_range, port_count)
@@ -25,11 +34,13 @@ Unreleased
 
 3.2.4 (2024-04-01)
 ------------------
+
 **Fixed:** Acl.group() transform LINE_DUPLICATE_REMARKS_UNGROUPED to LINE_DUPLICATE_REMARKS_GROUPED
 
 
 3.2.3 (2024-02-01)
 ------------------
+
 **Fixed:** ip access-list standard, permit A.B.C.D (without host keyword)
 
 
@@ -40,31 +51,37 @@ Unreleased
 
 3.2.0 (2023-12-04)
 ------------------
+
 **Changed:** poetry
 
 
 3.1.0 (2023-11-22)
 ------------------
+
 **Added:** asa
 
 
 3.0.4 (2022-11-02)
 ------------------
+
 **Added:** Acl.tcam_count()
 
 
 3.0.3 (2022-11-01)
 ------------------
+
 **Changed:** netports==0.6.1
 
 
 3.0.2 (2022-11-01)
 ------------------
+
 **Fixed:** py.typed
 
 
 3.0.1 (2022-10-31)
 ------------------
+
 **Removed:** AceBase, AddressBase
 
 **Fixed:** AddressBase._is_address_prefix()
@@ -72,6 +89,7 @@ Unreleased
 
 3.0.0 (2022-10-30)
 ------------------
+
 **Added:** kwargs for cisco_acl.acls() cisco_acl.aces() cisco_acl.addrgroups()
 
 **Changed:** Address "nxos" + "0.0.0.0/0" = "any"
@@ -83,6 +101,7 @@ Unreleased
 
 2.1.0 (2022-10-25)
 ------------------
+
 **Changed:** Ace.data(uuid=True)
 
 **Fixed:** Ace.shadow_of() performance improvement
@@ -102,11 +121,13 @@ Unreleased
 
 2.0.3 (2022-10-11)
 ------------------
+
 **Fixed:** disabled 100 chars check_line_length() for init_line()
 
 
 2.0.2 (2022-10-10)
 ------------------
+
 **Fixed:** README.rst
 
 **Fixed:** Address("10.0.0.1/30") with invalid mask,
@@ -114,11 +135,13 @@ WARNING:root:ValueError: 10.0.0.1/30 has host bits set, fixed to prefix 10.0.0.0
 
 2.0.1 (2022-10-06)
 ------------------
+
 **Fixed:** Ace.is_shadow_by() for addrgroup
 
 
 2.0.0 (2022-10-06)
 ------------------
+
 **Changed:** AceGroup.resequence()
 
 **Changed:** ConfigParser._make_ace_group()
@@ -168,11 +191,13 @@ WARNING:root:ValueError: 10.0.0.1/30 has host bits set, fixed to prefix 10.0.0.0
 
 1.2.2 (2022-09-08)
 ------------------
+
 **Added:** platform="cnx"
 
 
 1.2.1 (2022-07-30)
 ------------------
+
 **Added:** Ace.range()
 
 **Fixed:** protocol_nr in Ace.copy() Acl.copy()
@@ -182,6 +207,7 @@ WARNING:root:ValueError: 10.0.0.1/30 has host bits set, fixed to prefix 10.0.0.0
 
 1.2.0 (2022-07-30)
 ------------------
+
 **Removed:** Ace.numerically
 
 **Removed:** Acl.numerically
@@ -197,6 +223,7 @@ WARNING:root:ValueError: 10.0.0.1/30 has host bits set, fixed to prefix 10.0.0.0
 
 1.1.0 (2022-07-17)
 ------------------
+
 **Added:** cisco_acl.config_to_ace() cisco_acl.config_to_aceg()
 
 **Removed:** Interface
@@ -204,6 +231,7 @@ WARNING:root:ValueError: 10.0.0.1/30 has host bits set, fixed to prefix 10.0.0.0
 
 1.0.0 (2022-07-16)
 ------------------
+
 **Added:** numerically: Cisco ACL outputs some tcp/udp ports as numbers
 
 **Changed:** "cnx" to "nxos"
@@ -211,6 +239,7 @@ WARNING:root:ValueError: 10.0.0.1/30 has host bits set, fixed to prefix 10.0.0.0
 
 0.1.1 (2022-06-13)
 ------------------
+
 **Changed:** Pipfile packages versions
 
 **Changed:** README.md to README.rst
@@ -232,6 +261,7 @@ WARNING:root:ValueError: 10.0.0.1/30 has host bits set, fixed to prefix 10.0.0.0
 
 0.1.0 (2022-04-26)
 ------------------
+
 **Added:** convert dict to object and vice versa
 	acl = Acl(data=dict(...))
 	data = acl.data
@@ -241,4 +271,5 @@ WARNING:root:ValueError: 10.0.0.1/30 has host bits set, fixed to prefix 10.0.0.0
 
 0.0.5 (2022-04-19)
 ------------------
+
 **Added:** cisco-acl

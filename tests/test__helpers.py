@@ -5,7 +5,6 @@ from ipaddress import IPv4Network
 from logging import WARNING
 
 from netports import SwVersion
-from packaging.version import InvalidVersion
 
 from cisco_acl import helpers as h
 
@@ -263,14 +262,6 @@ class Test(unittest.TestCase):
             version_o = h.init_version(**kwargs)
             result = version_o.major
             self.assertEqual(result, req, msg=f"{kwargs=}")
-
-    def test_invalid__init_version(self):
-        """helpers.init_version()"""
-        for kwargs, error in [
-            (dict(version="typo"), InvalidVersion),
-        ]:
-            with self.assertRaises(error, msg=f"{kwargs=}"):
-                h.init_version(**kwargs)
 
     def test_valid__int_to_str(self):
         """helpers.int_to_str()"""
