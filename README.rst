@@ -60,7 +60,7 @@ or install the package from github.com release
 
 .. code:: bash
 
-    pip install https://github.com/vladimirs-git/cisco-acl/archive/refs/tags/3.3.3.tar.gz
+    pip install https://github.com/vladimirs-git/cisco-acl/archive/refs/tags/3.3.5.tar.gz
 
 or install the package from github.com repository
 

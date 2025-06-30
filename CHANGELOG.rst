@@ -12,10 +12,10 @@ Unreleased
 **Add:**  Recursive AddrGroup in other AddrGroup items
 
 
-3.3.4 (2025-06-28)
+3.3.5 (2025-06-30)
 ------------------
 
-**Changed:** dependencies netports-1.0.0
+**Changed:** dependencies netports-1.0.3
 
 
 3.3.3 (2024-07-14)
